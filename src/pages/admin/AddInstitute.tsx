@@ -11,8 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, X, Plus, Save, Building2, Loader2, MapPin, Phone, Globe, Mail, User as UserIcon, BookOpen, Warehouse, Sparkles, Binary } from "lucide-react";
 import { uploadFile, institutesAPI, Institute } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 export default function AddInstitute() {
   const { toast } = useToast();
@@ -41,9 +40,6 @@ export default function AddInstitute() {
   const [isUploading, setIsUploading] = useState(false);
   const [courseInput, setCourseInput] = useState("");
   const [facilityInput, setFacilityInput] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editingCode, setEditingCode] = useState<string | null>(null);
   const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [bulkData, setBulkData] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -132,52 +128,12 @@ export default function AddInstitute() {
         description: "", images: [], address: "", phone: "", email: "", website: "", principal: "",
         courses: [], facilities: [], status: "published"
       });
-      setIsEditMode(false);
-      setEditingCode(null);
-      setIsDialogOpen(false);
       fetchInstitutes();
     } catch (error) {
       toast({ title: "Protocol Error", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleEdit = (item: Institute) => {
-    setFormData({
-      code: item.code,
-      name: item.name,
-      place: item.place || "",
-      dist: item.dist || "",
-      region: item.region || "OU",
-      type: item.type || "PVT",
-      minority: item.minority || "NA",
-      mode: item.mode || "COED",
-      description: item.description || "",
-      images: item.images || [],
-      address: item.address || "",
-      phone: item.phone || "",
-      email: item.email || "",
-      website: item.website || "",
-      principal: item.principal || "",
-      courses: item.courses || [],
-      facilities: item.facilities || [],
-      status: item.status || "published"
-    });
-    setEditingCode(item.code);
-    setIsEditMode(true);
-    setIsDialogOpen(true);
-  };
-
-  const handleCancelEdit = () => {
-    setFormData({
-      code: "", name: "", place: "", dist: "", region: "OU", type: "PVT", minority: "NA", mode: "COED",
-      description: "", images: [], address: "", phone: "", email: "", website: "", principal: "",
-      courses: [], facilities: [], status: "published"
-    });
-    setEditingCode(null);
-    setIsEditMode(false);
-    setIsDialogOpen(false);
   };
 
   const handleDelete = async (item: Institute) => {
@@ -279,206 +235,171 @@ export default function AddInstitute() {
               <p className="text-muted-foreground font-medium underline underline-offset-4 decoration-primary/20">Manage global institutional profiles and academic infrastructure.</p>
             </div>
           </div>
-          <div className="flex gap-4">
-            <Button variant="outline" className="rounded-xl border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 text-blue-500 font-bold gap-2 focus-glow" onClick={() => setIsBulkOpen(true)}>
-              <Binary className="w-4 h-4" />
-              Bulk Ingress
-            </Button>
-            <Dialog open={isDialogOpen} onOpenChange={(open) => {
-              setIsDialogOpen(open);
-              if (!open) handleCancelEdit();
-            }}>
-              <DialogTrigger asChild>
-                <Button className="gap-2 font-bold uppercase tracking-widest text-xs hidden sm:flex bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/20 rounded-xl px-6">
-                  <Plus className="h-4 w-4" /> New Institute
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[1100px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
-                    {isEditMode ? 'Edit Institute Protocol' : 'Institute Protocol Architect'}
-                  </DialogTitle>
-                </DialogHeader>
-                <div className="pt-4">
-                  <form onSubmit={handleSubmit}>
-                    <Tabs defaultValue="identity" className="w-full">
-                      <TabsList className="grid w-full grid-cols-3 mb-6 bg-white/5 rounded-xl">
-                        <TabsTrigger value="identity" className="uppercase text-[10px] font-black tracking-widest">Identity</TabsTrigger>
-                        <TabsTrigger value="contacts" className="uppercase text-[10px] font-black tracking-widest">Contacts</TabsTrigger>
-                        <TabsTrigger value="academics" className="uppercase text-[10px] font-black tracking-widest">Academics & Media</TabsTrigger>
-                      </TabsList>
-
-                      {/* TAB 1: Identity */}
-                      <TabsContent value="identity" className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                          <div className="space-y-2 md:col-span-1">
-                            <Label className="text-[10px] font-black uppercase opacity-60">Reference Code</Label>
-                            <Input name="code" value={formData.code} onChange={handleChange} required className="premium-boundary h-11 uppercase font-black text-primary tracking-widest" placeholder="JNGP" />
-                          </div>
-                          <div className="space-y-2 md:col-span-3">
-                            <Label className="text-[10px] font-black uppercase opacity-60">Full Identity Name</Label>
-                            <Input name="name" value={formData.name} onChange={handleChange} required className="premium-boundary h-11" placeholder="Jawaharlal Nehru Government Polytechnic..." />
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
-                          <div className="space-y-2 md:col-span-2">
-                            <Label className="text-[10px] font-black uppercase opacity-60">Location (Place)</Label>
-                            <Input name="place" value={formData.place} onChange={handleChange} className="premium-boundary h-11" />
-                          </div>
-                          <div className="space-y-2 md:col-span-1">
-                            <Label className="text-[10px] font-black uppercase opacity-60">District Code</Label>
-                            <Input name="dist" value={formData.dist} onChange={handleChange} className="premium-boundary h-11 uppercase" />
-                          </div>
-                          <div className="space-y-2 md:col-span-1">
-                            <Label className="text-[10px] font-black uppercase opacity-60">Region</Label>
-                            <Input name="region" value={formData.region} onChange={handleChange} className="premium-boundary h-11" />
-                          </div>
-                          <div className="space-y-2 md:col-span-1">
-                            <Label className="text-[10px] font-black uppercase opacity-60">Admin Type</Label>
-                            <select name="type" value={formData.type} onChange={handleChange} className="w-full h-11 px-3 premium-boundary text-xs font-bold uppercase rounded-xl">
-                              <option value="GOV">GOV</option>
-                              <option value="PVT">PVT</option>
-                              <option value="AID">AIDED</option>
-                            </select>
-                          </div>
-                          <div className="space-y-2 md:col-span-1">
-                            <Label className="text-[10px] font-black uppercase opacity-60">System Mode</Label>
-                            <select name="mode" value={formData.mode} onChange={handleChange} className="w-full h-11 px-3 premium-boundary text-xs font-bold uppercase rounded-xl">
-                              <option value="COED">COED</option>
-                              <option value="GIRLS">WOMEN</option>
-                              <option value="BOYS">MEN</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase opacity-60">Mission Statement / Description</Label>
-                          <Textarea name="description" value={formData.description} onChange={handleChange} rows={4} className="premium-boundary font-mono text-xs" />
-                        </div>
-                      </TabsContent>
-
-                      {/* TAB 2: Contacts */}
-                      <TabsContent value="contacts" className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                              <Phone className="w-4 h-4 text-blue-500" />
-                              <p className="text-[10px] uppercase font-black tracking-widest opacity-60">Secure Communications</p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label className="text-[9px] uppercase opacity-40">Principal Lead</Label>
-                                <Input name="principal" value={formData.principal} onChange={handleChange} className="premium-boundary h-9 text-xs" />
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-[9px] uppercase opacity-40">Direct Phone</Label>
-                                <Input name="phone" value={formData.phone} onChange={handleChange} className="premium-boundary h-9 text-xs" />
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-[9px] uppercase opacity-40">Official Mail</Label>
-                              <Input name="email" type="email" value={formData.email} onChange={handleChange} className="premium-boundary h-9 text-xs" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-[9px] uppercase opacity-40">Global URL</Label>
-                              <Input name="website" value={formData.website} onChange={handleChange} className="premium-boundary h-9 text-xs" />
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-[9px] uppercase opacity-40">Physical Coordinates (Address)</Label>
-                              <Textarea name="address" value={formData.address} onChange={handleChange} rows={3} className="premium-boundary text-xs" />
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col justify-center items-center p-8 rounded-2xl bg-white/5 border border-white/5">
-                            <Building2 className="w-16 h-16 text-blue-500/30 mb-4" />
-                            <p className="text-[10px] uppercase font-black tracking-widest opacity-40 text-center">Contact details help connect stakeholders and verify authenticity of registered institutions.</p>
-                          </div>
-                        </div>
-                      </TabsContent>
-
-                      {/* TAB 3: Academics & Media */}
-                      <TabsContent value="academics" className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                              <BookOpen className="w-4 h-4 text-blue-500" />
-                              <p className="text-[10px] uppercase font-black tracking-widest opacity-60">Courses Manifest</p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Input value={courseInput} onChange={(v) => setCourseInput(v.target.value)} className="premium-boundary h-9 text-xs" placeholder="Add Degree..." />
-                              <Button type="button" size="icon" className="h-9 w-9 bg-primary" onClick={() => addItem('courses', courseInput, setCourseInput)}><Plus className="w-4 h-4" /></Button>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {formData.courses?.map((c, i) => (
-                                <Badge key={i} variant="outline" className="bg-blue-500/5 border-blue-500/20 text-[10px] rounded-lg pl-3 pr-1 py-1 flex gap-2">
-                                  {typeof c === 'string' ? c : c.name} <button type="button" onClick={() => removeItem('courses', i)}><X className="w-3 h-3 text-rose-500" /></button>
-                                </Badge>
-                              ))}
-                            </div>
-
-                            <div className="flex items-center gap-2 pb-2 border-b border-white/5 mt-4">
-                              <Warehouse className="w-4 h-4 text-indigo-500" />
-                              <p className="text-[10px] uppercase font-black tracking-widest opacity-60">Facility Ingress</p>
-                            </div>
-                            <div className="flex gap-2">
-                              <Input value={facilityInput} onChange={(v) => setFacilityInput(v.target.value)} className="premium-boundary h-9 text-xs" placeholder="Add Library/Lab..." />
-                              <Button type="button" size="icon" className="h-9 w-9 bg-indigo-500" onClick={() => addItem('facilities', facilityInput, setFacilityInput)}><Plus className="w-4 h-4" /></Button>
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {formData.facilities?.map((f, i) => (
-                                <Badge key={i} variant="outline" className="bg-indigo-500/5 border-indigo-500/20 text-[10px] rounded-lg pl-3 pr-1 py-1 flex gap-2">
-                                  {f} <button type="button" onClick={() => removeItem('facilities', i)}><X className="w-3 h-3 text-rose-500" /></button>
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-2 pb-2 border-b border-white/5">
-                              <Upload className="w-4 h-4 text-blue-500" />
-                              <p className="text-[10px] uppercase font-black tracking-widest opacity-60">Campus Visual Archives</p>
-                            </div>
-                            <div className="grid grid-cols-3 gap-3">
-                              {formData.images?.map((img, idx) => (
-                                <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-white/5 shadow-lg group">
-                                  <img src={img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                  <button type="button" onClick={() => removeImage(idx)} className="absolute inset-0 bg-rose-600/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                                    <X className="w-6 h-6 text-white" />
-                                  </button>
-                                </div>
-                              ))}
-                              <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="aspect-square rounded-xl border-dashed border-2 border-white/10 bg-white/5 flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition-all">
-                                {isUploading ? <Loader2 className="w-6 h-6 animate-spin text-primary" /> : <Upload className="w-6 h-6 text-muted-foreground" />}
-                                <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Sync Visual</span>
-                              </button>
-                              <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" multiple className="hidden" />
-                            </div>
-                          </div>
-                        </div>
-                      </TabsContent>
-                    </Tabs>
-
-                    <div className="space-y-2 pt-6 mt-4 border-t border-white/5">
-                      <Button type="submit" disabled={isLoading} className="w-full bg-blue-600 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all">
-                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : isEditMode ? 'Update Institution Profile' : 'Register Institution Profile'}
-                      </Button>
-                      {isEditMode && (
-                        <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full h-12 rounded-2xl border-white/10 bg-transparent uppercase font-black text-xs tracking-widest">
-                          Cancel Edit
-                        </Button>
-                      )}
-                    </div>
-                  </form>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+          <Button variant="outline" className="rounded-xl border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 text-blue-500 font-bold gap-2 focus-glow" onClick={() => setIsBulkOpen(true)}>
+            <Binary className="w-4 h-4" />
+            Bulk Ingress
+          </Button>
         </div>
 
-        <div className="space-y-8">
-          <div className="w-full">
-            <Card className="glass-card border-white/10 backdrop-blur-xl">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
+          <div className="xl:col-span-8 space-y-8">
+            <Card className="border-white/5 bg-card/40 backdrop-blur-md overflow-hidden relative">
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-primary" />
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xs uppercase tracking-[0.2em] font-black flex items-center gap-2">
+                  <Binary className="w-4 h-4 text-blue-500" />
+                  Institute Protocol Architect
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <form onSubmit={handleSubmit} className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="space-y-2 lg:col-span-1">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Reference Code</Label>
+                      <Input name="code" value={formData.code} onChange={handleChange} required className="premium-boundary h-11 uppercase font-black text-primary tracking-widest" placeholder="JNGP" />
+                    </div>
+                    <div className="space-y-2 lg:col-span-3">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Full Identity Name</Label>
+                      <Input name="name" value={formData.name} onChange={handleChange} required className="premium-boundary h-11" placeholder="Jawaharlal Nehru Government Polytechnic..." />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                    <div className="space-y-2 lg:col-span-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Location (Place)</Label>
+                      <Input name="place" value={formData.place} onChange={handleChange} className="premium-boundary h-11" />
+                    </div>
+                    <div className="space-y-2 lg:col-span-1">
+                      <Label className="text-[10px] font-black uppercase opacity-60">District Code</Label>
+                      <Input name="dist" value={formData.dist} onChange={handleChange} className="premium-boundary h-11 uppercase" />
+                    </div>
+                    <div className="space-y-2 lg:col-span-1">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Region</Label>
+                      <Input name="region" value={formData.region} onChange={handleChange} className="premium-boundary h-11" />
+                    </div>
+                    <div className="space-y-2 lg:col-span-1">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Admin Type</Label>
+                      <select name="type" value={formData.type} onChange={handleChange} className="w-full h-11 px-3 premium-boundary text-xs font-bold uppercase">
+                        <option value="GOV">GOV</option>
+                        <option value="PVT">PVT</option>
+                        <option value="AID">AIDED</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2 lg:col-span-1">
+                      <Label className="text-[10px] font-black uppercase opacity-60">System Mode</Label>
+                      <select name="mode" value={formData.mode} onChange={handleChange} className="w-full h-11 px-3 premium-boundary text-xs font-bold uppercase">
+                        <option value="COED">COED</option>
+                        <option value="GIRLS">WOMEN</option>
+                        <option value="BOYS">MEN</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase opacity-60">Mission Statement / Description</Label>
+                    <Textarea name="description" value={formData.description} onChange={handleChange} rows={3} className="premium-boundary font-mono text-xs" />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div className="space-y-6">
+                      <CardHeader className="p-0 pb-2 border-b border-white/5 flex flex-row items-center gap-2">
+                        <Phone className="w-4 h-4 text-blue-500" />
+                        <CardTitle className="text-[10px] uppercase font-black tracking-widest opacity-60">Secure Communications</CardTitle>
+                      </CardHeader>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[9px] uppercase opacity-40">Principal Lead</Label>
+                            <Input name="principal" value={formData.principal} onChange={handleChange} className="premium-boundary h-9 text-xs" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[9px] uppercase opacity-40">Direct Phone</Label>
+                            <Input name="phone" value={formData.phone} onChange={handleChange} className="premium-boundary h-9 text-xs" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] uppercase opacity-40">Official Mail</Label>
+                          <Input name="email" type="email" value={formData.email} onChange={handleChange} className="premium-boundary h-9 text-xs" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] uppercase opacity-40">Global URL</Label>
+                          <Input name="website" value={formData.website} onChange={handleChange} className="premium-boundary h-9 text-xs" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[9px] uppercase opacity-40">Physical Coordinates (Address)</Label>
+                          <Textarea name="address" value={formData.address} onChange={handleChange} rows={2} className="premium-boundary text-xs" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-6">
+                      <CardHeader className="p-0 pb-2 border-b border-white/5 flex flex-row items-center gap-2">
+                        <Binary className="w-4 h-4 text-blue-500" />
+                        <CardTitle className="text-[10px] uppercase font-black tracking-widest opacity-60">Infrastructure & Academics</CardTitle>
+                      </CardHeader>
+                      <div className="space-y-6">
+                        <div className="space-y-3">
+                          <Label className="text-[9px] uppercase opacity-40">Courses Manifest</Label>
+                          <div className="flex gap-2">
+                            <Input value={courseInput} onChange={(v) => setCourseInput(v.target.value)} className="premium-boundary h-9 text-xs" placeholder="Add Degree..." />
+                            <Button type="button" size="icon" className="h-9 w-9 bg-primary" onClick={() => addItem('courses', courseInput, setCourseInput)}><Plus className="w-4 h-4" /></Button>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {formData.courses?.map((c, i) => (
+                              <Badge key={i} variant="outline" className="bg-blue-500/5 border-blue-500/20 text-[10px] rounded-lg pl-3 pr-1 py-1 flex gap-2">
+                                {typeof c === 'string' ? c : c.name} <button type="button" onClick={() => removeItem('courses', i)}><X className="w-3 h-3 text-rose-500" /></button>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="space-y-3">
+                          <Label className="text-[9px] uppercase opacity-40">Facility Ingress</Label>
+                          <div className="flex gap-2">
+                            <Input value={facilityInput} onChange={(v) => setFacilityInput(v.target.value)} className="premium-boundary h-9 text-xs" placeholder="Add Library/Lab..." />
+                            <Button type="button" size="icon" className="h-9 w-9 bg-indigo-500" onClick={() => addItem('facilities', facilityInput, setFacilityInput)}><Plus className="w-4 h-4" /></Button>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {formData.facilities?.map((f, i) => (
+                              <Badge key={i} variant="outline" className="bg-indigo-500/5 border-indigo-500/20 text-[10px] rounded-lg pl-3 pr-1 py-1 flex gap-2">
+                                {f} <button type="button" onClick={() => removeItem('facilities', i)}><X className="w-3 h-3 text-rose-500" /></button>
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <Label className="text-[10px] font-black uppercase opacity-60">Campus Visual Archives</Label>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                      {formData.images?.map((img, idx) => (
+                        <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-white/5 shadow-lg group">
+                          <img src={img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                          <button type="button" onClick={() => removeImage(idx)} className="absolute inset-0 bg-rose-600/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <X className="w-6 h-6 text-white" />
+                          </button>
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="aspect-square rounded-xl border-dashed border-2 border-white/10 bg-white/5 flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition-all">
+                        {isUploading ? <Loader2 className="w-6 h-6 animate-spin text-primary" /> : <Upload className="w-6 h-6 text-muted-foreground" />}
+                        <span className="text-[9px] font-black uppercase tracking-widest opacity-40">Sync Visual</span>
+                      </button>
+                      <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" multiple className="hidden" />
+                    </div>
+                  </div>
+
+                  <Button className="w-full bg-blue-600 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all">
+                    Register Institution Profile
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="xl:col-span-4 space-y-8">
+            <Card className="border-white/5 bg-card/10 backdrop-blur-xl">
               <CardHeader className="border-b border-white/5">
                 <CardTitle className="flex items-center gap-2 uppercase tracking-tighter font-black">
                   <Sparkles className="w-5 h-5 text-blue-500" />
@@ -495,25 +416,25 @@ export default function AddInstitute() {
                 />
               </CardContent>
             </Card>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8">
-            {[
-              { icon: BookOpen, label: "Academic Depth", value: `${institutes.reduce((acc, i) => acc + (i.courses?.length || 0), 0)} Courses`, color: "text-blue-500" },
-              { icon: Warehouse, label: "Asset Density", value: `${institutes.reduce((acc, i) => acc + (i.facilities?.length || 0), 0)} Facilities`, color: "text-indigo-500" }
-            ].map((stat, i) => (
-              <Card key={i} className="border-white/5 bg-white/5 backdrop-blur-sm">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <stat.icon className={`w-6 h-6 ${stat.color}`} />
-                    <div>
-                      <p className="text-[9px] uppercase font-black tracking-widest opacity-40">{stat.label}</p>
-                      <p className="text-sm font-black">{stat.value}</p>
+            <div className="grid grid-cols-1 gap-4">
+              {[
+                { icon: BookOpen, label: "Academic Depth", value: `${institutes.reduce((acc, i) => acc + (i.courses?.length || 0), 0)} Courses`, color: "text-blue-500" },
+                { icon: Warehouse, label: "Asset Density", value: `${institutes.reduce((acc, i) => acc + (i.facilities?.length || 0), 0)} Facilities`, color: "text-indigo-500" }
+              ].map((stat, i) => (
+                <Card key={i} className="border-white/5 bg-white/5 backdrop-blur-sm">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                      <div>
+                        <p className="text-[9px] uppercase font-black tracking-widest opacity-40">{stat.label}</p>
+                        <p className="text-sm font-black">{stat.value}</p>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -546,6 +467,6 @@ export default function AddInstitute() {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout >
+    </AdminLayout>
   );
 }
