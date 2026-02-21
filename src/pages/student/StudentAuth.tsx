@@ -44,7 +44,7 @@ const StudentAuth = () => {
         if (!email || isOtpSent || activeTab === "signup") return;
         try {
             const exists = await fxbotAPI.checkEmailExists(email);
-            if (!exists && activeTab === "login") {
+            if (!exists) {
                 setActiveTab("signup");
                 toast({
                     title: "Account Not Found",
