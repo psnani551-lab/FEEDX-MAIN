@@ -1,0 +1,37 @@
+[
+  {
+    "id": "carousel-gioe-1",
+    "title": "GIOE — Campus Life",
+    "description": "Students and campus activities at GIOE.",
+    "image": "/images/ioes_banner.jpg",
+    "alt": "GIOE banner"
+  },
+  {
+    "id": "carousel-gioe-2",
+    "title": "Pragathi Scholarship Drive",
+    "description": "Awareness drive and campus event highlights.",
+    "image": "/images/ioes/537422c4-fa2d-4a37-986a-4468ee4c224a.jpg",
+    "alt": "Pragathi scholarship event"
+  },
+  {
+    "id": "carousel-gioe-3",
+    "title": "Student Projects & Workshops",
+    "description": "Hands-on projects, labs and student showcases.",
+    "image": "/images/ioes/87de1f65-8006-41bc-9fc1-db7ac3c7cf04.jpg",
+    "alt": "Student projects"
+  },
+  {
+    "id": "carousel-gioe-4",
+    "title": "Community Meetups",
+    "description": "Events, guest lectures and industry interactions.",
+    "image": "/images/ioes/7229f92e-c61c-4c22-9705-5235a05dfa76.jpg",
+    "alt": "Community meetups"
+  },
+  {
+    "id": "carousel-gioe-5",
+    "title": "Labs & Infrastructure",
+    "description": "Modern labs and facilities at GIOE.",
+    "image": "/images/ioes/e3a637d5-3e5b-44de-8c1d-14bb58cf7d31.jpg",
+    "alt": "Labs and infrastructure"
+  }
+]

@@ -1,0 +1,1920 @@
+{
+    "math": [
+        {
+            "q": "Evaluate the limit: lim (x -> 0) [sin(2x) / x]",
+            "options": [
+                "1",
+                "2",
+                "0.5",
+                "0"
+            ],
+            "ans": "2"
+        },
+        {
+            "q": "If A is the matrix [[1, 2], [3, 4]], find the determinant of A.",
+            "options": [
+                "2",
+                "-2",
+                "10",
+                "4"
+            ],
+            "ans": "-2"
+        },
+        {
+            "q": "Find the derivative of f(x) = e^(3x) with respect to x.",
+            "options": [
+                "e^(3x)",
+                "3e^(3x)",
+                "3x e^(3x)",
+                "e^x"
+            ],
+            "ans": "3e^(3x)"
+        },
+        {
+            "q": "What is the degree of the differential equation (d²y/dx²)³ + 4(dy/dx) + y = 0?",
+            "options": [
+                "1",
+                "2",
+                "3",
+                "4"
+            ],
+            "ans": "3"
+        },
+        {
+            "q": "The general form of a complex number is z = a + ib. What does i represent?",
+            "options": [
+                "A variable",
+                "A real number",
+                "The imaginary unit, sqrt(-1)",
+                "A constant"
+            ],
+            "ans": "The imaginary unit, sqrt(-1)"
+        },
+        {
+            "q": "Calculate the integral: Integral from 0 to 1 of x² dx",
+            "options": [
+                "1/2",
+                "1/3",
+                "1",
+                "2"
+            ],
+            "ans": "1/3"
+        },
+        {
+            "q": "If two events A and B are mutually exclusive, what is P(A intersection B)?",
+            "options": [
+                "P(A) + P(B)",
+                "P(A)P(B)",
+                "0",
+                "1"
+            ],
+            "ans": "0"
+        },
+        {
+            "q": "The equation x² + 5x + 6 = 0 has roots that are:",
+            "options": [
+                "Real and equal",
+                "Complex",
+                "Real and unequal",
+                "Imaginary"
+            ],
+            "ans": "Real and unequal"
+        },
+        {
+            "q": "What is sin(2θ) in terms of sinθ and cosθ?",
+            "options": [
+                "sin²θ - cos²θ",
+                "2sinθcosθ",
+                "sinθ + cosθ",
+                "tan(2θ)"
+            ],
+            "ans": "2sinθcosθ"
+        },
+        {
+            "q": "Which numerical method is used for finding the roots of a non-linear equation?",
+            "options": [
+                "Cramer's Rule",
+                "Newton-Raphson method",
+                "Gauss Elimination",
+                "Lagrange Interpolation"
+            ],
+            "ans": "Newton-Raphson method"
+        },
+        {
+            "q": "The inverse of the matrix I = [[1, 0], [0, 1]] is:",
+            "options": [
+                "[[0, 1], [1, 0]]",
+                "[[-1, 0], [0, -1]]",
+                "[[1, 1], [1, 1]]",
+                "[[1, 0], [0, 1]]"
+            ],
+            "ans": "[[1, 0], [0, 1]]"
+        },
+        {
+            "q": "What is the eccentricity of a parabola?",
+            "options": [
+                "0",
+                "1",
+                "Less than 1",
+                "Greater than 1"
+            ],
+            "ans": "1"
+        },
+        {
+            "q": "The condition for three lines to be concurrent is that the determinant of the coefficients is:",
+            "options": [
+                "1",
+                "0",
+                "Non-zero",
+                "-1"
+            ],
+            "ans": "0"
+        },
+        {
+            "q": "What is the domain of sin⁻¹(x)?",
+            "options": [
+                "[-1, 1]",
+                "[-π/2, π/2]",
+                "[0, π]",
+                "(-1, 1)"
+            ],
+            "ans": "[-1, 1]"
+        },
+        {
+            "q": "If f'(x) > 0 for all x in an interval, the function f(x) is:",
+            "options": [
+                "Decreasing",
+                "Constant",
+                "Increasing",
+                "Concave"
+            ],
+            "ans": "Increasing"
+        },
+        {
+            "q": "What is the formula for calculating the mean of a set of N values?",
+            "options": [
+                "Sum xᵢ",
+                "(Sum xᵢ) / N",
+                "N * Sum xᵢ",
+                "x_max - x_min"
+            ],
+            "ans": "(Sum xᵢ) / N"
+        },
+        {
+            "q": "The product of the slopes of two perpendicular lines is:",
+            "options": [
+                "1",
+                "-1",
+                "0",
+                "Undefined"
+            ],
+            "ans": "-1"
+        },
+        {
+            "q": "A scalar matrix where all diagonal elements are 1 is called:",
+            "options": [
+                "Zero matrix",
+                "Symmetric matrix",
+                "Identity matrix",
+                "Diagonal matrix"
+            ],
+            "ans": "Identity matrix"
+        },
+        {
+            "q": "Which differential equation type deals with partial derivatives?",
+            "options": [
+                "ODE",
+                "LDE",
+                "PDE",
+                "FDE"
+            ],
+            "ans": "PDE"
+        },
+        {
+            "q": "What is the distance between points (x₁, y₁) and (x₂, y₂)?",
+            "options": [
+                "sqrt((x₂+x₁)²+(y₂+y₁)²)",
+                "(x₂-x₁)+(y₂-y₁)",
+                "|x₂-x₁|",
+                "sqrt((x₂-x₁)²+(y₂-y₁)²)"
+            ],
+            "ans": "sqrt((x₂-x₁)²+(y₂-y₁)²)"
+        },
+        {
+            "q": "The area bounded by y=x, the x-axis, and x=1 is:",
+            "options": [
+                "1/2",
+                "1",
+                "2",
+                "4"
+            ],
+            "ans": "1/2"
+        },
+        {
+            "q": "The number of subsets of a set with n elements is:",
+            "options": [
+                "n",
+                "n!",
+                "2^n",
+                "n²"
+            ],
+            "ans": "2^n"
+        },
+        {
+            "q": "What is the magnitude of the complex number 3 + 4i?",
+            "options": [
+                "5",
+                "7",
+                "1",
+                "25"
+            ],
+            "ans": "5"
+        },
+        {
+            "q": "Using the Trapezoidal Rule, if n is the number of sub-intervals, the number of ordinates is:",
+            "options": [
+                "n",
+                "n-1",
+                "n+1",
+                "2n"
+            ],
+            "ans": "n+1"
+        },
+        {
+            "q": "The equation of a straight line parallel to the x-axis is:",
+            "options": [
+                "x = k",
+                "y = k",
+                "x + y = k",
+                "xy = k"
+            ],
+            "ans": "y = k"
+        },
+        {
+            "q": "Find the general solution of dy/dx = y.",
+            "options": [
+                "y = cx",
+                "y = c e^x",
+                "x = c y",
+                "y = x^c"
+            ],
+            "ans": "y = c e^x"
+        },
+        {
+            "q": "What is the value of tan⁻¹(1)?",
+            "options": [
+                "0",
+                "π/4",
+                "π/2",
+                "π"
+            ],
+            "ans": "π/4"
+        },
+        {
+            "q": "The formula for the n-th term of an Arithmetic Progression is:",
+            "options": [
+                "a + n d",
+                "a + (n-1)d",
+                "a r^(n-1)",
+                "n a d"
+            ],
+            "ans": "a + (n-1)d"
+        },
+        {
+            "q": "For a maximum value of a function f(x), the second derivative f''(x) must be:",
+            "options": [
+                "Positive",
+                "Negative",
+                "Zero",
+                "Undefined"
+            ],
+            "ans": "Negative"
+        },
+        {
+            "q": "If A is a square matrix, A+Aᵀ is always a:",
+            "options": [
+                "Skew-symmetric matrix",
+                "Hermitian matrix",
+                "Symmetric matrix",
+                "Null matrix"
+            ],
+            "ans": "Symmetric matrix"
+        },
+        {
+            "q": "The value of logₐ(a) is:",
+            "options": [
+                "0",
+                "a",
+                "1",
+                "∞"
+            ],
+            "ans": "1"
+        },
+        {
+            "q": "The volume of a sphere with radius r is given by:",
+            "options": [
+                "4 π r²",
+                "2 π r",
+                "4/3 π r³",
+                "1/3 π r³"
+            ],
+            "ans": "4/3 π r³"
+        },
+        {
+            "q": "Which measure of central tendency is affected most by extreme values?",
+            "options": [
+                "Mean",
+                "Median",
+                "Mode",
+                "Range"
+            ],
+            "ans": "Mean"
+        },
+        {
+            "q": "The distance from the origin (0,0,0) to the point (x,y,z) is:",
+            "options": [
+                "x+y+z",
+                "x²+y²+z²",
+                "sqrt(x²+y²+z²)",
+                "sqrt(x+y+z)"
+            ],
+            "ans": "sqrt(x²+y²+z²)"
+        },
+        {
+            "q": "What is the formula for the arc length s of a circle with radius r and angle θ (in radians)?",
+            "options": [
+                "r * θ",
+                "r / θ",
+                "θ / r",
+                "π r²"
+            ],
+            "ans": "r * θ"
+        },
+        {
+            "q": "If P(A) = 0.6 and P(B) = 0.3, and A and B are independent, what is P(A intersection B)?",
+            "options": [
+                "0.9",
+                "0.3",
+                "0.18",
+                "0.2"
+            ],
+            "ans": "0.18"
+        },
+        {
+            "q": "The method of finding the derivative of a function by substituting small increments is called:",
+            "options": [
+                "Integration",
+                "First Principle",
+                "Chain Rule",
+                "L'Hôpital's Rule"
+            ],
+            "ans": "First Principle"
+        },
+        {
+            "q": "The general solution of a first-order linear differential equation contains how many arbitrary constants?",
+            "options": [
+                "0",
+                "1",
+                "2",
+                "3"
+            ],
+            "ans": "1"
+        },
+        {
+            "q": "The value of cos(180°) is:",
+            "options": [
+                "0",
+                "1",
+                "-1",
+                "Undefined"
+            ],
+            "ans": "-1"
+        },
+        {
+            "q": "The rank of a matrix is the number of:",
+            "options": [
+                "Rows",
+                "Columns",
+                "Zero elements",
+                "Non-zero rows in the Echelon form"
+            ],
+            "ans": "Non-zero rows in the Echelon form"
+        },
+        {
+            "q": "The formula for calculating compound interest is:",
+            "options": [
+                "P(1 + r*t)",
+                "P(1 + r)ᵗ",
+                "P e^(r*t)",
+                "P * r * t"
+            ],
+            "ans": "P(1 + r)ᵗ"
+        },
+        {
+            "q": "What type of curve is represented by the equation x² + y² = r²?",
+            "options": [
+                "Parabola",
+                "Ellipse",
+                "Hyperbola",
+                "Circle"
+            ],
+            "ans": "Circle"
+        },
+        {
+            "q": "The mean value theorem relates the average rate of change to the instantaneous rate of change at some point c. This point c must lie within the interval:",
+            "options": [
+                "Closed interval",
+                "Open interval",
+                "Half-open interval",
+                "At the boundary"
+            ],
+            "ans": "Open interval"
+        },
+        {
+            "q": "The number of ways to arrange n distinct objects is:",
+            "options": [
+                "nⁿ",
+                "n!",
+                "2ⁿ",
+                "n"
+            ],
+            "ans": "n!"
+        },
+        {
+            "q": "The formula for the volume of revolution of y=f(x) rotated about the x-axis from a to b is:",
+            "options": [
+                "Integral (a to b) [2π y dx]",
+                "Integral (a to b) [π y² dx]",
+                "Integral (a to b) [y² dx]",
+                "Integral (a to b) [π x² dy]"
+            ],
+            "ans": "Integral (a to b) [π y² dx]"
+        },
+        {
+            "q": "The probability of an impossible event is:",
+            "options": [
+                "1",
+                "0.5",
+                "0",
+                "Undefined"
+            ],
+            "ans": "0"
+        },
+        {
+            "q": "A function f(x) is continuous at x=a if lim (x -> a) f(x) = f(a).",
+            "options": [
+                "True",
+                "False",
+                "Only if differentiable",
+                "Only if bounded"
+            ],
+            "ans": "True"
+        },
+        {
+            "q": "The equation y - y₁ = m(x - x₁) represents the equation of a line using:",
+            "options": [
+                "Slope-intercept form",
+                "Two-point form",
+                "Point-slope form",
+                "General form"
+            ],
+            "ans": "Point-slope form"
+        },
+        {
+            "q": "Which property states that (A+B)+C = A+(B+C) for matrices A, B, C?",
+            "options": [
+                "Commutative",
+                "Distributive",
+                "Identity",
+                "Associative"
+            ],
+            "ans": "Associative"
+        },
+        {
+            "q": "The number of sides of a nonagon is:",
+            "options": [
+                "8",
+                "9",
+                "10",
+                "12"
+            ],
+            "ans": "9"
+        }
+    ],
+    "physics": [
+        {
+            "q": "What is the SI unit of momentum?",
+            "options": [
+                "Newton-second (N·s)",
+                "Newton per second (N/s)",
+                "Joule (J)",
+                "Watt (W)"
+            ],
+            "ans": "Newton-second (N·s)"
+        },
+        {
+            "q": "The work done by a centripetal force on a body moving in a circle is:",
+            "options": [
+                "Positive",
+                "Negative",
+                "Zero",
+                "Depends on radius"
+            ],
+            "ans": "Zero"
+        },
+        {
+            "q": "Which law states that heat cannot spontaneously flow from a colder body to a hotter body?",
+            "options": [
+                "Zeroth Law of Thermodynamics",
+                "First Law of Thermodynamics",
+                "Second Law of Thermodynamics",
+                "Third Law of Thermodynamics"
+            ],
+            "ans": "Second Law of Thermodynamics"
+        },
+        {
+            "q": "What phenomenon is responsible for the apparent bending of a spoon in a glass of water?",
+            "options": [
+                "Diffraction",
+                "Refraction",
+                "Interference",
+                "Reflection"
+            ],
+            "ans": "Refraction"
+        },
+        {
+            "q": "The formula for the force between two point charges q₁ and q₂ separated by a distance r is given by:",
+            "options": [
+                "F = k(q₁q₂)/r",
+                "F = k(q₁q₂)/r²",
+                "F = k(q₁+q₂)/r²",
+                "F = k(q₁r)/q₂"
+            ],
+            "ans": "F = k(q₁q₂)/r²"
+        },
+        {
+            "q": "What is the function of a fuse in an electrical circuit?",
+            "options": [
+                "Increase current",
+                "Decrease resistance",
+                "Prevent excessive current flow",
+                "Maintain voltage"
+            ],
+            "ans": "Prevent excessive current flow"
+        },
+        {
+            "q": "The energy of a photon is given by the equation:",
+            "options": [
+                "E=mc²",
+                "E=hν",
+                "E=k_BT",
+                "E=P/t"
+            ],
+            "ans": "E=hν"
+        },
+        {
+            "q": "In an elastic collision, which quantity is conserved?",
+            "options": [
+                "Kinetic Energy only",
+                "Momentum only",
+                "Both Kinetic Energy and Momentum",
+                "Velocity only"
+            ],
+            "ans": "Both Kinetic Energy and Momentum"
+        },
+        {
+            "q": "What does the slope of a velocity-time graph represent?",
+            "options": [
+                "Displacement",
+                "Distance",
+                "Speed",
+                "Acceleration"
+            ],
+            "ans": "Acceleration"
+        },
+        {
+            "q": "The specific heat capacity of a substance is the amount of heat required to raise the temperature of:",
+            "options": [
+                "1 mole by 1 K",
+                "1 kg by 1 K",
+                "1 gram by 1°C",
+                "Any mass by 1°C"
+            ],
+            "ans": "1 kg by 1 K"
+        },
+        {
+            "q": "The property of light waves when they overlap to produce regions of maximum and minimum intensity is called:",
+            "options": [
+                "Polarization",
+                "Diffraction",
+                "Interference",
+                "Dispersion"
+            ],
+            "ans": "Interference"
+        },
+        {
+            "q": "Lenz's law is a consequence of the conservation of:",
+            "options": [
+                "Charge",
+                "Momentum",
+                "Mass",
+                "Energy"
+            ],
+            "ans": "Energy"
+        },
+        {
+            "q": "Which concept explains the working of optical fibers?",
+            "options": [
+                "Total Internal Reflection",
+                "Refraction",
+                "Diffraction",
+                "Scattering"
+            ],
+            "ans": "Total Internal Reflection"
+        },
+        {
+            "q": "A body is in rotational equilibrium if the net **torque** acting on it is:",
+            "options": [
+                "Maximum",
+                "Minimum",
+                "Zero",
+                "Equal to moment of inertia"
+            ],
+            "ans": "Zero"
+        },
+        {
+            "q": "The half-life of a radioactive substance is T. After a time 2T, the fraction of the initial substance remaining is:",
+            "options": [
+                "1/2",
+                "1/4",
+                "1/8",
+                "1/16"
+            ],
+            "ans": "1/4"
+        },
+        {
+            "q": "What is the equivalent resistance of two resistors, R₁ and R₂, connected in parallel?",
+            "options": [
+                "R₁ + R₂",
+                "R₁R₂",
+                "R₁R₂ / (R₁ + R₂)",
+                "(R₁ + R₂) / R₁R₂"
+            ],
+            "ans": "R₁R₂ / (R₁ + R₂)"
+        },
+        {
+            "q": "Temperature is a measure of the average **kinetic energy** of the molecules in a substance.",
+            "options": [
+                "Potential Energy",
+                "Kinetic Energy",
+                "Chemical Energy",
+                "Thermal Energy"
+            ],
+            "ans": "Kinetic Energy"
+        },
+        {
+            "q": "The Doppler Effect is not applicable to:",
+            "options": [
+                "Sound waves",
+                "Light waves",
+                "Water waves",
+                "Waves from a stationary source"
+            ],
+            "ans": "Waves from a stationary source"
+        },
+        {
+            "q": "What quantity is measured in **Tesla**?",
+            "options": [
+                "Electric Field Strength",
+                "Magnetic Flux",
+                "Magnetic Field Strength",
+                "Electric Potential"
+            ],
+            "ans": "Magnetic Field Strength"
+        },
+        {
+            "q": "According to special relativity, the speed of light in vacuum (c) is:",
+            "options": [
+                "Variable",
+                "Dependent on the observer's speed",
+                "Constant for all inertial observers",
+                "Dependent on the source's speed"
+            ],
+            "ans": "Constant for all inertial observers"
+        },
+        {
+            "q": "A body executing Simple Harmonic Motion (SHM) has maximum velocity at which point?",
+            "options": [
+                "Extreme position",
+                "Midway point",
+                "Equilibrium position",
+                "Quarter position"
+            ],
+            "ans": "Equilibrium position"
+        },
+        {
+            "q": "The process of splitting a heavy nucleus into two smaller nuclei is called:",
+            "options": [
+                "Nuclear fusion",
+                "Chain reaction",
+                "Nuclear fission",
+                "Radioactivity"
+            ],
+            "ans": "Nuclear fission"
+        },
+        {
+            "q": "The unit of electrical energy commonly used for billing domestic consumers is:",
+            "options": [
+                "Joule",
+                "Watt",
+                "Kilowatt-hour",
+                "Ampere-hour"
+            ],
+            "ans": "Kilowatt-hour"
+        },
+        {
+            "q": "The bending of waves around the corners of an obstacle is called:",
+            "options": [
+                "Refraction",
+                "Reflection",
+                "Polarization",
+                "Diffraction"
+            ],
+            "ans": "Diffraction"
+        },
+        {
+            "q": "The equation for the conservation of energy in fluid dynamics is given by:",
+            "options": [
+                "Pascal's Principle",
+                "Bernoulli's Principle",
+                "Archimedes' Principle",
+                "Continuity Equation"
+            ],
+            "ans": "Bernoulli's Principle"
+        },
+        {
+            "q": "What is the magnetic field inside a current-carrying solenoid?",
+            "options": [
+                "Zero",
+                "Uniform",
+                "Varies with distance from axis",
+                "Varies with current squared"
+            ],
+            "ans": "Uniform"
+        },
+        {
+            "q": "If a gas is compressed adiabatically, its temperature:",
+            "options": [
+                "Decreases",
+                "Increases",
+                "Remains constant",
+                "First increases then decreases"
+            ],
+            "ans": "Increases"
+        },
+        {
+            "q": "Which of the following colors has the shortest wavelength?",
+            "options": [
+                "Red",
+                "Green",
+                "Yellow",
+                "Violet"
+            ],
+            "ans": "Violet"
+        },
+        {
+            "q": "The phenomenon of super conductivity is related to:",
+            "options": [
+                "Zero resistance below critical temperature",
+                "High magnetic field",
+                "High resistance at low temperature",
+                "Material becoming magnetic"
+            ],
+            "ans": "Zero resistance below critical temperature"
+        },
+        {
+            "q": "The ratio of stress to strain is called:",
+            "options": [
+                "Bulk Modulus",
+                "Shear Modulus",
+                "Young's Modulus",
+                "Poisson's Ratio"
+            ],
+            "ans": "Young's Modulus"
+        },
+        {
+            "q": "A device used to convert AC to DC is called a:",
+            "options": [
+                "Transformer",
+                "Amplifier",
+                "Rectifier",
+                "Filter"
+            ],
+            "ans": "Rectifier"
+        },
+        {
+            "q": "In the photoelectric effect, the kinetic energy of emitted electrons depends on the light's:",
+            "options": [
+                "Intensity",
+                "Wavelength (or Frequency)",
+                "Speed",
+                "Polarization"
+            ],
+            "ans": "Wavelength (or Frequency)"
+        },
+        {
+            "q": "The escape velocity of a body from Earth depends on the body's mass.",
+            "options": [
+                "True",
+                "False",
+                "Only at poles",
+                "Only at equator"
+            ],
+            "ans": "False"
+        },
+        {
+            "q": "What is the term for the force that acts on an object when it is immersed in a fluid?",
+            "options": [
+                "Tension",
+                "Buoyancy",
+                "Viscosity",
+                "Surface tension"
+            ],
+            "ans": "Buoyancy"
+        },
+        {
+            "q": "Which mirror is used as a rear-view mirror in vehicles?",
+            "options": [
+                "Plane mirror",
+                "Concave mirror",
+                "Convex mirror",
+                "Cylindrical mirror"
+            ],
+            "ans": "Convex mirror"
+        },
+        {
+            "q": "The internal energy of an ideal gas is dependent only on its:",
+            "options": [
+                "Pressure",
+                "Volume",
+                "Temperature",
+                "Density"
+            ],
+            "ans": "Temperature"
+        },
+        {
+            "q": "The SI unit of magnetic flux is:",
+            "options": [
+                "Weber",
+                "Tesla",
+                "Henry",
+                "Farad"
+            ],
+            "ans": "Weber"
+        },
+        {
+            "q": "Which quantity remains unchanged when sound passes from air to water?",
+            "options": [
+                "Wavelength",
+                "Velocity",
+                "Frequency",
+                "Amplitude"
+            ],
+            "ans": "Frequency"
+        },
+        {
+            "q": "The nucleus of a Deuterium atom contains:",
+            "options": [
+                "1 proton, 1 neutron",
+                "2 protons, 1 neutron",
+                "1 proton, 2 neutrons",
+                "2 protons, 2 neutrons"
+            ],
+            "ans": "1 proton, 1 neutron"
+        },
+        {
+            "q": "What is the mathematical definition of power?",
+            "options": [
+                "Force * Distance",
+                "Work / Time",
+                "Mass * Acceleration",
+                "Energy * Time"
+            ],
+            "ans": "Work / Time"
+        },
+        {
+            "q": "The potential energy of a spring with spring constant k compressed by distance x is:",
+            "options": [
+                "k x",
+                "1/2 k x",
+                "1/2 k x²",
+                "k x²"
+            ],
+            "ans": "1/2 k x²"
+        },
+        {
+            "q": "Which material is used to control the fission rate in a nuclear reactor?",
+            "options": [
+                "Heavy water",
+                "Uranium",
+                "Cadmium rods",
+                "Helium gas"
+            ],
+            "ans": "Cadmium rods"
+        },
+        {
+            "q": "The critical angle for total internal reflection is the angle of incidence for which the angle of refraction is:",
+            "options": [
+                "45°",
+                "60°",
+                "90°",
+                "180°"
+            ],
+            "ans": "90°"
+        },
+        {
+            "q": "Ohm's law relates voltage, current, and:",
+            "options": [
+                "Power",
+                "Charge",
+                "Resistance",
+                "Capacitance"
+            ],
+            "ans": "Resistance"
+        },
+        {
+            "q": "The value of the universal gravitational constant (G) is approximately:",
+            "options": [
+                "9.8 m/s²",
+                "6.67 x 10⁻¹¹ N m²/kg²",
+                "3 x 10⁸ m/s",
+                "1.6 x 10⁻¹⁹ C"
+            ],
+            "ans": "6.67 x 10⁻¹¹ N m²/kg²"
+        },
+        {
+            "q": "The magnifying power of a telescope is given by the ratio of the focal lengths of:",
+            "options": [
+                "Objective to eyepiece",
+                "Eyepiece to objective",
+                "Lens to mirror",
+                "Primary to secondary"
+            ],
+            "ans": "Objective to eyepiece"
+        },
+        {
+            "q": "The phenomenon of light separating into its component colors upon passing through a prism is called:",
+            "options": [
+                "Dispersion",
+                "Refraction",
+                "Interference",
+                "Scattering"
+            ],
+            "ans": "Dispersion"
+        },
+        {
+            "q": "Kirchhoff's first law (Junction Rule) is based on the conservation of:",
+            "options": [
+                "Energy",
+                "Momentum",
+                "Charge",
+                "Voltage"
+            ],
+            "ans": "Charge"
+        },
+        {
+            "q": "What is the speed of sound in a solid compared to a gas?",
+            "options": [
+                "Slower",
+                "Same",
+                "Faster",
+                "Depends on humidity"
+            ],
+            "ans": "Faster"
+        },
+        {
+            "q": "The minimum energy required for a chemical reaction to occur is called:",
+            "options": [
+                "Potential energy",
+                "Activation energy",
+                "Kinetic energy",
+                "Bond energy"
+            ],
+            "ans": "Activation energy"
+        }
+    ],
+    "chemistry": [
+        {
+            "q": "Which of the following describes an **exothermic** reaction?",
+            "options": [
+                "Absorption of heat",
+                "Evolution of heat",
+                "No change in heat",
+                "Formation of precipitate"
+            ],
+            "ans": "Evolution of heat"
+        },
+        {
+            "q": "What is the functional group of a **Ketone**?",
+            "options": [
+                "-OH",
+                "-COOH",
+                "-CHO",
+                ">C=O"
+            ],
+            "ans": ">C=O"
+        },
+        {
+            "q": "Which element belongs to Group 1 (Alkali Metals) of the Periodic Table?",
+            "options": [
+                "Magnesium",
+                "Potassium",
+                "Aluminum",
+                "Neon"
+            ],
+            "ans": "Potassium"
+        },
+        {
+            "q": "The phenomenon where a pure liquid is heated and it boils below its normal boiling point is observed in:",
+            "options": [
+                "Eutectic mixture",
+                "Azeotropic mixture",
+                "Sublimation",
+                "Steam distillation"
+            ],
+            "ans": "Steam distillation"
+        },
+        {
+            "q": "What is the maximum number of electrons that can be accommodated in the **L-shell** (n=2)?",
+            "options": [
+                "2",
+                "8",
+                "18",
+                "32"
+            ],
+            "ans": "8"
+        },
+        {
+            "q": "The process of converting a vegetable oil into solid fat is called:",
+            "options": [
+                "Saponification",
+                "Hydrogenation",
+                "Esterification",
+                "Polymerization"
+            ],
+            "ans": "Hydrogenation"
+        },
+        {
+            "q": "Which type of bond is formed by the transfer of electrons between atoms?",
+            "options": [
+                "Covalent bond",
+                "Metallic bond",
+                "Ionic bond",
+                "Hydrogen bond"
+            ],
+            "ans": "Ionic bond"
+        },
+        {
+            "q": "What is the primary product of the reaction between an alkene and water in the presence of an acid catalyst?",
+            "options": [
+                "Ether",
+                "Aldehyde",
+                "Alcohol",
+                "Carboxylic acid"
+            ],
+            "ans": "Alcohol"
+        },
+        {
+            "q": "What is the pOH of a solution with a pH of 3 at 25°C?",
+            "options": [
+                "11",
+                "7",
+                "3",
+                "14"
+            ],
+            "ans": "11"
+        },
+        {
+            "q": "The BOD (Biochemical Oxygen Demand) of clean water is typically:",
+            "options": [
+                "High",
+                "Very low (less than 5 ppm)",
+                "Equal to COD",
+                "Above 100 ppm"
+            ],
+            "ans": "Very low (less than 5 ppm)"
+        },
+        {
+            "q": "The geometry of CH₄ (Methane) molecule is:",
+            "options": [
+                "Trigonal planar",
+                "Linear",
+                "Tetrahedral",
+                "Bent"
+            ],
+            "ans": "Tetrahedral"
+        },
+        {
+            "q": "Catalysts increase the rate of reaction by:",
+            "options": [
+                "Increasing reactant concentration",
+                "Decreasing activation energy",
+                "Increasing temperature",
+                "Increasing product concentration"
+            ],
+            "ans": "Decreasing activation energy"
+        },
+        {
+            "q": "Which compound causes the ozone layer depletion?",
+            "options": [
+                "CO₂",
+                "O₂",
+                "CFCs",
+                "SO₂"
+            ],
+            "ans": "CFCs"
+        },
+        {
+            "q": "The oxidation state of Manganese (Mn) in KMnO₄ is:",
+            "options": [
+                "+2",
+                "+4",
+                "+7",
+                "+6"
+            ],
+            "ans": "+7"
+        },
+        {
+            "q": "The principle involved in fractional distillation is the difference in:",
+            "options": [
+                "Boiling points",
+                "Melting points",
+                "Solubility",
+                "Density"
+            ],
+            "ans": "Boiling points"
+        },
+        {
+            "q": "The process of conversion of atmospheric N₂ into NH₃ is known as:",
+            "options": [
+                "Nitrification",
+                "Denitrification",
+                "Nitrogen Fixation",
+                "Ammonification"
+            ],
+            "ans": "Nitrogen Fixation"
+        },
+        {
+            "q": "Which allotrope of Carbon is a good conductor of electricity?",
+            "options": [
+                "Diamond",
+                "Fullerene",
+                "Graphite",
+                "Buckminsterfullerene"
+            ],
+            "ans": "Graphite"
+        },
+        {
+            "q": "In a zero-order reaction, the rate of reaction is independent of:",
+            "options": [
+                "Temperature",
+                "Catalyst",
+                "Concentration of reactants",
+                "Time"
+            ],
+            "ans": "Concentration of reactants"
+        },
+        {
+            "q": "Transition elements are found in which block of the periodic table?",
+            "options": [
+                "s-block",
+                "p-block",
+                "d-block",
+                "f-block"
+            ],
+            "ans": "d-block"
+        },
+        {
+            "q": "The general formula for an **alkyne** is:",
+            "options": [
+                "CₙH₂ₙ₊₂",
+                "CₙH₂ₙ",
+                "CₙH₂ₙ₋₂",
+                "CₙH₂ₙ₋₂"
+            ],
+            "ans": "CₙH₂ₙ₋₂"
+        },
+        {
+            "q": "What is the term for the tendency of an atom to attract a shared pair of electrons?",
+            "options": [
+                "Ionization Energy",
+                "Electron Affinity",
+                "Electronegativity",
+                "Atomic Radius"
+            ],
+            "ans": "Electronegativity"
+        },
+        {
+            "q": "According to Le Chatelier's Principle, increasing the pressure in a reversible reaction favors the side with:",
+            "options": [
+                "More moles of gas",
+                "Fewer moles of gas",
+                "Equal moles of gas",
+                "Liquids only"
+            ],
+            "ans": "Fewer moles of gas"
+        },
+        {
+            "q": "A solution that resists changes in pH upon addition of small amounts of acid or base is called a:",
+            "options": [
+                "Standard solution",
+                "Buffer solution",
+                "Saturated solution",
+                "Colloidal solution"
+            ],
+            "ans": "Buffer solution"
+        },
+        {
+            "q": "Which synthetic polymer is used to make disposable coffee cups?",
+            "options": [
+                "PVC",
+                "Polyethylene",
+                "Teflon",
+                "Polystyrene"
+            ],
+            "ans": "Polystyrene"
+        },
+        {
+            "q": "What is the common name for NaCl?",
+            "options": [
+                "Baking Soda",
+                "Washing Soda",
+                "Common Salt",
+                "Bleaching Powder"
+            ],
+            "ans": "Common Salt"
+        },
+        {
+            "q": "The main component of LPG is:",
+            "options": [
+                "Methane",
+                "Propane and Butane",
+                "Ethane",
+                "Hydrogen"
+            ],
+            "ans": "Propane and Butane"
+        },
+        {
+            "q": "The IUPAC name for CH₃CH₂OH is:",
+            "options": [
+                "Methanol",
+                "Ethanol",
+                "Propanol",
+                "Butanol"
+            ],
+            "ans": "Ethanol"
+        },
+        {
+            "q": "What is the pH of pure water at 25°C?",
+            "options": [
+                "0",
+                "7",
+                "14",
+                "Between 6 and 8"
+            ],
+            "ans": "7"
+        },
+        {
+            "q": "The process of removing temporary hardness of water by boiling is due to the decomposition of:",
+            "options": [
+                "Magnesium chloride",
+                "Calcium sulfate",
+                "Bicarbonates",
+                "Sodium chloride"
+            ],
+            "ans": "Bicarbonates"
+        },
+        {
+            "q": "In electrochemistry, reduction occurs at the:",
+            "options": [
+                "Anode",
+                "Cathode",
+                "Electrolyte",
+                "Salt bridge"
+            ],
+            "ans": "Cathode"
+        },
+        {
+            "q": "The type of hybridization in the Carbon atom of CO₂ is:",
+            "options": [
+                "sp³",
+                "sp²",
+                "sp",
+                "d²sp³"
+            ],
+            "ans": "sp"
+        },
+        {
+            "q": "Which of the following is a p-block element?",
+            "options": [
+                "Sodium",
+                "Calcium",
+                "Silicon",
+                "Iron"
+            ],
+            "ans": "Silicon"
+        },
+        {
+            "q": "The formula for rust (Iron oxide) is:",
+            "options": [
+                "Fe₂O₃",
+                "FeO",
+                "Fe(OH)₂",
+                "Fe₂O₃ · xH₂O"
+            ],
+            "ans": "Fe₂O₃ · xH₂O"
+        },
+        {
+            "q": "What are compounds having the same molecular formula but different structural formulas called?",
+            "options": [
+                "Isotopes",
+                "Allotropes",
+                "Isomers",
+                "Polymers"
+            ],
+            "ans": "Isomers"
+        },
+        {
+            "q": "The term used for the breaking down of large polymer molecules into smaller units is:",
+            "options": [
+                "Polymerization",
+                "Condensation",
+                "Depolymerization",
+                "Hydrolysis"
+            ],
+            "ans": "Hydrolysis"
+        },
+        {
+            "q": "What is the VSEPR geometry of NH₃?",
+            "options": [
+                "Tetrahedral",
+                "Trigonal planar",
+                "Trigonal bipyramidal",
+                "Trigonal pyramidal"
+            ],
+            "ans": "Trigonal pyramidal"
+        },
+        {
+            "q": "The rate constant of a first-order reaction has the units:",
+            "options": [
+                "mol L⁻¹ s⁻¹",
+                "s⁻¹",
+                "L mol⁻¹ s⁻¹",
+                "mol² L⁻² s⁻¹"
+            ],
+            "ans": "s⁻¹"
+        },
+        {
+            "q": "Which acid is present in vinegar?",
+            "options": [
+                "Sulphuric acid",
+                "Formic acid",
+                "Acetic acid",
+                "Nitric acid"
+            ],
+            "ans": "Acetic acid"
+        },
+        {
+            "q": "The minimum energy barrier that must be overcome for a reaction to occur is called:",
+            "options": [
+                "Potential energy",
+                "Activation energy",
+                "Heat of reaction",
+                "Lattice energy"
+            ],
+            "ans": "Activation energy"
+        },
+        {
+            "q": "The property of C atom to form long chains with itself is called:",
+            "options": [
+                "Isomerism",
+                "Valency",
+                "Catenation",
+                "Hybridization"
+            ],
+            "ans": "Catenation"
+        },
+        {
+            "q": "Which of the following is a reducing sugar?",
+            "options": [
+                "Sucrose",
+                "Starch",
+                "Cellulose",
+                "Glucose"
+            ],
+            "ans": "Glucose"
+        },
+        {
+            "q": "Which type of colloid has a liquid dispersed in a solid?",
+            "options": [
+                "Emulsion",
+                "Foam",
+                "Gel",
+                "Sol"
+            ],
+            "ans": "Gel"
+        },
+        {
+            "q": "The common name of CaCO₃ is:",
+            "options": [
+                "Quicklime",
+                "Limestone",
+                "Plaster of Paris",
+                "Slaked Lime"
+            ],
+            "ans": "Limestone"
+        },
+        {
+            "q": "The reaction of an acid with a base to form salt and water is called:",
+            "options": [
+                "Decomposition",
+                "Redox",
+                "Neutralization",
+                "Hydrolysis"
+            ],
+            "ans": "Neutralization"
+        },
+        {
+            "q": "The electronic configuration of an inert (noble) gas is characterized by a filled valence shell.",
+            "options": [
+                "True",
+                "False",
+                "Only for Helium",
+                "Only for Neon"
+            ],
+            "ans": "True"
+        }
+    ],
+    "cse": [
+        {
+            "q": "Which storage class specifies that a variable is stored in the CPU's register for faster access in C?",
+            "options": [
+                "auto",
+                "static",
+                "extern",
+                "register"
+            ],
+            "ans": "register"
+        },
+        {
+            "q": "The ability of an object to take on many forms (e.g., method overloading) is known as:",
+            "options": [
+                "Inheritance",
+                "Abstraction",
+                "Encapsulation",
+                "Polymorphism"
+            ],
+            "ans": "Polymorphism"
+        },
+        {
+            "q": "In C++, what is the default visibility mode for members of a `class`?",
+            "options": [
+                "private",
+                "public",
+                "protected",
+                "friend"
+            ],
+            "ans": "private"
+        },
+        {
+            "q": "In OOP, a **virtual function** enables which type of polymorphism?",
+            "options": [
+                "Compile-time",
+                "Design-time",
+                "Run-time",
+                "Functional"
+            ],
+            "ans": "Run-time"
+        },
+        {
+            "q": "What is a **destructor** in C++?",
+            "options": [
+                "A function called to initialize an object",
+                "A function called automatically when an object is destroyed",
+                "A function that creates copies of an object",
+                "A static member function"
+            ],
+            "ans": "A function called automatically when an object is destroyed"
+        },
+        {
+            "q": "The mechanism of wrapping data and code together as a single unit is called:",
+            "options": [
+                "Inheritance",
+                "Abstraction",
+                "Encapsulation",
+                "Polymorphism"
+            ],
+            "ans": "Encapsulation"
+        },
+        {
+            "q": "The process of creating an object from a class blueprint is known as:",
+            "options": [
+                "Abstraction",
+                "Inheritance",
+                "Declaration",
+                "Instantiation"
+            ],
+            "ans": "Instantiation"
+        },
+        {
+            "q": "What does the pointer declaration `int *p[10]` mean in C?",
+            "options": [
+                "A pointer to an array of 10 integers",
+                "An array of 10 integer pointers",
+                "A pointer to an integer",
+                "An integer array of size 10"
+            ],
+            "ans": "An array of 10 integer pointers"
+        },
+        {
+            "q": "What keyword is used to prevent a C++ class or method from being overridden or inherited (C++11 standard)?",
+            "options": [
+                "abstract",
+                "final",
+                "sealed",
+                "friend"
+            ],
+            "ans": "final"
+        },
+        {
+            "q": "The 2's complement of the binary number 10110 is:",
+            "options": [
+                "01010",
+                "01001",
+                "11010",
+                "00110"
+            ],
+            "ans": "01010"
+        },
+        {
+            "q": "Which of the following is considered a **Universal Gate**?",
+            "options": [
+                "AND",
+                "OR",
+                "XOR",
+                "NAND"
+            ],
+            "ans": "NAND"
+        },
+        {
+            "q": "What is the output of a 3-input AND gate if inputs are 1, 0, and 1?",
+            "options": [
+                "0",
+                "1",
+                "3",
+                "Undefined"
+            ],
+            "ans": "0"
+        },
+        {
+            "q": "In Boolean algebra, A + (A' * B) simplifies to:",
+            "options": [
+                "A * B",
+                "A + B",
+                "A",
+                "A' + B"
+            ],
+            "ans": "A + B"
+        },
+        {
+            "q": "How many bits are in a standard byte?",
+            "options": [
+                "4",
+                "8",
+                "16",
+                "32"
+            ],
+            "ans": "8"
+        },
+        {
+            "q": "The largest 8-bit unsigned integer is:",
+            "options": [
+                "127",
+                "255",
+                "256",
+                "511"
+            ],
+            "ans": "255"
+        },
+        {
+            "q": "A half-adder circuit has two outputs: Sum and:",
+            "options": [
+                "Carry",
+                "Difference",
+                "Borrow",
+                "Result"
+            ],
+            "ans": "Carry"
+        },
+        {
+            "q": "The primary use of a Karnaugh Map (K-map) is for:",
+            "options": [
+                "Multiplication",
+                "Addition",
+                "Boolean expression simplification",
+                "Data storage"
+            ],
+            "ans": "Boolean expression simplification"
+        },
+        {
+            "q": "The decimal equivalent of the hexadecimal number 1A is:",
+            "options": [
+                "26",
+                "30",
+                "16",
+                "17"
+            ],
+            "ans": "26"
+        },
+        {
+            "q": "Which component is used to select one of N inputs to one output based on select lines?",
+            "options": [
+                "Decoder",
+                "Encoder",
+                "Multiplexer",
+                "Demultiplexer"
+            ],
+            "ans": "Multiplexer"
+        },
+        {
+            "q": "Which data structure is best suited for implementing Breadth-First Search (BFS)?",
+            "options": [
+                "Stack",
+                "Queue",
+                "Tree",
+                "Hash Table"
+            ],
+            "ans": "Queue"
+        },
+        {
+            "q": "The worst-case time complexity of Quick Sort algorithm is:",
+            "options": [
+                "O(n²)",
+                "O(n log n)",
+                "O(n)",
+                "O(log n)"
+            ],
+            "ans": "O(n²)"
+        },
+        {
+            "q": "What is the time complexity of searching an element in a balanced Binary Search Tree (average case)?",
+            "options": [
+                "O(n)",
+                "O(1)",
+                "O(log n)",
+                "O(n log n)"
+            ],
+            "ans": "O(log n)"
+        },
+        {
+            "q": "Which data structure is used to implement a recursive function call?",
+            "options": [
+                "Queue",
+                "Linked List",
+                "Stack",
+                "Heap"
+            ],
+            "ans": "Stack"
+        },
+        {
+            "q": "What is the output of the following C code snippet? `int x=5; x = x++ + ++x; printf(\"%d\", x);`",
+            "options": [
+                "12",
+                "13",
+                "11",
+                "Undefined Behavior"
+            ],
+            "ans": "Undefined Behavior"
+        },
+        {
+            "q": "The best-case time complexity for Bubble Sort is:",
+            "options": [
+                "O(n²)",
+                "O(n)",
+                "O(n log n)",
+                "O(log n)"
+            ],
+            "ans": "O(n)"
+        },
+        {
+            "q": "Which sorting algorithm is comparison-based and stable (maintains relative order of equal elements)?",
+            "options": [
+                "Selection Sort",
+                "Heap Sort",
+                "Merge Sort",
+                "Quick Sort"
+            ],
+            "ans": "Merge Sort"
+        },
+        {
+            "q": "The `pop()` operation on an empty stack results in a condition called:",
+            "options": [
+                "Overflow",
+                "Underflow",
+                "Crash",
+                "Exception"
+            ],
+            "ans": "Underflow"
+        },
+        {
+            "q": "In an adjacency matrix representation of a graph with V vertices, the space complexity is:",
+            "options": [
+                "O(V)",
+                "O(V+E)",
+                "O(V²)",
+                "O(E²)"
+            ],
+            "ans": "O(V²)"
+        },
+        {
+            "q": "What is the main advantage of using a **circular linked list**?",
+            "options": [
+                "Faster insertion at the beginning",
+                "No null pointer checks",
+                "Accessing the last node quickly from the first",
+                "Lower memory usage"
+            ],
+            "ans": "Accessing the last node quickly from the first"
+        },
+        {
+            "q": "The temporary high-speed memory between the CPU and main memory is called:",
+            "options": [
+                "Hard Disk",
+                "Cache Memory",
+                "Virtual Memory",
+                "ROM"
+            ],
+            "ans": "Cache Memory"
+        },
+        {
+            "q": "The term used for partitioning memory into fixed-size blocks is:",
+            "options": [
+                "Segmentation",
+                "Paging",
+                "Swapping",
+                "Fragmentation"
+            ],
+            "ans": "Paging"
+        },
+        {
+            "q": "Which is **not** one of the **ACID** properties in DBMS?",
+            "options": [
+                "Atomicity",
+                "Consistency",
+                "Isolation",
+                "Efficiency"
+            ],
+            "ans": "Efficiency"
+        },
+        {
+            "q": "What is **Deadlock** in Operating Systems?",
+            "options": [
+                "Two processes waiting for the same resource",
+                "A process crash",
+                "Two processes waiting indefinitely for resources held by others",
+                "High CPU usage"
+            ],
+            "ans": "Two processes waiting indefinitely for resources held by others"
+        },
+        {
+            "q": "Which Normal Form (NF) eliminates transitive dependency?",
+            "options": [
+                "1NF",
+                "2NF",
+                "3NF",
+                "BCNF"
+            ],
+            "ans": "3NF"
+        },
+        {
+            "q": "What is the purpose of **virtual memory**?",
+            "options": [
+                "Increase RAM size",
+                "Allow execution of processes larger than physical memory",
+                "Faster CPU access",
+                "Store permanent files"
+            ],
+            "ans": "Allow execution of processes larger than physical memory"
+        },
+        {
+            "q": "The `DELETE` command in SQL is what type of language?",
+            "options": [
+                "DDL (Data Definition Language)",
+                "DCL (Data Control Language)",
+                "DML (Data Manipulation Language)",
+                "TCL (Transaction Control Language)"
+            ],
+            "ans": "DML (Data Manipulation Language)"
+        },
+        {
+            "q": "What is the primary job of a **compiler**?",
+            "options": [
+                "Execute code line by line",
+                "Convert high-level code to machine code at once",
+                "Manage memory",
+                "Handle I/O operations"
+            ],
+            "ans": "Convert high-level code to machine code at once"
+        },
+        {
+            "q": "What is the purpose of SQL's `GROUP BY` clause?",
+            "options": [
+                "To join tables",
+                "To filter rows",
+                "To aggregate rows into groups",
+                "To order the results"
+            ],
+            "ans": "To aggregate rows into groups"
+        },
+        {
+            "q": "What is a 'fork' system call used for in Operating Systems?",
+            "options": [
+                "To duplicate a file",
+                "To create a new process (child process)",
+                "To allocate memory",
+                "To change directory"
+            ],
+            "ans": "To create a new process (child process)"
+        },
+        {
+            "q": "Which layer of the OSI model is responsible for logical addressing (IP addresses)?",
+            "options": [
+                "Physical Layer",
+                "Data Link Layer",
+                "Network Layer",
+                "Transport Layer"
+            ],
+            "ans": "Network Layer"
+        },
+        {
+            "q": "The **Transport Layer** of the TCP/IP model handles:",
+            "options": [
+                "Routing",
+                "Flow Control and Segmentation",
+                "Physical transmission",
+                "User interface"
+            ],
+            "ans": "Flow Control and Segmentation"
+        },
+        {
+            "q": "Which networking device operates primarily at the Data Link Layer (Layer 2)?",
+            "options": [
+                "Router",
+                "Hub",
+                "Repeater",
+                "Switch"
+            ],
+            "ans": "Switch"
+        },
+        {
+            "q": "What is the purpose of the **DHCP** protocol?",
+            "options": [
+                "File transfer",
+                "Email sending",
+                "Dynamically assigning IP addresses to devices",
+                "Website viewing"
+            ],
+            "ans": "Dynamically assigning IP addresses to devices"
+        },
+        {
+            "q": "Which JavaScript method is used to modify the content of an HTML element?",
+            "options": [
+                "`getElement()`",
+                "`modifyHTML()`",
+                "`innerHTML`",
+                "`changeContent()`"
+            ],
+            "ans": "`innerHTML`"
+        },
+        {
+            "q": "What does **CSS** stand for in web development?",
+            "options": [
+                "Computer Style Sheets",
+                "Cascading Simple Styles",
+                "Cascading Style Sheets",
+                "Creative Style System"
+            ],
+            "ans": "Cascading Style Sheets"
+        },
+        {
+            "q": "The highest layer of the OSI model that provides services directly to the end user is the:",
+            "options": [
+                "Network layer",
+                "Presentation layer",
+                "Session layer",
+                "Application layer"
+            ],
+            "ans": "Application layer"
+        }
+    ]
+}
