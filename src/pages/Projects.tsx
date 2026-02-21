@@ -12,7 +12,47 @@ const Projects = () => {
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
 
   const projects = useMemo(
-    () => [],
+    () => [
+      {
+        id: 'proj-1',
+        title: 'Smart Feedback Analyzer',
+        subtitle: 'AI-driven sentiment analysis for student feedback.',
+        category: 'Technology',
+        status: 'Active',
+        description: 'A machine learning model designed to categorize and analyze student feedback effectively, prioritizing urgent issues for administration.',
+        details: [
+          'Utilizes Natural Language Processing (NLP)',
+          'Current accuracy: 92%',
+          'Integrates directly with FXBOT'
+        ]
+      },
+      {
+        id: 'proj-2',
+        title: 'Campus Resource Tracker',
+        subtitle: 'Real-time inventory and resource management system.',
+        category: 'Student Support',
+        status: 'Pilot',
+        description: 'An IoT-based tracking system to monitor the availability of lab equipment and library resources in real-time.',
+        details: [
+          'RFID based tracking',
+          'Mobile app for student access',
+          'Deploying to 3 main labs next month'
+        ]
+      },
+      {
+        id: 'proj-3',
+        title: 'Automated Attendance System',
+        subtitle: 'Facial recognition based attendance logging.',
+        category: 'Education',
+        status: 'Planning',
+        description: 'A contactless attendance system aiming to eliminate proxy attendance and save instructional time.',
+        details: [
+          'Seeking faculty approval',
+          'Privacy-first on-device processing',
+          'Expected completion: Fall 2026'
+        ]
+      }
+    ],
     []
   );
 

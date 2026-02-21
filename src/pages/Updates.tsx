@@ -7,7 +7,7 @@ import { Bell, Info, BookOpen, Award, Share2, Download, Clock, X, FileText, Spar
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { noDataIllustration, updatesIllustration } from '@/lib/illustrations';
-import { updatesAPI, Update } from '@/lib/api';
+import { updatesAPI, notificationsAPI, Update } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,9 +24,29 @@ const Updates = () => {
   useEffect(() => {
     const fetchUpdates = async () => {
       try {
-        const data = await updatesAPI.getAll();
-        console.log('Fetched updates:', data);
-        setUpdates(data || []);
+        const [updatesData, notificationsData] = await Promise.all([
+          updatesAPI.getAll().catch(() => []),
+          notificationsAPI.getAll().catch(() => [])
+        ]);
+
+        const mappedNotifications: Update[] = notificationsData.map(n => ({
+          id: n.id,
+          title: n.title,
+          description: n.description,
+          type: 'announcement',
+          priority: 'high',
+          category: 'General',
+          timestamp: n.timestamp,
+          images: [],
+          files: []
+        }));
+
+        const merged = [...updatesData, ...mappedNotifications].sort(
+          (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+
+        console.log('Fetched updates & notifications:', merged);
+        setUpdates(merged);
       } catch (error) {
         console.error('Failed to fetch updates:', error);
         setUpdates([]);
