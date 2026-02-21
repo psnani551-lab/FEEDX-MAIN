@@ -104,6 +104,7 @@ export interface Project {
   status: string;
   description: string;
   details: string[];
+  projectUrl?: string;
   timestamp: string;
 }
 
@@ -117,9 +118,11 @@ export const projectsAPI = {
   },
   create: async (data: Omit<Project, 'id' | 'timestamp'>): Promise<Project> => {
     try {
-      const { data: record, error } = await supabase.from('projects').insert([data]).select().single();
+      const payload = { ...data, project_url: data.projectUrl };
+      delete payload.projectUrl;
+      const { data: record, error } = await supabase.from('projects').insert([payload]).select().single();
       if (error) throw error;
-      return { ...record, timestamp: record.created_at };
+      return { ...record, timestamp: record.created_at, projectUrl: record.project_url };
     } catch (e) {
       console.warn("Supabase insert failed, trying local fallback", e);
       const res = await fetch(`${API_BASE}/api/admin/projects`, {
@@ -149,7 +152,12 @@ export const projectsAPI = {
   },
   update: async (id: string, data: Partial<Project>): Promise<void> => {
     try {
-      const { error } = await supabase.from('projects').update(data).eq('id', id);
+      const payload: any = { ...data };
+      if (payload.projectUrl !== undefined) {
+        payload.project_url = payload.projectUrl;
+        delete payload.projectUrl;
+      }
+      const { error } = await supabase.from('projects').update(payload).eq('id', id);
       if (error) throw error;
     } catch (e) {
       console.warn("Supabase update failed, trying local fallback", e);

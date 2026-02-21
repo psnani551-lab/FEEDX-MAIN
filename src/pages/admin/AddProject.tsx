@@ -38,6 +38,8 @@ export default function AddProject() {
     const [description, setDescription] = useState('');
     const [details, setDetails] = useState<string[]>(['']);
 
+    const [projectUrl, setProjectUrl] = useState('');
+
     const fetchProjects = async () => {
         try {
             const data = await projectsAPI.getAll();
@@ -61,6 +63,7 @@ export default function AddProject() {
         setStatus('Planning');
         setDescription('');
         setDetails(['']);
+        setProjectUrl('');
         setEditingId(null);
     };
 
@@ -71,6 +74,7 @@ export default function AddProject() {
         setStatus(project.status);
         setDescription(project.description);
         setDetails(project.details.length > 0 ? project.details : ['']);
+        setProjectUrl(project.projectUrl || '');
         setEditingId(project.id);
         setIsDialogOpen(true);
     };
@@ -102,7 +106,8 @@ export default function AddProject() {
                 category,
                 status,
                 description,
-                details: cleanDetails
+                details: cleanDetails,
+                projectUrl: projectUrl.trim() !== '' ? projectUrl.trim() : undefined
             };
 
             if (editingId) {
@@ -205,6 +210,11 @@ export default function AddProject() {
                                     <div className="space-y-2">
                                         <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Description</Label>
                                         <Textarea required value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[100px] bg-white/5 border-white/10 focus:border-primary/50 transition-colors" placeholder="Full description of the project..." />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Project Link / URL (Optional)</Label>
+                                        <Input type="url" value={projectUrl} onChange={(e) => setProjectUrl(e.target.value)} className="bg-white/5 border-white/10 focus:border-primary/50 transition-colors" placeholder="e.g. https://github.com/..." />
                                     </div>
 
                                     <div className="space-y-3">

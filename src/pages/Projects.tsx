@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, ChevronDown, Bot } from 'lucide-react';
+import { ArrowRight, ChevronDown, Bot, ExternalLink } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { projectsIllustration } from '@/lib/illustrations';
@@ -144,6 +144,21 @@ const Projects = () => {
                           <ArrowRight className="w-4 h-4 ml-2 transition-transform group-hover:translate-x-1" />
                         </Button>
                       </Link>
+
+                      {project.projectUrl && (
+                        <a
+                          href={project.projectUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full sm:w-auto"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Button variant="secondary" className="w-full sm:w-auto bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20">
+                            Visit Project
+                            <ExternalLink className="w-4 h-4 ml-2" />
+                          </Button>
+                        </a>
+                      )}
                     </div>
 
                     {isExpanded && (
