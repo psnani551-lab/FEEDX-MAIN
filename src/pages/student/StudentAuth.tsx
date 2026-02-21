@@ -231,7 +231,67 @@ const StudentAuth = () => {
                             </TabsList>
 
                             <AnimatePresence mode="wait">
-                                {activeTab === "login" ? (
+                                {isOtpSent ? (
+                                    // OTP verification screen — shown for BOTH login and signup
+                                    <motion.div
+                                        key="otp-content"
+                                        initial={{ opacity: 0, scale: 0.96 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.96 }}
+                                        transition={{ duration: 0.3 }}
+                                        className="space-y-8 text-center pb-8"
+                                    >
+                                        <div className="space-y-2">
+                                            <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                <ShieldCheck className="h-8 w-8 text-blue-600" />
+                                            </div>
+                                            <h3 className="text-xl font-bold text-slate-900">Confirm Identity</h3>
+                                            <p className="text-slate-500 text-sm">Validating access for <span className="text-blue-600 font-semibold">{email}</span></p>
+                                        </div>
+
+                                        <div className="flex justify-center">
+                                            <InputOTP maxLength={6} value={otp} onChange={setOtp} autoFocus>
+                                                <InputOTPGroup className="gap-2.5">
+                                                    {[0, 1, 2, 3, 4, 5].map(i => (
+                                                        <InputOTPSlot
+                                                            key={i}
+                                                            index={i}
+                                                            className="h-14 w-11 rounded-xl border-2 border-slate-200 bg-white/50 text-xl font-bold focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all"
+                                                        />
+                                                    ))}
+                                                </InputOTPGroup>
+                                            </InputOTP>
+                                        </div>
+
+                                        <div className="space-y-4">
+                                            <Button
+                                                onClick={handleVerifyOTP}
+                                                className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-black text-white text-base font-bold shadow-xl shadow-slate-200 transition-all active:scale-[0.98]"
+                                                disabled={isLoading}
+                                            >
+                                                {isLoading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : "Verify & Continue"}
+                                            </Button>
+
+                                            <div className="flex flex-col items-center gap-2">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={handleSendOTP}
+                                                    disabled={countdown > 0 || isLoading}
+                                                    className="text-slate-500 hover:text-blue-600 font-bold"
+                                                >
+                                                    {countdown > 0 ? `Retry in ${countdown}s` : "Resend Access Code"}
+                                                </Button>
+                                                <button
+                                                    onClick={() => { setIsOtpSent(false); setOtp(""); }}
+                                                    className="text-xs text-slate-400 hover:text-red-500 transition-colors underline underline-offset-4"
+                                                >
+                                                    Change email address
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ) : activeTab === "login" ? (
                                     <motion.div
                                         key="login-content"
                                         initial={{ opacity: 0, x: -20 }}
@@ -240,93 +300,31 @@ const StudentAuth = () => {
                                         transition={{ duration: 0.3 }}
                                         className="space-y-6 pb-8"
                                     >
-                                        {!isOtpSent ? (
-                                            <div className="space-y-6">
-                                                <div className="space-y-2.5">
-                                                    <Label htmlFor="email" className="text-slate-700 text-sm font-bold ml-1">Email Address</Label>
-                                                    <div className="relative group">
-                                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
-                                                        <Input
-                                                            id="email"
-                                                            type="email"
-                                                            placeholder="name@institution.edu"
-                                                            value={email}
-                                                            onChange={(e) => setEmail(e.target.value.toLowerCase())}
-                                                            onBlur={handleEmailBlur}
-                                                            disabled={isLoading}
-                                                            className="h-14 bg-white/50 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl text-base pl-12 transition-all"
-                                                        />
-                                                    </div>
-                                                </div>
-
-                                                <Button
-                                                    onClick={handleSendOTP}
-                                                    className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-base font-bold shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] group"
-                                                    disabled={isLoading}
-                                                >
-                                                    {isLoading ? (
-                                                        <Loader2 className="h-5 w-5 animate-spin" />
-                                                    ) : (
-                                                        <>
-                                                            Get Access Code
-                                                            <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                                                        </>
-                                                    )}
-                                                </Button>
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-8 text-center pb-4">
-                                                <div className="space-y-2">
-                                                    <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                        <ShieldCheck className="h-8 w-8 text-blue-600" />
-                                                    </div>
-                                                    <h3 className="text-xl font-bold text-slate-900">Confirm Identity</h3>
-                                                    <p className="text-slate-500 text-sm">Validating access for <span className="text-blue-600 font-semibold">{email}</span></p>
-                                                </div>
-
-                                                <div className="flex justify-center">
-                                                    <InputOTP maxLength={6} value={otp} onChange={setOtp} autoFocus>
-                                                        <InputOTPGroup className="gap-2.5">
-                                                            {[0, 1, 2, 3, 4, 5].map(i => (
-                                                                <InputOTPSlot
-                                                                    key={i}
-                                                                    index={i}
-                                                                    className="h-14 w-11 rounded-xl border-2 border-slate-200 bg-white/50 text-xl font-bold focus:border-blue-600 focus:ring-4 focus:ring-blue-500/10 transition-all"
-                                                                />
-                                                            ))}
-                                                        </InputOTPGroup>
-                                                    </InputOTP>
-                                                </div>
-
-                                                <div className="space-y-4">
-                                                    <Button
-                                                        onClick={handleVerifyOTP}
-                                                        className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-black text-white text-base font-bold shadow-xl shadow-slate-200 transition-all active:scale-[0.98]"
+                                        <div className="space-y-6">
+                                            <div className="space-y-2.5">
+                                                <Label htmlFor="email" className="text-slate-700 text-sm font-bold ml-1">Email Address</Label>
+                                                <div className="relative group">
+                                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
+                                                    <Input
+                                                        id="email"
+                                                        type="email"
+                                                        placeholder="name@institution.edu"
+                                                        value={email}
+                                                        onChange={(e) => setEmail(e.target.value.toLowerCase())}
+                                                        onBlur={handleEmailBlur}
                                                         disabled={isLoading}
-                                                    >
-                                                        {isLoading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : "Verify & Continue"}
-                                                    </Button>
-
-                                                    <div className="flex flex-col items-center gap-2">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={handleSendOTP}
-                                                            disabled={countdown > 0 || isLoading}
-                                                            className="text-slate-500 hover:text-blue-600 font-bold"
-                                                        >
-                                                            {countdown > 0 ? `Retry in ${countdown}s` : "Resend Access Code"}
-                                                        </Button>
-                                                        <button
-                                                            onClick={() => setIsOtpSent(false)}
-                                                            className="text-xs text-slate-400 hover:text-red-500 transition-colors underline underline-offset-4"
-                                                        >
-                                                            Change email address
-                                                        </button>
-                                                    </div>
+                                                        className="h-14 bg-white/50 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl text-base pl-12 transition-all"
+                                                    />
                                                 </div>
                                             </div>
-                                        )}
+                                            <Button
+                                                onClick={handleSendOTP}
+                                                className="w-full h-14 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-base font-bold shadow-xl shadow-blue-500/20 transition-all active:scale-[0.98] group"
+                                                disabled={isLoading}
+                                            >
+                                                {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <><span>Get Access Code</span><ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" /></>}
+                                            </Button>
+                                        </div>
                                     </motion.div>
                                 ) : (
                                     <motion.div
@@ -337,6 +335,7 @@ const StudentAuth = () => {
                                         transition={{ duration: 0.3 }}
                                         className="space-y-5 pb-10"
                                     >
+
                                         <div className="grid grid-cols-2 gap-3 mb-6">
                                             <Button
                                                 variant={userType === 'student' ? 'default' : 'outline'}
