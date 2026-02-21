@@ -44,7 +44,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
     useEffect(() => {
         if (!isAuthLoading && !isAuthenticated) {
-            navigate('/admin-login');
+            navigate('/signin?redirect=/admin');
         }
     }, [isAuthenticated, isAuthLoading, navigate]);
 
