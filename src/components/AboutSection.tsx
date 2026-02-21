@@ -52,18 +52,18 @@ const AboutSection = () => {
               <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">Our Mission</span>
             </div>
 
-            <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-foreground tracking-tighter uppercase leading-[0.9]">
+            <h2 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-foreground tracking-tighter uppercase leading-[0.85] mb-8">
               WHO WE <span className="text-primary">ARE.</span>
             </h2>
 
-            <div className="space-y-6 text-muted-foreground leading-relaxed">
-              <p className="text-2xl sm:text-3xl text-foreground font-black tracking-tight">
+            <div className="space-y-8 text-muted-foreground leading-relaxed">
+              <p className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/50 pb-2">
                 FEEDX is an acronym for Feed + X (Exchange & Exposure).
               </p>
-              <p className="text-lg font-medium max-w-3xl mx-auto">
+              <p className="text-xl md:text-2xl font-medium max-w-4xl mx-auto leading-relaxed">
                 We believe Polytechnic education is the bedrock of industry. Our mission is to bridge the gap between classroom theory and career-ready mastery through our comprehensive S-O-K model.
               </p>
-              <p className="text-base max-w-3xl mx-auto">
+              <p className="text-lg md:text-xl font-medium max-w-3xl mx-auto">
                 By connecting students with real-world skills, opportunities, and knowledge, we're building a generation of industry-ready professionals who don't just find jobs—they create careers.
               </p>
             </div>
@@ -79,13 +79,13 @@ const AboutSection = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-8 mt-12">
               <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">Our Framework</span>
             </div>
-            <h3 className="text-4xl sm:text-5xl font-black text-foreground tracking-tighter uppercase leading-[0.9] mb-4">
+            <h3 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-foreground tracking-tighter uppercase leading-[0.85] mb-6">
               THE S-O-K <span className="text-primary">MODEL.</span>
             </h3>
-            <p className="text-lg text-muted-foreground font-medium max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl text-muted-foreground font-medium max-w-3xl mx-auto leading-relaxed">
               A comprehensive framework designed to transform students into industry-ready professionals.
             </p>
           </motion.div>
