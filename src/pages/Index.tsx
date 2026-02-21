@@ -11,6 +11,7 @@ const FeaturesSection = lazy(() => import('@/components/FeaturesSection'));
 const TestimonialsSection = lazy(() => import('@/components/TestimonialsSection'));
 const EventsSection = lazy(() => import('@/components/EventsSection'));
 const AboutSection = lazy(() => import('@/components/AboutSection'));
+const VisionSection = lazy(() => import('@/components/VisionSection'));
 const Footer = lazy(() => import('@/components/Footer'));
 
 const BackToTop = lazy(() => import('@/components/BackToTop'));
@@ -35,20 +36,19 @@ const Index = () => {
 
         {/* Progressive Loading: Split Suspense boundaries for faster perceived load */}
 
-        {/* 1. About Segment (formerly Gallery Region) */}
+        {/* 1. About Segment */}
         <ErrorBoundary>
           <Suspense fallback={<div className="h-96" />}>
-            <div className="border-t border-white/[0.05] py-20">
+            <div className="py-20 bg-background relative z-10 -mt-6 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] border-t border-white/5">
               <AboutSection />
             </div>
           </Suspense>
         </ErrorBoundary>
 
-
-        {/* 2. Social Segment - Testimonials moved up to reduce white space */}
+        {/* 2. Testimonials Segment */}
         <ErrorBoundary>
           <Suspense fallback={<div className="h-96" />}>
-            <div className="border-t border-white/[0.05] py-20">
+            <div className="py-20 bg-background relative z-20 -mt-8 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] border-t border-white/5">
               <TestimonialsSection />
             </div>
           </Suspense>
@@ -58,12 +58,12 @@ const Index = () => {
         <ErrorBoundary>
           <Suspense fallback={<div className="h-96" />}>
             {/* Events Segment */}
-            <div className="bg-card/30 border-t border-white/[0.05] py-20">
+            <div className="py-20 bg-card/30 relative z-30 -mt-8 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] border-t border-white/5">
               <EventsSection />
             </div>
 
-            {/* Gallery Region (formerly About Segment) */}
-            <div className="py-20 bg-background relative overflow-hidden border-t border-white/[0.05]">
+            {/* Gallery Region */}
+            <div className="py-20 bg-background relative z-40 -mt-8 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] overflow-hidden border-t border-white/5">
               <div className="container mx-auto px-6 lg:px-12 relative z-10">
                 <div className="text-left mb-12">
                   <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-foreground tracking-tighter uppercase leading-[0.9]">
@@ -75,7 +75,12 @@ const Index = () => {
               <div className="absolute top-1/2 -left-32 w-96 h-96 bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
             </div>
 
-            <div className="border-t border-white/[0.05]">
+            {/* Vision Segment (Kept at bottom) */}
+            <div className="bg-background relative z-50 -mt-8 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] border-t border-white/5">
+              <VisionSection />
+            </div>
+
+            <div className="border-t border-white/[0.05] relative z-50">
               <Footer />
             </div>
             <BackToTop />
