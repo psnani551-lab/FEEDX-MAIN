@@ -1,0 +1,10 @@
+[
+  {
+    "id": "admin001",
+    "username": "admin",
+    "email": "admin@feedx.com",
+    "name": "Administrator",
+    "password": "$2b$10$8e/pKvqTYix1bKwmrDNA7uB/NaQiI9DKYkUxwvLyWrafTucuSo18e",
+    "created_at": "2025-12-17T17:49:37.865Z"
+  }
+]

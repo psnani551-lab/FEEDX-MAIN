@@ -1,0 +1,274 @@
+[
+    {
+        "subject": "Mathematics",
+        "questions": 50,
+        "icon": "📐",
+        "topics": [
+            {
+                "title": "Algebra",
+                "summary": "Equations, inequalities, complex numbers",
+                "details": [
+                    "Quadratic and cubic equations",
+                    "Arithmetic and Geometric Progressions (AP/GP)",
+                    "Binomial theorem and permutations/combinations",
+                    "De Moivre's theorem"
+                ]
+            },
+            {
+                "title": "Trigonometry",
+                "summary": "Functions, identities, equations",
+                "details": [
+                    "Inverse trigonometric functions",
+                    "Properties of triangles",
+                    "Heights and distances"
+                ]
+            },
+            {
+                "title": "Calculus",
+                "summary": "Limits, derivatives, integrals",
+                "details": [
+                    "Continuity and Differentiability",
+                    "Mean Value Theorems (Rolle's, Lagrange's)",
+                    "Applications of derivatives (Tangents, Normals, Maxima, Minima)",
+                    "Definite and Indefinite Integration"
+                ]
+            },
+            {
+                "title": "Differential Equations",
+                "summary": "ODE, PDE, applications",
+                "details": [
+                    "First order linear and exact differential equations",
+                    "Homogeneous and non-homogeneous equations",
+                    "Formation of partial differential equations (PDE)"
+                ]
+            },
+            {
+                "title": "Matrices & Determinants",
+                "summary": "Properties, operations, inverses",
+                "details": [
+                    "Adjoint and inverse of a matrix",
+                    "Rank of a matrix",
+                    "Solving linear equations (Cramer's rule, Matrix inversion)"
+                ]
+            },
+            {
+                "title": "Probability",
+                "summary": "Events, distributions, statistics",
+                "details": [
+                    "Conditional Probability and Bayes' Theorem",
+                    "Binomial, Poisson, and Normal distributions",
+                    "Measures of central tendency and dispersion"
+                ]
+            },
+            {
+                "title": "Numerical Methods",
+                "summary": "Approximation techniques, algorithms",
+                "details": [
+                    "Bisection method and Newton-Raphson method",
+                    "Interpolation (Lagrange, Newton's)",
+                    "Numerical integration (Trapezoidal, Simpson's rules)"
+                ]
+            }
+        ]
+    },
+    {
+        "subject": "Physics",
+        "questions": 25,
+        "icon": "⚛️",
+        "topics": [
+            {
+                "title": "Mechanics",
+                "summary": "Motion, forces, energy, momentum",
+                "details": [
+                    "Newton's Laws of Motion",
+                    "Work-Energy Theorem and conservation laws",
+                    "Rotational motion and moment of inertia",
+                    "Simple Harmonic Motion (SHM)"
+                ]
+            },
+            {
+                "title": "Heat & Thermodynamics",
+                "summary": "Temperature, heat, laws",
+                "details": [
+                    "Zeroth, First, and Second Laws of Thermodynamics",
+                    "Heat transfer mechanisms (Conduction, Convection, Radiation)",
+                    "Specific heats of gases and phase transitions"
+                ]
+            },
+            {
+                "title": "Waves",
+                "summary": "Properties, interference, diffraction",
+                "details": [
+                    "Wave equation and wave motion types (Transverse, Longitudinal)",
+                    "Doppler effect in sound",
+                    "Huygens' Principle and Young's double-slit experiment"
+                ]
+            },
+            {
+                "title": "Electricity & Magnetism",
+                "summary": "Fields, circuits, induction",
+                "details": [
+                    "Coulomb's Law and Electric Field",
+                    "Ohm's Law, Kirchhoff's Laws, and DC circuits",
+                    "Faraday's Law of Induction and AC circuits (RLC)"
+                ]
+            },
+            {
+                "title": "Modern Physics",
+                "summary": "Quantum concepts, relativity, nuclear physics",
+                "details": [
+                    "Photoelectric effect and Bohr's model of the atom",
+                    "Special theory of relativity (Time dilation, Length contraction)",
+                    "Radioactivity, nuclear fission, and fusion"
+                ]
+            }
+        ]
+    },
+    {
+        "subject": "Chemistry",
+        "questions": 25,
+        "icon": "🧪",
+        "topics": [
+            {
+                "title": "Physical Chemistry",
+                "summary": "Thermodynamics, kinetics, equilibrium",
+                "details": [
+                    "Chemical kinetics (Rate laws, reaction order)",
+                    "Chemical and ionic equilibrium",
+                    "Electrochemistry and Nernst equation",
+                    "Colloids and surface chemistry"
+                ]
+            },
+            {
+                "title": "Organic Chemistry",
+                "summary": "Mechanisms, reactions, synthesis",
+                "details": [
+                    "Nomenclature (IUPAC) and isomerism",
+                    "Reactions of alkanes, alkenes, and alkynes",
+                    "Chemistry of functional groups (Alcohols, Aldehydes, Acids)",
+                    "Polymers and Biomolecules (Carbohydrates, Proteins)"
+                ]
+            },
+            {
+                "title": "Inorganic Chemistry",
+                "summary": "Periodic table, bonding, compounds",
+                "details": [
+                    "Periodic properties and chemical bonding (VBT, MOT)",
+                    "p-block, d-block, and f-block elements",
+                    "Coordination compounds and isomerism"
+                ]
+            },
+            {
+                "title": "Environmental Chemistry",
+                "summary": "Pollution, sustainability, cycles",
+                "details": [
+                    "Atmospheric and water pollution (BOD, COD)",
+                    "Green chemistry principles",
+                    "Biogeochemical cycles (Carbon, Nitrogen)"
+                ]
+            }
+        ]
+    },
+    {
+        "subject": "Computer Science & Engineering",
+        "questions": 100,
+        "icon": "💻",
+        "topics": [
+            {
+                "title": "Programming in C",
+                "summary": "Syntax, pointers, memory management",
+                "details": [
+                    "Control structures and functions",
+                    "Arrays and strings handling",
+                    "Dynamic memory allocation (malloc, calloc, realloc)",
+                    "File handling in C"
+                ]
+            },
+            {
+                "title": "OOP in C++",
+                "summary": "Classes, inheritance, polymorphism",
+                "details": [
+                    "Constructors, destructors, and friend functions",
+                    "Virtual functions and pure virtual functions",
+                    "Operator overloading and exception handling"
+                ]
+            },
+            {
+                "title": "Data Structures",
+                "summary": "Arrays, linked lists, trees, graphs",
+                "details": [
+                    "Stack (push/pop) and Queue (enqueue/dequeue) operations",
+                    "Tree traversals (Inorder, Preorder, Postorder)",
+                    "Graph representations (Adjacency Matrix/List) and traversals (BFS, DFS)"
+                ]
+            },
+            {
+                "title": "Algorithms",
+                "summary": "Sorting, searching, dynamic programming",
+                "details": [
+                    "Time and space complexity analysis (Big O)",
+                    "Sorting: Merge Sort, Quick Sort, Heap Sort",
+                    "Searching: Binary Search, Hashing"
+                ]
+            },
+            {
+                "title": "DBMS",
+                "summary": "SQL, normalization, transactions",
+                "details": [
+                    "Relational Model and Relational Algebra",
+                    "Functional Dependencies and Normal Forms (1NF, 2NF, 3NF, BCNF)",
+                    "ACID properties and concurrency control"
+                ]
+            },
+            {
+                "title": "Operating Systems",
+                "summary": "Processes, memory, scheduling",
+                "details": [
+                    "Process states and Inter-Process Communication (IPC)",
+                    "CPU Scheduling algorithms (FCFS, SJF, Priority, Round Robin)",
+                    "Virtual memory and Paging",
+                    "Deadlocks (Prevention, Avoidance, Detection)"
+                ]
+            },
+            {
+                "title": "Digital Electronics",
+                "summary": "Logic gates, circuits, design",
+                "details": [
+                    "Boolean Algebra and K-maps (Karnaugh Maps)",
+                    "Combinational Circuits (Adders, Multiplexers, Decoders)",
+                    "Sequential Circuits (Flip-Flops, Counters, Registers)"
+                ]
+            },
+            {
+                "title": "Computer Architecture",
+                "summary": "CPU, cache, instruction sets",
+                "details": [
+                    "Data representation (Floating point, Fixed point)",
+                    "Pipelining and instruction level parallelism",
+                    "Cache memory organization (Mapping techniques)",
+                    "I/O organization (DMA, Interrupts)"
+                ]
+            },
+            {
+                "title": "Computer Networks",
+                "summary": "OSI model, protocols, TCP/IP",
+                "details": [
+                    "Networking devices (Hub, Switch, Router)",
+                    "IP addressing (IPv4 and IPv6) and Subnetting",
+                    "Transport layer protocols (TCP, UDP)",
+                    "Application layer protocols (HTTP, DNS, FTP)"
+                ]
+            },
+            {
+                "title": "Web Technologies",
+                "summary": "HTML, CSS, JavaScript, HTTP",
+                "details": [
+                    "HTML5 semantic elements and forms",
+                    "CSS layouts (Flexbox and Grid)",
+                    "DOM manipulation and AJAX in JavaScript",
+                    "Client-server architecture"
+                ]
+            }
+        ]
+    }
+]

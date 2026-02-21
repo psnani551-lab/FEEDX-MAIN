@@ -1,0 +1,32 @@
+[
+  {
+    "id": "mjabbhypdh7w8swvyn",
+    "username": "harsha",
+    "password": "$2b$10$Sks49Wj9MN9Pm/y5v2z34.Ede96Eh3o5U4ZaGbl.o.98lzbnFNwTu",
+    "name": "devaharsha d",
+    "email": "deva32871@gmail.com",
+    "phone": "9440029698",
+    "pin": "cps015",
+    "created_at": "2025-12-17T17:55:48.529Z"
+  },
+  {
+    "id": "mjso2v103fkuh0h1alk",
+    "username": "admin",
+    "password": "$2b$10$R9IGFk33ZYf4ca7cpX4WjuvgtSRbbZy0ROJ/4iec6Uk6hsWQI8wxq",
+    "name": "Administrator",
+    "email": "admin@feedx.com",
+    "phone": "0000000000",
+    "pin": "0000",
+    "createdAt": "2025-12-30T14:12:51.732Z"
+  },
+  {
+    "id": "mjsrowvuflq4lty9964",
+    "username": "feedx",
+    "password": "$2b$10$Sn1G43NMxkBtDsKOltlYl.8TH/S2A0MlJvHPe8IYzX5GLJzb3NPBK",
+    "name": "feedx",
+    "email": "feedxhub@gmail.com",
+    "phone": "0000000000",
+    "pin": "0000000000",
+    "created_at": "2025-12-30T15:53:59.418Z"
+  }
+]

@@ -1,0 +1,686 @@
+[
+  {
+    "id": "resource-2025-12-19-001",
+    "title": "ACS Chapter 5",
+    "description": "Lecture notes: ACS Chapter 5",
+    "longDescription": "Faculty-verified ACS Chapter 5 notes.",
+    "tags": [
+      "ACS",
+      "Communication"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1t272oALd44Bxy6RUxjXz8qO10qBC-_wt/view?usp=drive_linka"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:10:00.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-002",
+    "title": "ACS Chapter 6",
+    "description": "Lecture notes: ACS Chapter 6",
+    "longDescription": "Faculty-verified ACS Chapter 6 notes.",
+    "tags": [
+      "ACS",
+      "Communication"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/16uizwJwiKKpAAxyDdenaIGDN_2bWvxNg/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:10:10.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-003",
+    "title": "Application of Digital Communication",
+    "description": "Notes on applications of digital communication",
+    "longDescription": "Faculty-verified notes covering digital communication applications.",
+    "tags": [
+      "Digital Communication",
+      "Communication"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1o9reWoZmyYV0DeiIpFp_lqe8h82irHKr/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:10:20.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-004",
+    "title": "BEEE Notes C-24",
+    "description": "BEEE notes (C-24)",
+    "longDescription": "Basics of electrical engineering (BEEE) notes for C-24.",
+    "tags": [
+      "BEEE",
+      "Electrical"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1xvJa1iKin5dk5kE4vqZLU9t8gPZAVbh2/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:10:30.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-005",
+    "title": "CHN Chapter 5",
+    "description": "Chemistry notes: CHN Chapter 5",
+    "longDescription": "Unit-wise chemistry notes.",
+    "tags": [
+      "CHN",
+      "Chemistry"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1B6aSKLFHV1bRfMwMrrWYT13dfX-hNqCB/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:10:40.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-006",
+    "title": "CF & CN Chapter 1, 2",
+    "description": "CF & CN chapters 1 and 2",
+    "longDescription": "Control/flow & computer networks introductory chapters.",
+    "tags": [
+      "CF",
+      "CN",
+      "Networks"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1bf1hsrk0gd5Vwk6XQXMZaQMsVDIBT4iX/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:10:50.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-007",
+    "title": "CF & CH Chapter 3",
+    "description": "CF & CH chapter 3 notes",
+    "longDescription": "Combined CF & CH notes for chapter 3.",
+    "tags": [
+      "CF",
+      "CH"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1T2aCqChCzh5RIKcukmG8tiFmDeBDAFzq/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:11:00.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-008",
+    "title": "CF & CH Chapter 4",
+    "description": "CF & CH chapter 4 notes",
+    "longDescription": "Combined CF & CH notes for chapter 4.",
+    "tags": [
+      "CF",
+      "CH"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1UgjpSVfGKD2A-qnS1LAw9JK_T4jmx0jB/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:11:10.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-009",
+    "title": "CF & CN Chapter 5, 6",
+    "description": "CF & CN chapters 5 and 6",
+    "longDescription": "Advanced CF & CN materials.",
+    "tags": [
+      "CF",
+      "CN"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/15tyGEN4ooKlpan1EtxZSx998pa_Cya3Y/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:11:20.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-010",
+    "title": "Digital Communication 4",
+    "description": "Digital Communication - Unit 4",
+    "longDescription": "Notes for digital communication unit 4.",
+    "tags": [
+      "Digital Communication",
+      "Communication"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1EniSiOcdmZNZT8ZxETsASEznHp1SWilC/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:11:30.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-011",
+    "title": "LICA",
+    "description": "Linear Integrated Circuits & Applications (LICA)",
+    "longDescription": "Notes for LICA.",
+    "tags": [
+      "LICA",
+      "Electronics"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1EKBFm3BpM3UwqDn09h1N_CcT1Wel5cp5/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:11:40.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-012",
+    "title": "Mobile Communication Optic Fibre",
+    "description": "Notes on mobile communication and optic fibre",
+    "longDescription": "Combined notes for mobile communication and optic fibre.",
+    "tags": [
+      "Mobile Communication",
+      "Optic Fibre",
+      "Communications"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1CY_t_TEvZJ1BMoij6XBfaVncO_hKpdy_/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:11:50.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-013",
+    "title": "Linear Integration Circuits 2",
+    "description": "Linear integration circuits - part 2",
+    "longDescription": "Further LICA topics and exercises.",
+    "tags": [
+      "Linear",
+      "Electronics"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1AAIYl-8CWho1egexqNUXFFfEOm5-P4bY/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:12:00.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-014",
+    "title": "Android Programming Chapter 1",
+    "description": "Android programming notes - chapter 1",
+    "longDescription": "Introductory Android programming notes.",
+    "tags": [
+      "Android",
+      "Programming",
+      "Mobile"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1RLQXX7zQbh1y_eh3Auf9KKdqDXNnOdMk/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:12:10.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-015",
+    "title": "Android Programming Chapter 2",
+    "description": "Android programming notes - chapter 2",
+    "longDescription": "Android chapter 2 notes.",
+    "tags": [
+      "Android",
+      "Programming"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1IvVWIWHtknpFifRwotHtUcACuApKubeu/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:12:20.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-016",
+    "title": "Android Programming Chapter 5",
+    "description": "Android programming notes - chapter 5",
+    "longDescription": "Android chapter 5 notes.",
+    "tags": [
+      "Android",
+      "Programming"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1ffYKzhDvGrFcgiP_B3ks9XKWaTm6G_64/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:12:30.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-017",
+    "title": "Android Programming Chapter 6",
+    "description": "Android programming notes - chapter 6",
+    "longDescription": "Android chapter 6 notes.",
+    "tags": [
+      "Android",
+      "Programming"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1WPQ0n-iwb_J0e118jizhwRadxkAl0lzE/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:12:40.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-018",
+    "title": "Cloud Computing 1",
+    "description": "Cloud Computing - Unit 1",
+    "longDescription": "Cloud Computing introductory notes.",
+    "tags": [
+      "Cloud Computing",
+      "Cloud"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1r421ulg5udiH8rRafJOtKXN8yCxeZy8M/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:12:50.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-019",
+    "title": "Cloud Computing 2",
+    "description": "Cloud Computing - Unit 2",
+    "longDescription": "Cloud Computing unit 2 notes.",
+    "tags": [
+      "Cloud Computing",
+      "Cloud"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1v8NahmeUDB9m7jkHOK_UvFWXjyoEFBZt/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:13:00.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-020",
+    "title": "Cloud Computing 3",
+    "description": "Cloud Computing - Unit 3",
+    "longDescription": "Cloud Computing unit 3 notes.",
+    "tags": [
+      "Cloud Computing",
+      "Cloud"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1uvDaaDpadkPAxMEstMe2Wc9h-q_FCp7C/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:13:10.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-021",
+    "title": "Cloud Computing 4",
+    "description": "Cloud Computing - Unit 4",
+    "longDescription": "Cloud Computing unit 4 notes.",
+    "tags": [
+      "Cloud Computing",
+      "Cloud"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1ohLajuTh2Bq28D_OmOzBmGhVhp3EkDuR/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:13:20.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-022",
+    "title": "Cloud Computing 5",
+    "description": "Cloud Computing - Unit 5",
+    "longDescription": "Cloud Computing unit 5 notes.",
+    "tags": [
+      "Cloud Computing",
+      "Cloud"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/13C_kROkzhkvNM0J1VfH0_Ua6opSVnMyk/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:13:30.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-023",
+    "title": "Cloud Computing 6",
+    "description": "Cloud Computing - Unit 6",
+    "longDescription": "Cloud Computing unit 6 notes.",
+    "tags": [
+      "Cloud Computing",
+      "Cloud"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1lrd5uutnX6QbL5VNopK7hLrrvxCDAmRG/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:13:40.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-024",
+    "title": "Cyber Security & Laws 1",
+    "description": "Cyber Security & Laws - Part 1",
+    "longDescription": "Notes covering cyber security fundamentals and laws (part 1).",
+    "tags": [
+      "Cyber Security",
+      "Laws",
+      "Security"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1lTRQBedddoz9yDq1Fjk17ebvZOJkXpi5/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:13:50.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-025",
+    "title": "Cyber Security & Laws 2",
+    "description": "Cyber Security & Laws - Part 2",
+    "longDescription": "Notes covering cyber security fundamentals and laws (part 2).",
+    "tags": [
+      "Cyber Security",
+      "Laws"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1sybWF7q14zWLlZlkk7p4Q44ZrE-D0bhI/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:14:00.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-026",
+    "title": "Cyber Security & Laws 3",
+    "description": "Cyber Security & Laws - Part 3",
+    "longDescription": "Notes covering cyber security fundamentals and laws (part 3).",
+    "tags": [
+      "Cyber Security",
+      "Laws"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1UcnHVGbWjdb-0PVZHdj5qelDRAQPdx8u/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:14:10.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-027",
+    "title": "Cyber Security & Laws 4",
+    "description": "Cyber Security & Laws - Part 4",
+    "longDescription": "Notes covering cyber security fundamentals and laws (part 4).",
+    "tags": [
+      "Cyber Security",
+      "Laws"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/14VSOI6kvL4hPuAfVHZCSlusbcyD_txYT/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:14:20.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-028",
+    "title": "Cyber Security & Laws 5",
+    "description": "Cyber Security & Laws - Part 5",
+    "longDescription": "Notes covering cyber security fundamentals and laws (part 5).",
+    "tags": [
+      "Cyber Security",
+      "Laws"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1h94t4jHIPg5QTDbtEfZq1WfEeF_vwKJt/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:14:30.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-029",
+    "title": "Cyber Security & Laws 6",
+    "description": "Cyber Security & Laws - Part 6",
+    "longDescription": "Notes covering cyber security fundamentals and laws (part 6).",
+    "tags": [
+      "Cyber Security",
+      "Laws"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1elXH8d4JEN-4h9jbVUYktfescJJ3HDpR/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:14:40.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-030",
+    "title": "IME Chapter 1",
+    "description": "IME notes - chapter 1",
+    "longDescription": "IME unit 1 notes.",
+    "tags": [
+      "IME",
+      "Mechanical"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1DD2rmcvA_j-qmocoolMIOZMSAjuU2IUY/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:14:50.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-031",
+    "title": "IME Chapter 2",
+    "description": "IME notes - chapter 2",
+    "longDescription": "IME unit 2 notes.",
+    "tags": [
+      "IME",
+      "Mechanical"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1fmJq_FKYwckqEJnqDPYAunN70Ax30L_t/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:15:00.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-032",
+    "title": "Python Chapter 1, 2",
+    "description": "Python notes chapters 1 and 2",
+    "longDescription": "Introductory Python notes.",
+    "tags": [
+      "Python",
+      "Programming"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/1bHUxA14ttqb5YuFy8iBCZ2i5yzBiMvej/edit?usp=drive_link&ouid=100417972043792937764&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:15:10.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-033",
+    "title": "Python Chapter 3, 4",
+    "description": "Python notes chapters 3 and 4",
+    "longDescription": "Python intermediate notes.",
+    "tags": [
+      "Python",
+      "Programming"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1oJjpHAk_KhdGUy97gE8KoRLWvUw87Rok/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:15:20.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-034",
+    "title": "Python Chapter 5, 6",
+    "description": "Python notes chapters 5 and 6",
+    "longDescription": "Python advanced notes.",
+    "tags": [
+      "Python",
+      "Programming"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1qXUri0OJYuL35m0HiR3GHL1U7MdKQkvL/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:15:30.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-035",
+    "title": "CPS & IoT Chapter 1, 2",
+    "description": "CPS & IoT chapters 1 and 2",
+    "longDescription": "Introductory CPS & IoT notes.",
+    "tags": [
+      "CPS",
+      "IoT"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1LTZ9kyi08Fx2J91HqMcyfUPOISOLTsyV/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:15:40.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-036",
+    "title": "CPS & IoT Chapter 3, 4",
+    "description": "CPS & IoT chapters 3 and 4",
+    "longDescription": "Intermediate CPS & IoT notes.",
+    "tags": [
+      "CPS",
+      "IoT"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/19prhkoKco9psprfyXnoE5x11_IqQ-mUa/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:15:50.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-037",
+    "title": "CPS & IoT Chapter 5, 6",
+    "description": "CPS & IoT chapters 5 and 6",
+    "longDescription": "Advanced CPS & IoT notes.",
+    "tags": [
+      "CPS",
+      "IoT"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1EqIlgO1sqFQ_lTlWimxEBvnYjkwpTUr_/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:16:00.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-038",
+    "title": "Embedded System Notes",
+    "description": "Embedded Systems notes",
+    "longDescription": "Comprehensive notes for embedded systems.",
+    "tags": [
+      "Embedded Systems",
+      "Embedded"
+    ],
+    "files": [
+      "https://docs.google.com/document/d/18QETvPsBsjY5KjmPULpKfdPI6z4ROPqK/edit?usp=drive_link&ouid=101251612034493311563&rtpof=true&sd=true"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:16:10.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-039",
+    "title": "MicroController Programming Notes",
+    "description": "Microcontroller programming notes",
+    "longDescription": "Notes and examples for microcontroller programming.",
+    "tags": [
+      "Microcontroller",
+      "Embedded"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/1GlxIwpRpjY7DH8oMf0QDB8OqGxEg2g5R/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:16:20.000Z"
+  },
+  {
+    "id": "resource-2025-12-19-040",
+    "title": "Network Security Chapter 1, 2",
+    "description": "Network Security chapters 1 and 2",
+    "longDescription": "Introductory network security notes and practice materials.",
+    "tags": [
+      "Network Security",
+      "Security"
+    ],
+    "files": [
+      "https://drive.google.com/drive/folders/1VP9TBG3--hwQPLqUnJdCOagOeiDCtl4I?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-19T00:16:30.000Z"
+  },
+  {
+    "id": "resource-2025-12-20-001",
+    "title": "Basic English (HU-101) - Mid 1",
+    "description": "C-21 | Mid 1 | DIR",
+    "longDescription": "Basic English HU-101 notes for C-21, Mid 1 in directory format.",
+    "tags": [
+      "English",
+      "HU-101",
+      "Mid 1"
+    ],
+    "files": [
+      "https://drive.google.com/drive/folders/1KWdVjSV8d1Za_uv2K8nqBG55pyFhsnA-?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-20T00:00:00.000Z"
+  },
+  {
+    "id": "resource-2025-12-20-002",
+    "title": "Basic English (HU-101) - Mid 2",
+    "description": "C-21 | Mid 2 | img",
+    "longDescription": "Basic English HU-101 notes for C-21, Mid 2 in image format.",
+    "tags": [
+      "English",
+      "HU-101",
+      "Mid 2"
+    ],
+    "files": [
+      "https://drive.google.com/file/d/16kWETGMSc0BsVK4hjjYX8v5_6b7e6wZf/view?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-20T00:00:00.000Z"
+  },
+  {
+    "id": "resource-2025-12-20-003",
+    "title": "Basic English (HU-101) - Sem",
+    "description": "C-21 | Sem | dir",
+    "longDescription": "Basic English HU-101 semester notes for C-21 in directory format.",
+    "tags": [
+      "English",
+      "HU-101",
+      "Semester"
+    ],
+    "files": [
+      "https://drive.google.com/drive/folders/1cS4PZhSa2EpkOuOycIxwnQhP63ERUu5u?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-20T00:00:00.000Z"
+  },
+  {
+    "id": "resource-2025-12-20-004",
+    "title": "Basic English (HU-201) - Mid 1",
+    "description": "C-21 | Mid 1 | dir",
+    "longDescription": "Basic English HU-201 notes for C-21, Mid 1 in directory format.",
+    "tags": [
+      "English",
+      "HU-201",
+      "Mid 1"
+    ],
+    "files": [
+      "https://drive.google.com/drive/folders/1DsCff1KiTIXwHlIZ74MpGwx5gOEbFbsN?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-20T00:00:00.000Z"
+  },
+  {
+    "id": "resource-2025-12-20-005",
+    "title": "Basic English (HU-201) - Mid 2",
+    "description": "C-21 | Mid 2 | dir",
+    "longDescription": "Basic English HU-201 notes for C-21, Mid 2 in directory format.",
+    "tags": [
+      "English",
+      "HU-201",
+      "Mid 2"
+    ],
+    "files": [
+      "https://drive.google.com/drive/folders/1HSpPUIcrMxklnmw0RsRmYc5NNICgki-f?usp=drive_link"
+    ],
+    "images": [],
+    "timestamp": "2025-12-20T00:00:00.000Z"
+  }
+]
