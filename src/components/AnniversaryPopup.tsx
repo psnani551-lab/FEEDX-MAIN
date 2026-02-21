@@ -77,7 +77,7 @@ const AnniversaryPopup = () => {
                 {/* Special Image - Proportionally scaled */}
                 <div className="relative rounded-xl overflow-hidden mb-4 bg-muted/30 border border-white/10">
                   <img
-                    src="/images/1stanniversary.jpg"
+                    src={`${import.meta.env.BASE_URL}images/1stanniversary.jpg`}
                     alt="1st Anniversary"
                     className="w-full h-auto object-contain max-h-[50vh]"
                   />
