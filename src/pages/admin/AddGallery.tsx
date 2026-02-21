@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { uploadFile, galleryAPI } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { X, Upload, Loader2, GripVertical, Image as ImageIcon } from "lucide-react";
+import { X, Upload, Loader2, GripVertical, Image as ImageIcon, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface GalleryImage {
     id: string;
@@ -22,6 +23,7 @@ export default function AddGallery() {
     const [isUploading, setIsUploading] = useState(false);
     const [images, setImages] = useState<GalleryImage[]>([]);
     const [imageUrl, setImageUrl] = useState("");
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     useEffect(() => {
         fetchGalleryImages();
@@ -75,6 +77,7 @@ export default function AddGallery() {
 
             toast({ title: "Image Added", description: "Gallery image added successfully" });
             setImageUrl("");
+            setIsDialogOpen(false);
             fetchGalleryImages();
         } catch (error) {
             toast({ title: "Error", variant: "destructive" });
@@ -160,83 +163,90 @@ export default function AddGallery() {
 
     return (
         <AdminLayout>
-            <div className="space-y-8">
-                {/* Header */}
-                <div>
-                    <h1 className="text-4xl font-black tracking-tighter uppercase">
-                        Gallery <span className="text-primary">Management.</span>
-                    </h1>
-                    <p className="text-muted-foreground mt-2">
-                        Manage homepage carousel images
-                    </p>
+            <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h1 className="text-3xl font-black tracking-tighter uppercase text-foreground">
+                            Manage <span className="text-primary">Gallery.</span>
+                        </h1>
+                        <p className="text-muted-foreground font-medium">Manage homepage carousel images.</p>
+                    </div>
+                    <Dialog open={isDialogOpen} onOpenChange={(open) => {
+                        setIsDialogOpen(open);
+                        if (!open) {
+                            setImageUrl("");
+                            setIsUploading(false);
+                        }
+                    }}>
+                        <DialogTrigger asChild>
+                            <Button className="gap-2 font-bold uppercase tracking-widest text-xs hidden sm:flex">
+                                <Plus className="h-4 w-4" /> New Image
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[500px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
+                            <DialogHeader>
+                                <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
+                                    Add New Image
+                                </DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-6 pt-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="image">Gallery Image</Label>
+                                    <div className="flex gap-4 items-start">
+                                        <div className="flex-1">
+                                            <Input
+                                                id="image"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                                disabled={isUploading}
+                                                className="bg-background/50 border-white/10"
+                                            />
+                                        </div>
+                                        {isUploading && (
+                                            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                                        )}
+                                    </div>
+                                    {imageUrl && (
+                                        <div className="relative mt-4 inline-block">
+                                            <img
+                                                src={imageUrl}
+                                                alt="Preview"
+                                                className="w-full max-w-md h-48 object-cover rounded-lg border border-white/10"
+                                            />
+                                            <button
+                                                onClick={() => setImageUrl("")}
+                                                className="absolute top-2 right-2 p-1 bg-destructive rounded-full hover:bg-destructive/80"
+                                            >
+                                                <X className="w-4 h-4 text-white" />
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                                <Button
+                                    onClick={handleAddImage}
+                                    disabled={isLoading || !imageUrl}
+                                    className="w-full"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                            Adding...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Upload className="w-4 h-4 mr-2" />
+                                            Add to Gallery
+                                        </>
+                                    )}
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
-                {/* Add New Image Form */}
-                <Card className="bg-card/40 border-white/10">
-                    <CardHeader>
-                        <CardTitle className="text-2xl font-black uppercase tracking-tight">
-                            Add New Image
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* Image Upload */}
-                        <div className="space-y-2">
-                            <Label htmlFor="image">Gallery Image</Label>
-                            <div className="flex gap-4 items-start">
-                                <div className="flex-1">
-                                    <Input
-                                        id="image"
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        disabled={isUploading}
-                                        className="bg-background/50 border-white/10"
-                                    />
-                                </div>
-                                {isUploading && (
-                                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
-                                )}
-                            </div>
-                            {imageUrl && (
-                                <div className="relative mt-4 inline-block">
-                                    <img
-                                        src={imageUrl}
-                                        alt="Preview"
-                                        className="w-full max-w-md h-48 object-cover rounded-lg border border-white/10"
-                                    />
-                                    <button
-                                        onClick={() => setImageUrl("")}
-                                        className="absolute top-2 right-2 p-1 bg-destructive rounded-full hover:bg-destructive/80"
-                                    >
-                                        <X className="w-4 h-4 text-white" />
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Add Button */}
-                        <Button
-                            onClick={handleAddImage}
-                            disabled={isLoading || !imageUrl}
-                            className="w-full sm:w-auto"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    Adding...
-                                </>
-                            ) : (
-                                <>
-                                    <Upload className="w-4 h-4 mr-2" />
-                                    Add to Gallery
-                                </>
-                            )}
-                        </Button>
-                    </CardContent>
-                </Card>
-
                 {/* Gallery Images Table */}
-                <Card className="bg-card/40 border-white/10">
+                <Card className="glass-card border-white/10">
                     <CardHeader>
                         <CardTitle className="text-2xl font-black uppercase tracking-tight">
                             Current Gallery Images ({images.length})
@@ -264,7 +274,7 @@ export default function AddGallery() {
                 </Card>
 
                 {/* Instructions */}
-                <Card className="bg-primary/5 border-primary/20">
+                <Card className="glass-card bg-primary/5 border-primary/20">
                     <CardContent className="pt-6">
                         <h3 className="font-bold mb-2 flex items-center gap-2">
                             <ImageIcon className="w-5 h-5 text-primary" />

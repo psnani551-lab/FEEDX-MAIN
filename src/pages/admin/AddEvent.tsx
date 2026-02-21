@@ -11,7 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { eventsAPI, Event, uploadFile } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useAutoSave } from "@/hooks/useAutoSave";
-import { X, Upload, Loader2, Calendar, MapPin, Link as LinkIcon, Sparkles, Trophy, Globe } from "lucide-react";
+import { X, Upload, Loader2, Calendar, MapPin, Link as LinkIcon, Sparkles, Trophy, Globe, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 
 export default function AddEvent() {
@@ -21,6 +22,7 @@ export default function AddEvent() {
   const [events, setEvents] = useState<Event[]>([]);
   const [editingItem, setEditingItem] = useState<Event | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -115,6 +117,7 @@ export default function AddEvent() {
       });
       setIsEditMode(false);
       setEditingItem(null);
+      setIsDialogOpen(false);
       fetchEvents();
     } catch (error) {
       toast({ title: "Sync Failed", variant: "destructive" });
@@ -170,8 +173,7 @@ export default function AddEvent() {
       files: item.files || [],
       adminStatus: (item.status as any) || 'published'
     });
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsDialogOpen(true);
   };
 
   const handleStatusToggle = async (item: Event) => {
@@ -217,6 +219,7 @@ export default function AddEvent() {
       files: [],
       adminStatus: "published"
     });
+    setIsDialogOpen(false);
   };
 
   const columns = [
@@ -259,139 +262,144 @@ export default function AddEvent() {
     <AdminLayout>
       <div className="space-y-10">
         <div>
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-700 shadow-xl shadow-amber-500/20">
-              <Calendar className="w-6 h-6 text-white" />
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-700 shadow-xl shadow-amber-500/20">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-black tracking-tighter uppercase">Global <span className="text-primary">Events.</span></h1>
+                <p className="text-muted-foreground font-medium underline underline-offset-4 decoration-primary/20">Coordinate webinars, meetups, and academic sessions.</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-4xl font-black tracking-tighter uppercase">Global <span className="text-primary">Events.</span></h1>
-              <p className="text-muted-foreground font-medium underline underline-offset-4 decoration-primary/20">Coordinate webinars, meetups, and academic sessions.</p>
-            </div>
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (!open) handleCancelEdit();
+            }}>
+              <DialogTrigger asChild>
+                <Button className="gap-2 font-bold uppercase tracking-widest text-xs hidden sm:flex bg-amber-600 hover:bg-amber-700 shadow-lg shadow-amber-500/20">
+                  <Plus className="h-4 w-4" /> New Event
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[700px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl overflow-y-auto max-h-[90vh]">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
+                    {isEditMode ? 'Edit Event' : 'Add New Event'}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="pt-4">
+                  <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Event Title</Label>
+                      <Input name="title" value={formData.title} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="AI Global Meetup 2026..." />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Objective</Label>
+                      <Textarea name="description" value={formData.description} onChange={handleInputChange} required rows={3} className="premium-boundary font-mono text-xs" />
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                      <div className="flex gap-3 items-center">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                        <Label className="font-black text-sm uppercase tracking-tighter text-primary">Stealth Launch</Label>
+                      </div>
+                      <Switch checked={formData.isComingSoon} onCheckedChange={(v) => setFormData(f => ({ ...f, isComingSoon: v }))} />
+                    </div>
+
+                    {!formData.isComingSoon && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase opacity-60">Calendar Date</Label>
+                          <Input type="date" name="date" value={formData.date} onChange={handleInputChange} required className="premium-boundary h-11" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase opacity-60">Standard Time</Label>
+                          <Input type="time" name="time" value={formData.time} onChange={handleInputChange} required className="premium-boundary h-11" />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Deployment Location</Label>
+                      <Input name="location" value={formData.location} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="Zoom Hybrid / Tech Hall A" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Access URL</Label>
+                      <Input name="registerLink" type="url" value={formData.registerLink} onChange={handleInputChange} className="premium-boundary h-11" placeholder="https://register.zoom.us/..." />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Event Snapshot</Label>
+                      <Button type="button" variant="outline" className="w-full h-11 border-dashed border-white/10 bg-white/5 rounded-xl text-xs flex gap-2" onClick={() => imageInputRef.current?.click()} disabled={isUploading}>
+                        <Upload className="w-4 h-4 text-amber-500" /> {isUploading ? "Uploading..." : formData.image ? "Change Visual" : "Upload Visual"}
+                      </Button>
+                      <input type="file" ref={imageInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
+                      {formData.image && (
+                        <div className="relative aspect-video mt-2 overflow-hidden rounded-xl border border-white/10">
+                          <img src={formData.image} className="w-full h-full object-cover" />
+                          <button type="button" onClick={() => setFormData(f => ({ ...f, image: "" }))} className="absolute top-2 right-2 bg-rose-500 rounded-full p-1"><X className="w-3 h-3 text-white" /></button>
+                        </div>
+                      )}
+                    </div>
+
+                    <Button className="w-full bg-amber-600 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all">
+                      {isEditMode ? 'Update Event' : 'Finalize Deployment'}
+                    </Button>
+                    {isEditMode && (
+                      <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full h-14 rounded-2xl border-white/10">
+                        Cancel Edit
+                      </Button>
+                    )}
+                  </form>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-4 space-y-8">
-            <Card className="border-white/5 bg-card/40 backdrop-blur-md overflow-hidden relative">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-primary" />
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xs uppercase tracking-[0.2em] font-black flex items-center gap-2">
-                  <Trophy className="w-4 h-4 text-amber-500" />
-                  Event Orchestrator
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Event Title</Label>
-                    <Input name="title" value={formData.title} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="AI Global Meetup 2026..." />
-                  </div>
+        <div className="space-y-8">
+          <Card className="glass-card border-white/10">
+            <CardHeader className="border-b border-white/5">
+              <CardTitle className="flex items-center gap-2 uppercase tracking-tighter font-black">
+                <Calendar className="w-5 h-5 text-amber-500" />
+                Strategic Schedule
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <AdminDataTable
+                data={events}
+                columns={columns}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onBulkDelete={handleBulkDelete}
+                onStatusToggle={handleStatusToggle}
+                onBulkStatusToggle={handleBulkStatusToggle}
+                searchPlaceholder="Search event registry..."
+              />
+            </CardContent>
+          </Card>
 
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Objective</Label>
-                    <Textarea name="description" value={formData.description} onChange={handleInputChange} required rows={3} className="premium-boundary font-mono text-xs" />
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                    <div className="flex gap-3 items-center">
-                      <Sparkles className="w-5 h-5 text-primary" />
-                      <Label className="font-black text-sm uppercase tracking-tighter text-primary">Stealth Launch</Label>
-                    </div>
-                    <Switch checked={formData.isComingSoon} onCheckedChange={(v) => setFormData(f => ({ ...f, isComingSoon: v }))} />
-                  </div>
-
-                  {!formData.isComingSoon && (
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase opacity-60">Calendar Date</Label>
-                        <Input type="date" name="date" value={formData.date} onChange={handleInputChange} required className="premium-boundary h-11" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-[10px] font-black uppercase opacity-60">Standard Time</Label>
-                        <Input type="time" name="time" value={formData.time} onChange={handleInputChange} required className="premium-boundary h-11" />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Deployment Location</Label>
-                    <Input name="location" value={formData.location} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="Zoom Hybrid / Tech Hall A" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Access URL</Label>
-                    <Input name="registerLink" type="url" value={formData.registerLink} onChange={handleInputChange} className="premium-boundary h-11" placeholder="https://register.zoom.us/..." />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Event Snapshot</Label>
-                    <Button type="button" variant="outline" className="w-full h-11 border-dashed border-white/10 bg-white/5 rounded-xl text-xs flex gap-2" onClick={() => imageInputRef.current?.click()} disabled={isUploading}>
-                      <Upload className="w-4 h-4 text-amber-500" /> {isUploading ? "Uploading..." : formData.image ? "Change Visual" : "Upload Visual"}
-                    </Button>
-                    <input type="file" ref={imageInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
-                    {formData.image && (
-                      <div className="relative aspect-video mt-2 overflow-hidden rounded-xl border border-white/10">
-                        <img src={formData.image} className="w-full h-full object-cover" />
-                        <button type="button" onClick={() => setFormData(f => ({ ...f, image: "" }))} className="absolute top-2 right-2 bg-rose-500 rounded-full p-1"><X className="w-3 h-3 text-white" /></button>
-                      </div>
-                    )}
-                  </div>
-
-                  <Button className="w-full bg-amber-600 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all">
-                    {isEditMode ? 'Update Event' : 'Finalize Deployment'}
-                  </Button>
-                  {isEditMode && (
-                    <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full h-14 rounded-2xl border-white/10">
-                      Cancel Edit
-                    </Button>
-                  )}
-                </form>
+          <div className="mt-8 grid grid-cols-2 gap-4">
+            <Card className="border-emerald-500/10 bg-emerald-500/5 backdrop-blur-sm">
+              <CardContent className="p-4 flex items-center gap-3">
+                <Globe className="w-6 h-6 text-emerald-500" />
+                <div>
+                  <p className="text-[9px] uppercase font-black tracking-widest text-emerald-500">Global Sync</p>
+                  <p className="text-xs font-bold">100% Availability</p>
+                </div>
               </CardContent>
             </Card>
-          </div>
-
-          <div className="lg:col-span-8">
-            <Card className="border-white/5 bg-card/10 backdrop-blur-xl">
-              <CardHeader className="border-b border-white/5">
-                <CardTitle className="flex items-center gap-2 uppercase tracking-tighter font-black">
-                  <Calendar className="w-5 h-5 text-amber-500" />
-                  Strategic Schedule
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <AdminDataTable
-                  data={events}
-                  columns={columns}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onBulkDelete={handleBulkDelete}
-                  onStatusToggle={handleStatusToggle}
-                  onBulkStatusToggle={handleBulkStatusToggle}
-                  searchPlaceholder="Search event registry..."
-                />
+            <Card className="border-indigo-500/10 bg-indigo-500/5 backdrop-blur-sm">
+              <CardContent className="p-4 flex items-center gap-3">
+                <Sparkles className="w-6 h-6 text-indigo-500" />
+                <div>
+                  <p className="text-[9px] uppercase font-black tracking-widest text-indigo-500">Live Feedback</p>
+                  <p className="text-xs font-bold">Enabled</p>
+                </div>
               </CardContent>
             </Card>
-
-            <div className="mt-8 grid grid-cols-2 gap-4">
-              <Card className="border-emerald-500/10 bg-emerald-500/5 backdrop-blur-sm">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <Globe className="w-6 h-6 text-emerald-500" />
-                  <div>
-                    <p className="text-[9px] uppercase font-black tracking-widest text-emerald-500">Global Sync</p>
-                    <p className="text-xs font-bold">100% Availability</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-indigo-500/10 bg-indigo-500/5 backdrop-blur-sm">
-                <CardContent className="p-4 flex items-center gap-3">
-                  <Sparkles className="w-6 h-6 text-indigo-500" />
-                  <div>
-                    <p className="text-[9px] uppercase font-black tracking-widest text-indigo-500">Live Feedback</p>
-                    <p className="text-xs font-bold">Enabled</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         </div>
       </div>

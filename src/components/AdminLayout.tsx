@@ -117,7 +117,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             <div className="p-3 pt-2 border-t border-white/5 space-y-1">
                 <Button
                     variant="outline"
-                    className="w-full justify-start gap-2.5 border-white/5 hover:bg-white/5 h-10"
+                    className="w-full justify-start gap-2.5 border-white/5 hover:bg-white/5 h-10 transition-all duration-300"
                     onClick={handleBackup}
                     disabled={isBackingUp}
                 >
@@ -126,17 +126,25 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 </Button>
                 <Button
                     variant="outline"
-                    className="w-full justify-start gap-2.5 border-white/5 hover:bg-white/5 h-10"
+                    className="w-full justify-start gap-2.5 border-white/5 hover:bg-white/5 h-10 transition-all duration-300 group"
                     onClick={async () => {
-                        toast({ title: "System Synchronized", description: "Supabase real-time stream active." });
+                        // Keep admin tokens to prevent unintended logout, but clear everything else
+                        const token = localStorage.getItem('adminToken');
+                        const user = localStorage.getItem('adminUser');
+                        localStorage.clear();
+                        if (token) localStorage.setItem('adminToken', token);
+                        if (user) localStorage.setItem('adminUser', user);
+
+                        toast({ title: "Cache Purged", description: "System memory cleared successfully." });
+                        setTimeout(() => window.location.reload(), 800);
                     }}
                 >
-                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                    <Sparkles className="w-3.5 h-3.5 text-primary group-hover:animate-pulse" />
                     <span className="text-xs">Purge Cache</span>
                 </Button>
                 <Button
                     variant="ghost"
-                    className="w-full justify-start gap-2.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 h-10"
+                    className="w-full justify-start gap-2.5 text-red-500 hover:text-red-400 hover:bg-red-500/10 h-10 transition-all duration-300"
                     onClick={handleLogout}
                 >
                     <LogOut className="w-3.5 h-3.5" />

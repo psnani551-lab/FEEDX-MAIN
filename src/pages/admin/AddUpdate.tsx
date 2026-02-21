@@ -16,8 +16,9 @@ import {
 } from "@/components/ui/select";
 import { updatesAPI, Update, uploadFile } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { X, Upload, Loader2, Newspaper, Ghost, Sparkles, FileText, Activity } from "lucide-react";
+import { X, Upload, Loader2, Newspaper, Ghost, Sparkles, FileText, Activity, Plus } from "lucide-react";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export default function AddUpdate() {
   const { toast } = useToast();
@@ -26,6 +27,7 @@ export default function AddUpdate() {
   const [updates, setUpdates] = useState<Update[]>([]);
   const [editingItem, setEditingItem] = useState<Update | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -95,6 +97,7 @@ export default function AddUpdate() {
       });
       setIsEditMode(false);
       setEditingItem(null);
+      setIsDialogOpen(false);
       fetchUpdates();
     } catch (error) {
       console.error("Broadcast failed:", error);
@@ -148,7 +151,7 @@ export default function AddUpdate() {
       files: item.files || [],
       status: item.status || 'published'
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsDialogOpen(true);
   };
 
   const handleStatusToggle = async (item: Update) => {
@@ -191,6 +194,7 @@ export default function AddUpdate() {
       files: [],
       status: "published"
     });
+    setIsDialogOpen(false);
   };
 
   const columns = [
@@ -225,7 +229,7 @@ export default function AddUpdate() {
   return (
     <AdminLayout>
       <div className="space-y-10">
-        <div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 shadow-xl shadow-emerald-500/20">
               <Newspaper className="w-6 h-6 text-white" />
@@ -235,19 +239,22 @@ export default function AddUpdate() {
               <p className="text-muted-foreground font-medium underline underline-offset-4 decoration-primary/20">Broadcast system updates and academic circulars.</p>
             </div>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-4 space-y-8">
-            <Card className="border-white/5 bg-card/40 backdrop-blur-md overflow-hidden relative">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-primary" />
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xs uppercase tracking-[0.2em] font-black flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-emerald-500" />
-                  Broadcast Engine
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) handleCancelEdit();
+          }}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 font-bold uppercase tracking-widest text-xs hidden sm:flex bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-500/20">
+                <Plus className="h-4 w-4" /> New Update
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[700px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl overflow-y-auto max-h-[90vh]">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
+                  {isEditMode ? 'Edit Update' : 'Add New Update'}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="pt-4">
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase opacity-60">Headline</Label>
@@ -315,24 +322,14 @@ export default function AddUpdate() {
                     </Button>
                   )}
                 </form>
-              </CardContent>
-            </Card>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
 
-            <Card className="border-emerald-500/10 bg-emerald-500/5 backdrop-blur-sm overflow-hidden border-dashed">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-3">
-                  <Sparkles className="w-4 h-4 text-emerald-500 shrink-0 mt-1" />
-                  <div>
-                    <h4 className="text-[10px] uppercase font-black tracking-widest mb-1 text-emerald-500">Pro Tip</h4>
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">High priority updates are highlighted in red on the main feed for maximum visibility.</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="lg:col-span-8">
-            <Card className="border-white/5 bg-card/10 backdrop-blur-xl">
+        <div className="space-y-8">
+          <div className="w-full">
+            <Card className="glass-card border-white/10 backdrop-blur-xl">
               <CardHeader className="border-b border-white/5">
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="w-5 h-5 text-emerald-500" />
@@ -352,6 +349,20 @@ export default function AddUpdate() {
                 />
               </CardContent>
             </Card>
+
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Card className="border-emerald-500/10 bg-emerald-500/5 backdrop-blur-sm overflow-hidden border-dashed">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-3">
+                    <Sparkles className="w-4 h-4 text-emerald-500 shrink-0 mt-1" />
+                    <div>
+                      <h4 className="text-[10px] uppercase font-black tracking-widest mb-1 text-emerald-500">Pro Tip</h4>
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">High priority updates are highlighted in red on the main feed for maximum visibility.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>

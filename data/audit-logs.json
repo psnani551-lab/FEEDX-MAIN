@@ -1,5 +1,17 @@
 [
   {
+    "id": "mlw9zg0jjrv3gjw8ixp",
+    "userId": "mjso2v103fkuh0h1alk",
+    "username": "admin",
+    "action": "CREATE",
+    "resource": "projects",
+    "resourceId": "mlw9zg0gkv7eb1maso",
+    "details": {
+      "title": "Manual Project Verification"
+    },
+    "timestamp": "2026-02-21T12:08:47.059Z"
+  },
+  {
     "id": "mlmh9mcpfzosc4z4m5r",
     "userId": "mjso2v103fkuh0h1alk",
     "username": "admin",

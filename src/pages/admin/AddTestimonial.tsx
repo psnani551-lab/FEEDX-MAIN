@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { testimonialsAPI, Testimonial, uploadFile } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
-import { X, Upload, Loader2, Quote, User, Sparkles, MessageSquare, ShieldCheck, Camera } from "lucide-react";
+import { X, Upload, Loader2, Quote, User, Sparkles, MessageSquare, ShieldCheck, Camera, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 export default function AddTestimonial() {
   const { toast } = useToast();
@@ -18,6 +19,7 @@ export default function AddTestimonial() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [editingItem, setEditingItem] = useState<Testimonial | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     title: "",
@@ -76,6 +78,7 @@ export default function AddTestimonial() {
       });
       setIsEditMode(false);
       setEditingItem(null);
+      setIsDialogOpen(false);
       fetchTestimonials();
     } catch (error) {
       toast({ title: "Sync Failed", variant: "destructive" });
@@ -125,7 +128,7 @@ export default function AddTestimonial() {
       image: item.image || '',
       status: item.status || 'published'
     });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setIsDialogOpen(true);
   };
 
   const handleStatusToggle = async (item: Testimonial) => {
@@ -165,6 +168,7 @@ export default function AddTestimonial() {
       image: "",
       status: "published"
     });
+    setIsDialogOpen(false);
   };
 
   const columns = [
@@ -211,7 +215,7 @@ export default function AddTestimonial() {
   return (
     <AdminLayout>
       <div className="space-y-10">
-        <div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-700 shadow-xl shadow-indigo-500/20 text-white">
               <Quote className="w-6 h-6" />
@@ -221,19 +225,22 @@ export default function AddTestimonial() {
               <p className="text-muted-foreground font-medium underline underline-offset-4 decoration-primary/20">Manage high-fidelity user testimonials and social validation.</p>
             </div>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-          <div className="lg:col-span-12 xl:col-span-4 space-y-8">
-            <Card className="border-white/5 bg-card/40 backdrop-blur-md overflow-hidden relative">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-primary" />
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xs uppercase tracking-[0.2em] font-black flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-indigo-500" />
-                  Testimony Architect
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            setIsDialogOpen(open);
+            if (!open) handleCancelEdit();
+          }}>
+            <DialogTrigger asChild>
+              <Button className="gap-2 font-bold uppercase tracking-widest text-xs hidden sm:flex bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20">
+                <Plus className="h-4 w-4" /> New Testimony
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[700px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl overflow-y-auto max-h-[90vh]">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
+                  {isEditMode ? 'Edit Testimony' : 'Add New Testimony'}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="pt-4">
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -284,12 +291,14 @@ export default function AddTestimonial() {
                     </Button>
                   )}
                 </form>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
 
-          <div className="lg:col-span-12 xl:col-span-8">
-            <Card className="border-white/5 bg-card/10 backdrop-blur-xl">
+        <div className="space-y-8">
+          <div className="w-full">
+            <Card className="glass-card border-white/10 backdrop-blur-xl">
               <CardHeader className="border-b border-white/5">
                 <CardTitle className="flex items-center gap-2 uppercase tracking-tighter font-black">
                   <MessageSquare className="w-5 h-5 text-indigo-500" />
