@@ -1532,9 +1532,11 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`   GET/POST/PUT/DELETE /api/admin/notifications`);
   console.log(`   GET/POST/PUT/DELETE /api/admin/updates`);
   console.log(`   GET/POST/PUT/DELETE /api/admin/resources`);
-  console.log(`   GET/POST/PUT/DELETE /api/admin/events`);
-  console.log(`   GET/POST/PUT/DELETE /api/admin/spotlight`);
-  console.log(`   GET/POST/PUT/DELETE /api/admin/testimonials`);
-  console.log(`   GET/POST/DELETE /api/admin/institutes`);
-  console.log(`\n✅ Default admin: username=admin, password=admin123\n`);
+  console.log('   GET/POST/PUT/DELETE /api/admin/events');
+  console.log('   GET/POST/PUT/DELETE /api/admin/spotlight');
+  console.log('   GET/POST/PUT/DELETE /api/admin/testimonials');
+  console.log('   GET/POST/PUT/DELETE /api/admin/projects');
+  console.log('   GET/POST/DELETE /api/admin/institutes');
+  console.log('');
+  console.log('✅ Default admin: username=admin, password=admin123\n');
 });

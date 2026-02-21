@@ -113,7 +113,7 @@ export const projectsAPI = {
       const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       return data.map(p => ({ ...p, timestamp: p.created_at }));
-    }, '/api/admin/projects');
+    }, '/api/projects');
   },
   create: async (data: Omit<Project, 'id' | 'timestamp'>): Promise<Project> => {
     const { data: record, error } = await supabase.from('projects').insert([data]).select().single();
