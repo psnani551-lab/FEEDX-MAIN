@@ -281,77 +281,85 @@ export default function AddEvent() {
                   <Plus className="h-4 w-4" /> New Event
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[700px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
+              <DialogContent className="sm:max-w-[900px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
                     {isEditMode ? 'Edit Event' : 'Add New Event'}
                   </DialogTitle>
                 </DialogHeader>
                 <div className="pt-4">
-                  <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase opacity-60">Event Title</Label>
-                      <Input name="title" value={formData.title} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="AI Global Meetup 2026..." />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase opacity-60">Objective</Label>
-                      <Textarea name="description" value={formData.description} onChange={handleInputChange} required rows={3} className="premium-boundary font-mono text-xs" />
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                      <div className="flex gap-3 items-center">
-                        <Sparkles className="w-5 h-5 text-primary" />
-                        <Label className="font-black text-sm uppercase tracking-tighter text-primary">Stealth Launch</Label>
+                  <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase opacity-60">Event Title</Label>
+                        <Input name="title" value={formData.title} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="AI Global Meetup 2026..." />
                       </div>
-                      <Switch checked={formData.isComingSoon} onCheckedChange={(v) => setFormData(f => ({ ...f, isComingSoon: v }))} />
-                    </div>
 
-                    {!formData.isComingSoon && (
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase opacity-60">Calendar Date</Label>
-                          <Input type="date" name="date" value={formData.date} onChange={handleInputChange} required className="premium-boundary h-11" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[10px] font-black uppercase opacity-60">Standard Time</Label>
-                          <Input type="time" name="time" value={formData.time} onChange={handleInputChange} required className="premium-boundary h-11" />
-                        </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase opacity-60">Objective</Label>
+                        <Textarea name="description" value={formData.description} onChange={handleInputChange} required rows={3} className="premium-boundary font-mono text-xs" />
                       </div>
-                    )}
 
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase opacity-60">Deployment Location</Label>
-                      <Input name="location" value={formData.location} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="Zoom Hybrid / Tech Hall A" />
-                    </div>
+                      <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                        <div className="flex gap-3 items-center">
+                          <Sparkles className="w-5 h-5 text-primary" />
+                          <Label className="font-black text-sm uppercase tracking-tighter text-primary">Stealth Launch</Label>
+                        </div>
+                        <Switch checked={formData.isComingSoon} onCheckedChange={(v) => setFormData(f => ({ ...f, isComingSoon: v }))} />
+                      </div>
 
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase opacity-60">Access URL</Label>
-                      <Input name="registerLink" type="url" value={formData.registerLink} onChange={handleInputChange} className="premium-boundary h-11" placeholder="https://register.zoom.us/..." />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase opacity-60">Event Snapshot</Label>
-                      <Button type="button" variant="outline" className="w-full h-11 border-dashed border-white/10 bg-white/5 rounded-xl text-xs flex gap-2" onClick={() => imageInputRef.current?.click()} disabled={isUploading}>
-                        <Upload className="w-4 h-4 text-amber-500" /> {isUploading ? "Uploading..." : formData.image ? "Change Visual" : "Upload Visual"}
-                      </Button>
-                      <input type="file" ref={imageInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
-                      {formData.image && (
-                        <div className="relative aspect-video mt-2 overflow-hidden rounded-xl border border-white/10">
-                          <img src={formData.image} className="w-full h-full object-cover" />
-                          <button type="button" onClick={() => setFormData(f => ({ ...f, image: "" }))} className="absolute top-2 right-2 bg-rose-500 rounded-full p-1"><X className="w-3 h-3 text-white" /></button>
+                      {!formData.isComingSoon && (
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase opacity-60">Calendar Date</Label>
+                            <Input type="date" name="date" value={formData.date} onChange={handleInputChange} required className="premium-boundary h-11" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label className="text-[10px] font-black uppercase opacity-60">Standard Time</Label>
+                            <Input type="time" name="time" value={formData.time} onChange={handleInputChange} required className="premium-boundary h-11" />
+                          </div>
                         </div>
                       )}
                     </div>
 
-                    <Button className="w-full bg-amber-600 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all">
-                      {isEditMode ? 'Update Event' : 'Finalize Deployment'}
-                    </Button>
-                    {isEditMode && (
-                      <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full h-14 rounded-2xl border-white/10">
-                        Cancel Edit
-                      </Button>
-                    )}
+                    <div className="space-y-4 flex flex-col justify-between">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase opacity-60">Deployment Location</Label>
+                          <Input name="location" value={formData.location} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="Zoom Hybrid / Tech Hall A" />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase opacity-60">Access URL</Label>
+                          <Input name="registerLink" type="url" value={formData.registerLink} onChange={handleInputChange} className="premium-boundary h-11" placeholder="https://register.zoom.us/..." />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-[10px] font-black uppercase opacity-60">Event Snapshot</Label>
+                          <Button type="button" variant="outline" className="w-full h-11 border-dashed border-white/10 bg-white/5 rounded-xl text-xs flex gap-2" onClick={() => imageInputRef.current?.click()} disabled={isUploading}>
+                            <Upload className="w-4 h-4 text-amber-500" /> {isUploading ? "Uploading..." : formData.image ? "Change Visual" : "Upload Visual"}
+                          </Button>
+                          <input type="file" ref={imageInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
+                          {formData.image && (
+                            <div className="relative aspect-video mt-2 overflow-hidden rounded-xl border border-white/10">
+                              <img src={formData.image} className="w-full h-full object-cover" />
+                              <button type="button" onClick={() => setFormData(f => ({ ...f, image: "" }))} className="absolute top-2 right-2 bg-rose-500 rounded-full p-1"><X className="w-3 h-3 text-white" /></button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 mt-auto">
+                        <Button className="w-full bg-amber-600 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl shadow-lg shadow-amber-500/20 active:scale-[0.98] transition-all">
+                          {isEditMode ? 'Update Event' : 'Finalize Deployment'}
+                        </Button>
+                        {isEditMode && (
+                          <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full h-14 rounded-2xl border-white/10">
+                            Cancel Edit
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   </form>
                 </div>
               </DialogContent>

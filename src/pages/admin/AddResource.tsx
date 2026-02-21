@@ -273,92 +273,100 @@ export default function AddResource() {
                 <Plus className="h-4 w-4" /> New Resource
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[700px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
+            <DialogContent className="sm:max-w-[900px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
                   {isEditMode ? 'Edit Resource' : 'Add New Resource'}
                 </DialogTitle>
               </DialogHeader>
               <div className="pt-4">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Asset Title</Label>
-                    <Input name="title" value={formData.title} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="Advanced Mathematics Vol 1..." />
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Asset Title</Label>
+                      <Input name="title" value={formData.title} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="Advanced Mathematics Vol 1..." />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Teaser text</Label>
+                      <Input name="description" value={formData.description} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="Brief intro to the subject..." />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Detailed Index</Label>
+                      <Textarea name="longDescription" value={formData.longDescription} onChange={handleInputChange} required rows={4} className="premium-boundary font-mono text-xs" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Classification Tags</Label>
+                      <div className="flex gap-2">
+                        <Input value={currentTag} onChange={(e) => setCurrentTag(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())} className="premium-boundary h-10" placeholder="e.g. Science" />
+                        <Button type="button" onClick={handleAddTag} variant="secondary" className="h-10 rounded-xl group px-3">
+                          <Hash className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {formData.tags.map((tag, i) => (
+                          <Badge key={i} className="bg-indigo-500/10 text-indigo-500 border-0 hover:bg-indigo-500/20 cursor-pointer" onClick={() => setFormData(f => ({ ...f, tags: f.tags.filter((_, idx) => idx !== i) }))}>
+                            {tag} <X className="w-2 h-2 ml-1" />
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Teaser text</Label>
-                    <Input name="description" value={formData.description} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="Brief intro to the subject..." />
-                  </div>
+                  <div className="space-y-4 flex flex-col justify-between">
+                    <div className="space-y-4">
+                      <div className="space-y-4 pt-4 border-t border-white/5">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-[10px] font-black uppercase opacity-60">Linked Assets (URLs)</Label>
+                        </div>
+                        <div className="flex gap-2">
+                          <Input value={externalLink} onChange={(e) => setExternalLink(e.target.value)} className="premium-boundary h-10" placeholder="https://drive.google..." />
+                          <Button type="button" onClick={handleAddExternalLink} variant="secondary" className="h-10 rounded-xl"><LinkIcon className="w-4 h-4" /></Button>
+                        </div>
+                        {formData.files.length > 0 && (
+                          <div className="space-y-1">
+                            {formData.files.map((file, i) => (
+                              <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-white/5 text-[10px] text-muted-foreground group">
+                                <span className="truncate flex-1">{file}</span>
+                                <button type="button" onClick={() => setFormData(f => ({ ...f, files: f.files.filter((_, idx) => idx !== i) }))} className="text-rose-500 p-1 opacity-0 group-hover:opacity-100"><X className="w-3 h-3" /></button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Detailed Index</Label>
-                    <Textarea name="longDescription" value={formData.longDescription} onChange={handleInputChange} required rows={4} className="premium-boundary font-mono text-xs" />
-                  </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase opacity-60">Visual Assets</Label>
+                        <Button type="button" variant="outline" className="w-full h-11 border-dashed border-white/10 bg-white/5 rounded-xl text-xs flex gap-2" onClick={() => imageInputRef.current?.click()} disabled={isUploading}>
+                          <Upload className="w-4 h-4 text-indigo-500" /> {isUploading ? "Uploading..." : "Click to Upload Preview"}
+                        </Button>
+                        <input type="file" ref={imageInputRef} onChange={handleImageUpload} accept="image/*" multiple className="hidden" />
+                        {formData.images.length > 0 && (
+                          <div className="grid grid-cols-4 gap-2 mt-2">
+                            {formData.images.map((img, i) => (
+                              <div key={i} className="relative aspect-square group">
+                                <img src={img} className="w-full h-full object-cover rounded-lg border border-white/10" />
+                                <button type="button" onClick={() => setFormData(f => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }))} className="absolute -top-1 -right-1 bg-red-500 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-2 h-2 text-white" /></button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Classification Tags</Label>
-                    <div className="flex gap-2">
-                      <Input value={currentTag} onChange={(e) => setCurrentTag(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())} className="premium-boundary h-10" placeholder="e.g. Science" />
-                      <Button type="button" onClick={handleAddTag} variant="secondary" className="h-10 rounded-xl group px-3">
-                        <Hash className="w-4 h-4" />
+                    <div className="space-y-2 mt-auto">
+                      <Button className="w-full bg-indigo-600 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-transform">
+                        {isEditMode ? 'Update Asset' : 'Deploy Asset'}
                       </Button>
-                    </div>
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {formData.tags.map((tag, i) => (
-                        <Badge key={i} className="bg-indigo-500/10 text-indigo-500 border-0 hover:bg-indigo-500/20 cursor-pointer" onClick={() => setFormData(f => ({ ...f, tags: f.tags.filter((_, idx) => idx !== i) }))}>
-                          {tag} <X className="w-2 h-2 ml-1" />
-                        </Badge>
-                      ))}
+                      {isEditMode && (
+                        <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full h-14 rounded-2xl border-white/10">
+                          Cancel Edit
+                        </Button>
+                      )}
                     </div>
                   </div>
-
-                  <div className="space-y-4 pt-4 border-t border-white/5">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-[10px] font-black uppercase opacity-60">Linked Assets (URLs)</Label>
-                    </div>
-                    <div className="flex gap-2">
-                      <Input value={externalLink} onChange={(e) => setExternalLink(e.target.value)} className="premium-boundary h-10" placeholder="https://drive.google..." />
-                      <Button type="button" onClick={handleAddExternalLink} variant="secondary" className="h-10 rounded-xl"><LinkIcon className="w-4 h-4" /></Button>
-                    </div>
-                    {formData.files.length > 0 && (
-                      <div className="space-y-1">
-                        {formData.files.map((file, i) => (
-                          <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-white/5 text-[10px] text-muted-foreground group">
-                            <span className="truncate flex-1">{file}</span>
-                            <button type="button" onClick={() => setFormData(f => ({ ...f, files: f.files.filter((_, idx) => idx !== i) }))} className="text-rose-500 p-1 opacity-0 group-hover:opacity-100"><X className="w-3 h-3" /></button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Visual Assets</Label>
-                    <Button type="button" variant="outline" className="w-full h-11 border-dashed border-white/10 bg-white/5 rounded-xl text-xs flex gap-2" onClick={() => imageInputRef.current?.click()} disabled={isUploading}>
-                      <Upload className="w-4 h-4 text-indigo-500" /> {isUploading ? "Uploading..." : "Click to Upload Preview"}
-                    </Button>
-                    <input type="file" ref={imageInputRef} onChange={handleImageUpload} accept="image/*" multiple className="hidden" />
-                    {formData.images.length > 0 && (
-                      <div className="grid grid-cols-4 gap-2 mt-2">
-                        {formData.images.map((img, i) => (
-                          <div key={i} className="relative aspect-square group">
-                            <img src={img} className="w-full h-full object-cover rounded-lg border border-white/10" />
-                            <button onClick={() => setFormData(f => ({ ...f, images: f.images.filter((_, idx) => idx !== i) }))} className="absolute -top-1 -right-1 bg-red-500 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-2 h-2 text-white" /></button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <Button className="w-full bg-indigo-600 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-transform">
-                    {isEditMode ? 'Update Asset' : 'Deploy Asset'}
-                  </Button>
-                  {isEditMode && (
-                    <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full h-14 rounded-2xl border-white/10">
-                      Cancel Edit
-                    </Button>
-                  )}
                 </form>
               </div>
             </DialogContent>

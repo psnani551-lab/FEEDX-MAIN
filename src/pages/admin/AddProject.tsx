@@ -157,91 +157,96 @@ export default function AddProject() {
                                     <Plus className="h-4 w-4" /> New Project
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-[700px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
+                            <DialogContent className="sm:max-w-[900px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
                                 <DialogHeader>
                                     <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
                                         {editingId ? 'Edit Project' : 'Add New Project'}
                                     </DialogTitle>
                                 </DialogHeader>
-                                <form onSubmit={handleSubmit} className="space-y-6 pt-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Title</Label>
-                                            <Input required value={title} onChange={(e) => setTitle(e.target.value)} className="bg-white/5 border-white/10 focus:border-primary/50 transition-colors" placeholder="e.g. Smart Feedback Analyzer" />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Category</Label>
-                                            <select
-                                                value={category}
-                                                onChange={(e) => setCategory(e.target.value)}
-                                                className="flex h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-colors text-foreground"
-                                                required
-                                            >
-                                                <option value="" disabled className="bg-background text-muted-foreground">Select Category Area</option>
-                                                <option value="Technology" className="bg-background text-foreground">Technology</option>
-                                                <option value="Student Support" className="bg-background text-foreground">Student Support</option>
-                                                <option value="Education" className="bg-background text-foreground">Education</option>
-                                                <option value="Innovation" className="bg-background text-foreground">Innovation</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Subtitle (One-liner)</Label>
-                                            <Input required value={subtitle} onChange={(e) => setSubtitle(e.target.value)} className="bg-white/5 border-white/10 focus:border-primary/50 transition-colors" placeholder="e.g. AI-driven sentiment analysis." />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Status</Label>
-                                            <select
-                                                value={status}
-                                                onChange={(e) => setStatus(e.target.value)}
-                                                className="flex h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-colors text-foreground"
-                                                required
-                                            >
-                                                <option value="Planning" className="bg-background text-slate-500 font-bold">Planning</option>
-                                                <option value="Coming Soon" className="bg-background text-yellow-500 font-bold">Coming Soon</option>
-                                                <option value="Pilot" className="bg-background text-blue-500 font-bold">Pilot</option>
-                                                <option value="Active" className="bg-background text-emerald-500 font-bold">Active</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Description</Label>
-                                        <Textarea required value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[100px] bg-white/5 border-white/10 focus:border-primary/50 transition-colors" placeholder="Full description of the project..." />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Project Link / URL (Optional)</Label>
-                                        <Input type="url" value={projectUrl} onChange={(e) => setProjectUrl(e.target.value)} className="bg-white/5 border-white/10 focus:border-primary/50 transition-colors" placeholder="e.g. https://github.com/..." />
-                                    </div>
-
-                                    <div className="space-y-3">
-                                        <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Project Details / Bullet Points</Label>
-                                        {details.map((detail, index) => (
-                                            <div key={index} className="flex gap-2">
-                                                <Input
-                                                    value={detail}
-                                                    onChange={(e) => handleDetailChange(index, e.target.value)}
-                                                    className="bg-white/5 border-white/10 focus:border-primary/50"
-                                                    placeholder={`Bullet point ${index + 1}`}
-                                                />
-                                                {details.length > 1 && (
-                                                    <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveDetail(index)} className="shrink-0 text-muted-foreground hover:text-destructive">
-                                                        <X className="h-4 w-4" />
-                                                    </Button>
-                                                )}
+                                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Title</Label>
+                                                <Input required value={title} onChange={(e) => setTitle(e.target.value)} className="bg-white/5 border-white/10 focus:border-primary/50 transition-colors" placeholder="e.g. Smart Feedback Analyzer" />
                                             </div>
-                                        ))}
-                                        <Button type="button" variant="outline" size="sm" onClick={handleAddDetail} className="mt-2 border-white/10 text-xs font-bold uppercase tracking-widest">
-                                            <PlusSquare className="h-4 w-4 mr-2" /> Add Detail
+                                            <div className="space-y-2">
+                                                <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Category</Label>
+                                                <select
+                                                    value={category}
+                                                    onChange={(e) => setCategory(e.target.value)}
+                                                    className="flex h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-colors text-foreground"
+                                                    required
+                                                >
+                                                    <option value="" disabled className="bg-background text-muted-foreground">Select Category Area</option>
+                                                    <option value="Technology" className="bg-background text-foreground">Technology</option>
+                                                    <option value="Student Support" className="bg-background text-foreground">Student Support</option>
+                                                    <option value="Education" className="bg-background text-foreground">Education</option>
+                                                    <option value="Innovation" className="bg-background text-foreground">Innovation</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div className="space-y-2">
+                                                <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Subtitle (One-liner)</Label>
+                                                <Input required value={subtitle} onChange={(e) => setSubtitle(e.target.value)} className="bg-white/5 border-white/10 focus:border-primary/50 transition-colors" placeholder="e.g. AI-driven sentiment analysis." />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Status</Label>
+                                                <select
+                                                    value={status}
+                                                    onChange={(e) => setStatus(e.target.value)}
+                                                    className="flex h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-colors text-foreground"
+                                                    required
+                                                >
+                                                    <option value="Planning" className="bg-background text-slate-500 font-bold">Planning</option>
+                                                    <option value="Coming Soon" className="bg-background text-yellow-500 font-bold">Coming Soon</option>
+                                                    <option value="Pilot" className="bg-background text-blue-500 font-bold">Pilot</option>
+                                                    <option value="Active" className="bg-background text-emerald-500 font-bold">Active</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Description</Label>
+                                            <Textarea required value={description} onChange={(e) => setDescription(e.target.value)} className="min-h-[100px] bg-white/5 border-white/10 focus:border-primary/50 transition-colors" placeholder="Full description of the project..." />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Project Link / URL (Optional)</Label>
+                                            <Input type="url" value={projectUrl} onChange={(e) => setProjectUrl(e.target.value)} className="bg-white/5 border-white/10 focus:border-primary/50 transition-colors" placeholder="e.g. https://github.com/..." />
+                                        </div>
+
+                                    </div>
+
+                                    <div className="space-y-4 flex flex-col justify-between">
+                                        <div className="space-y-3">
+                                            <Label className="uppercase font-black text-[10px] tracking-widest text-muted-foreground">Project Details / Bullet Points</Label>
+                                            {details.map((detail, index) => (
+                                                <div key={index} className="flex gap-2">
+                                                    <Input
+                                                        value={detail}
+                                                        onChange={(e) => handleDetailChange(index, e.target.value)}
+                                                        className="bg-white/5 border-white/10 focus:border-primary/50"
+                                                        placeholder={`Bullet point ${index + 1}`}
+                                                    />
+                                                    {details.length > 1 && (
+                                                        <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveDetail(index)} className="shrink-0 text-muted-foreground hover:text-destructive">
+                                                            <X className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            ))}
+                                            <Button type="button" variant="outline" size="sm" onClick={handleAddDetail} className="mt-2 border-white/10 text-xs font-bold uppercase tracking-widest">
+                                                <PlusSquare className="h-4 w-4 mr-2" /> Add Detail
+                                            </Button>
+                                        </div>
+
+                                        <Button type="submit" className="w-full font-bold uppercase tracking-widest h-14 mt-4">
+                                            {editingId ? 'Save Changes' : 'Create Project'}
                                         </Button>
                                     </div>
-
-                                    <Button type="submit" className="w-full font-bold uppercase tracking-widest">
-                                        {editingId ? 'Save Changes' : 'Create Project'}
-                                    </Button>
                                 </form>
                             </DialogContent>
                         </Dialog>

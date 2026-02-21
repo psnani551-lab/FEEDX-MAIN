@@ -183,57 +183,65 @@ export default function AddNotification() {
                 <Plus className="h-4 w-4" /> New Notification
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[700px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
+            <DialogContent className="sm:max-w-[900px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
                   {isEditMode ? 'Edit Notification' : 'Add New Notification'}
                 </DialogTitle>
               </DialogHeader>
               <div className="pt-4">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest font-bold opacity-60">Heading</Label>
-                    <Input
-                      name="title"
-                      placeholder="Maintenance Update..."
-                      value={formData.title}
-                      onChange={handleInputChange}
-                      required
-                      className="premium-boundary h-11"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-[10px] uppercase tracking-widest font-bold opacity-60">Message</Label>
-                      <Button type="button" variant="ghost" size="sm" onClick={() => setShowPreview(!showPreview)} className="h-6 text-[9px] uppercase font-black">
-                        {showPreview ? <EyeOff className="w-3 h-3 mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
-                        {showPreview ? 'Edit' : 'Preview'}
-                      </Button>
-                    </div>
-                    {showPreview ? (
-                      <div className="min-h-[150px] p-4 rounded-xl bg-white/5 border border-white/10 text-xs">
-                        <MarkdownRenderer content={formData.description || '*Quick preview appear here...*'} />
-                      </div>
-                    ) : (
-                      <Textarea
-                        name="description"
-                        placeholder="Industrial grade markdown supported..."
-                        value={formData.description}
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] uppercase tracking-widest font-bold opacity-60">Heading</Label>
+                      <Input
+                        name="title"
+                        placeholder="Maintenance Update..."
+                        value={formData.title}
                         onChange={handleInputChange}
                         required
-                        rows={8}
-                        className="premium-boundary font-mono text-xs"
+                        className="premium-boundary h-11"
                       />
-                    )}
+                    </div>
+
+                    <div className="space-y-2 mt-auto pt-4 border-t border-white/5">
+                      <Button className="w-full bg-primary text-white font-black uppercase text-xs tracking-widest h-14 rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-all">
+                        {isEditMode ? 'Update Notification' : 'Publish Live'}
+                      </Button>
+                      {isEditMode && (
+                        <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full h-14 rounded-xl border-white/10 mt-2">
+                          Cancel Edit
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <Button className="w-full bg-primary text-white font-black uppercase text-[10px] tracking-widest h-12 rounded-xl">
-                    {isEditMode ? 'Update Notification' : 'Publish Live'}
-                  </Button>
-                  {isEditMode && (
-                    <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full h-12 rounded-xl border-white/10">
-                      Cancel Edit
-                    </Button>
-                  )}
+
+                  <div className="space-y-4 flex flex-col justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] uppercase tracking-widest font-bold opacity-60">Message</Label>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => setShowPreview(!showPreview)} className="h-6 text-[9px] uppercase font-black">
+                          {showPreview ? <EyeOff className="w-3 h-3 mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
+                          {showPreview ? 'Edit' : 'Preview'}
+                        </Button>
+                      </div>
+                      {showPreview ? (
+                        <div className="min-h-[150px] p-4 rounded-xl bg-white/5 border border-white/10 text-xs">
+                          <MarkdownRenderer content={formData.description || '*Quick preview appear here...*'} />
+                        </div>
+                      ) : (
+                        <Textarea
+                          name="description"
+                          placeholder="Industrial grade markdown supported..."
+                          value={formData.description}
+                          onChange={handleInputChange}
+                          required
+                          rows={6}
+                          className="premium-boundary font-mono text-xs"
+                        />
+                      )}
+                    </div>
+                  </div>
                 </form>
               </div>
             </DialogContent>

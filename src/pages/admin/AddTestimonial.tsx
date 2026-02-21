@@ -234,62 +234,68 @@ export default function AddTestimonial() {
                 <Plus className="h-4 w-4" /> New Testimony
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[700px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
+            <DialogContent className="sm:max-w-[900px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
                   {isEditMode ? 'Edit Testimony' : 'Add New Testimony'}
                 </DialogTitle>
               </DialogHeader>
               <div className="pt-4">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase opacity-60">Identity Name</Label>
-                      <Input name="name" value={formData.name} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="Dr. Sarah Jenkins..." />
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase opacity-60">Identity Name</Label>
+                        <Input name="name" value={formData.name} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="Dr. Sarah Jenkins..." />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase opacity-60">Designation</Label>
+                        <Input name="title" value={formData.title} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="Senior Researcher..." />
+                      </div>
                     </div>
+
                     <div className="space-y-2">
-                      <Label className="text-[10px] font-black uppercase opacity-60">Designation</Label>
-                      <Input name="title" value={formData.title} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="Senior Researcher..." />
+                      <Label className="text-[10px] font-black uppercase opacity-60">Direct Quotation</Label>
+                      <Textarea name="content" value={formData.content} onChange={handleInputChange} required rows={5} className="premium-boundary font-mono text-xs italic leading-relaxed" placeholder="The impact of FeedX has been..." />
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Direct Quotation</Label>
-                    <Textarea name="content" value={formData.content} onChange={handleInputChange} required rows={5} className="premium-boundary font-mono text-xs italic leading-relaxed" placeholder="The impact of FeedX has been..." />
-                  </div>
+                  <div className="space-y-4 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Identity Snapshot</Label>
+                      <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
 
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Identity Snapshot</Label>
-                    <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
-
-                    <div className="flex items-center gap-6 p-4 rounded-2xl bg-white/5 border border-white/5 shadow-inner">
-                      <div className="relative group shrink-0">
-                        <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-indigo-500/20 bg-black/40 flex items-center justify-center">
-                          {formData.image ? (
-                            <img src={formData.image} alt="Avatar" className="w-full h-full object-cover" />
-                          ) : (
-                            <User className="w-6 h-6 text-white/20" />
-                          )}
+                      <div className="flex items-center gap-6 p-4 rounded-2xl bg-white/5 border border-white/5 shadow-inner">
+                        <div className="relative group shrink-0">
+                          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-indigo-500/20 bg-black/40 flex items-center justify-center">
+                            {formData.image ? (
+                              <img src={formData.image} alt="Avatar" className="w-full h-full object-cover" />
+                            ) : (
+                              <User className="w-6 h-6 text-white/20" />
+                            )}
+                          </div>
+                          <Button type="button" variant="ghost" size="icon" className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white border-2 border-background shadow-lg" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                            {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Camera className="w-3 h-3" />}
+                          </Button>
                         </div>
-                        <Button type="button" variant="ghost" size="icon" className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white border-2 border-background shadow-lg" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                          {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Camera className="w-3 h-3" />}
-                        </Button>
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-1">Upload Protocol</p>
-                        <p className="text-[11px] text-muted-foreground font-medium">Standardize profile visuals for maximum credibility.</p>
+                        <div className="flex-1">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-indigo-500 mb-1">Upload Protocol</p>
+                          <p className="text-[11px] text-muted-foreground font-medium">Standardize profile visuals for maximum credibility.</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <Button className="w-full bg-indigo-600 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all">
-                    {isEditMode ? 'Update Testimony' : 'Register Testimony'}
-                  </Button>
-                  {isEditMode && (
-                    <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full h-14 rounded-2xl border-white/10">
-                      Cancel Edit
-                    </Button>
-                  )}
+                    <div className="space-y-2 mt-auto">
+                      <Button className="w-full bg-indigo-600 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all">
+                        {isEditMode ? 'Update Testimony' : 'Register Testimony'}
+                      </Button>
+                      {isEditMode && (
+                        <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full h-14 rounded-2xl border-white/10">
+                          Cancel Edit
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </form>
               </div>
             </DialogContent>

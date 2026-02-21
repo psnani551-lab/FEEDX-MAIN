@@ -240,72 +240,78 @@ export default function AddSpotlight() {
                 <Plus className="h-4 w-4" /> New Spotlight
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[700px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
+            <DialogContent className="sm:max-w-[900px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
                   {isEditMode ? 'Edit Spotlight' : 'Add New Spotlight'}
                 </DialogTitle>
               </DialogHeader>
               <div className="pt-4">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Success Story Title</Label>
-                    <Input name="title" value={formData.title} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="University Grand Prize Winners..." />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Full Narrative <span className="text-[8px] opacity-40 italic">(Markdown Engine Powered)</span></Label>
-                    <Textarea name="description" value={formData.description} onChange={handleInputChange} required rows={6} className="premium-boundary font-mono text-xs leading-relaxed" placeholder="Chronicle the achievement here..." />
-                  </div>
-
-                  {formData.description && (
-                    <div className="p-4 rounded-xl border border-white/5 bg-black/20">
-                      <p className="text-[9px] font-black uppercase tracking-widest mb-3 opacity-40">Narrative Preview</p>
-                      <div className="prose prose-invert prose-xs">
-                        <MarkdownRenderer content={formData.description} />
-                      </div>
+                <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Success Story Title</Label>
+                      <Input name="title" value={formData.title} onChange={handleInputChange} required className="premium-boundary h-11" placeholder="University Grand Prize Winners..." />
                     </div>
-                  )}
 
-                  <div className="space-y-3">
-                    <Label className="text-[10px] font-black uppercase opacity-60">Visual Assets</Label>
-                    <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" multiple className="hidden" />
-                    <Button type="button" variant="outline" className="w-full h-14 border-dashed border-white/10 bg-white/5 rounded-2xl flex flex-col gap-1 items-center justify-center group hover:bg-white/10 transition-all" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                      {isUploading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                          <span className="text-[10px] uppercase font-black tracking-widest opacity-60">Synchronizing Assets...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="w-5 h-5 text-indigo-500 group-hover:scale-110 transition-transform" />
-                          <span className="text-[10px] uppercase font-black tracking-widest opacity-60">Inject Multi-Visual Data</span>
-                        </>
-                      )}
-                    </Button>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Full Narrative <span className="text-[8px] opacity-40 italic">(Markdown Engine Powered)</span></Label>
+                      <Textarea name="description" value={formData.description} onChange={handleInputChange} required rows={6} className="premium-boundary font-mono text-xs leading-relaxed" placeholder="Chronicle the achievement here..." />
+                    </div>
 
-                    {formData.images.length > 0 && (
-                      <div className="grid grid-cols-4 gap-3 mt-4">
-                        {formData.images.map((img, idx) => (
-                          <div key={idx} className="relative aspect-square group rounded-lg overflow-hidden border border-white/5">
-                            <img src={img} alt={`Asset ${idx}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                            <button type="button" onClick={() => removeImage(idx)} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                              <X className="w-5 h-5 text-white" />
-                            </button>
-                          </div>
-                        ))}
+                    {formData.description && (
+                      <div className="p-4 rounded-xl border border-white/5 bg-black/20">
+                        <p className="text-[9px] font-black uppercase tracking-widest mb-3 opacity-40">Narrative Preview</p>
+                        <div className="prose prose-invert prose-xs">
+                          <MarkdownRenderer content={formData.description} />
+                        </div>
                       </div>
                     )}
                   </div>
 
-                  <Button className="w-full bg-indigo-600 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all">
-                    {isEditMode ? 'Update Spotlight' : 'Finalize Spotlight'}
-                  </Button>
-                  {isEditMode && (
-                    <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full h-14 rounded-2xl border-white/10">
-                      Cancel Edit
-                    </Button>
-                  )}
+                  <div className="space-y-4 flex flex-col justify-between">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Visual Assets</Label>
+                      <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" multiple className="hidden" />
+                      <Button type="button" variant="outline" className="w-full h-14 border-dashed border-white/10 bg-white/5 rounded-2xl flex flex-col gap-1 items-center justify-center group hover:bg-white/10 transition-all" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                        {isUploading ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                            <span className="text-[10px] uppercase font-black tracking-widest opacity-60">Synchronizing Assets...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-5 h-5 text-indigo-500 group-hover:scale-110 transition-transform" />
+                            <span className="text-[10px] uppercase font-black tracking-widest opacity-60">Inject Multi-Visual Data</span>
+                          </>
+                        )}
+                      </Button>
+
+                      {formData.images.length > 0 && (
+                        <div className="grid grid-cols-4 gap-3 mt-4">
+                          {formData.images.map((img, idx) => (
+                            <div key={idx} className="relative aspect-square group rounded-lg overflow-hidden border border-white/5">
+                              <img src={img} alt={`Asset ${idx}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                              <button type="button" onClick={() => removeImage(idx)} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <X className="w-5 h-5 text-white" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2 mt-auto">
+                      <Button className="w-full bg-indigo-600 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all">
+                        {isEditMode ? 'Update Spotlight' : 'Finalize Spotlight'}
+                      </Button>
+                      {isEditMode && (
+                        <Button type="button" variant="outline" onClick={handleCancelEdit} className="w-full h-14 rounded-2xl border-white/10">
+                          Cancel Edit
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 </form>
               </div>
             </DialogContent>
