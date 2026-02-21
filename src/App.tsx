@@ -77,7 +77,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <SmoothScroll>
-            <BrowserRouter>
+            <BrowserRouter basename="/FEEDX-MAIN">
               <ScrollToTop />
               <ScrollToTop />
               <AnniversaryPopup />
