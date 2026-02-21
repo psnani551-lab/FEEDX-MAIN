@@ -281,7 +281,7 @@ export default function AddEvent() {
                   <Plus className="h-4 w-4" /> New Event
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[700px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl overflow-y-auto max-h-[90vh]">
+              <DialogContent className="sm:max-w-[700px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
                 <DialogHeader>
                   <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
                     {isEditMode ? 'Edit Event' : 'Add New Event'}
