@@ -208,7 +208,7 @@ const EventCard = ({ event, onAction }: { event: Event; onAction: () => void }) 
     <div className="group bg-white/[0.02] border border-white/[0.05] rounded-[32px] overflow-hidden hover:border-primary/50 hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.3)] transition-all duration-500 p-2 flex flex-col h-full">
         <div className="relative aspect-[16/10] rounded-[24px] overflow-hidden mb-6 flex-shrink-0">
             <img
-                src={event.image || noDataIllustration}
+                src={event.image ? getImageUrl(event.image) : noDataIllustration}
                 alt={event.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                 loading="lazy"
