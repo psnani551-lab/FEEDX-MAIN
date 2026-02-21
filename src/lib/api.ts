@@ -96,6 +96,39 @@ export interface Testimonial {
   timestamp: string;
 }
 
+export interface Project {
+  id: string;
+  title: string;
+  subtitle: string;
+  category: string;
+  status: string;
+  description: string;
+  details: string[];
+  timestamp: string;
+}
+
+export const projectsAPI = {
+  getAll: async (): Promise<Project[]> => {
+    return withFallback(async () => {
+      const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data.map(p => ({ ...p, timestamp: p.created_at }));
+    }, '/api/admin/projects');
+  },
+  create: async (data: Omit<Project, 'id' | 'timestamp'>): Promise<Project> => {
+    const { data: record, error } = await supabase.from('projects').insert([data]).select().single();
+    if (error) throw error;
+    return { ...record, timestamp: record.created_at };
+  },
+  delete: async (id: string): Promise<void> => {
+    const { error } = await supabase.from('projects').delete().eq('id', id);
+    if (error) throw error;
+  },
+  update: async (id: string, data: Partial<Project>): Promise<void> => {
+    const { error } = await supabase.from('projects').update(data).eq('id', id);
+    if (error) throw error;
+  },
+};
 
 export interface GalleryImage {
   id: string;

@@ -38,6 +38,7 @@ import AddSpotlight from "./pages/admin/AddSpotlight";
 import AddTestimonial from "./pages/admin/AddTestimonial";
 import AddGallery from "./pages/admin/AddGallery";
 import AddInstitute from "./pages/admin/AddInstitute";
+import AddProject from "./pages/admin/AddProject";
 
 import InstituteAdmin from "./pages/admin/InstituteAdmin";
 import MobileNav from "./components/MobileNav";
@@ -138,6 +139,7 @@ const App = () => (
                 <Route path="/admin/testimonials" element={<AddTestimonial />} />
                 <Route path="/admin/gallery" element={<AddGallery />} />
                 <Route path="/admin/institutes" element={<AddInstitute />} />
+                <Route path="/admin/projects" element={<AddProject />} />
                 <Route path="/admin/institutes/:code" element={<InstituteAdmin />} />
 
                 <Route path="/admin/users" element={<UserManagement />} />

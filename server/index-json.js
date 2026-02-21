@@ -660,6 +660,7 @@ createAdminCrudRoutes('resources');
 createAdminCrudRoutes('events');
 createAdminCrudRoutes('spotlight');
 createAdminCrudRoutes('testimonials');
+createAdminCrudRoutes('projects');
 
 // ================== APPEARANCE SETTINGS ==================
 app.get('/api/admin/appearance', (req, res) => {

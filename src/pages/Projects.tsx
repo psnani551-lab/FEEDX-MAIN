@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,54 +7,26 @@ import { ArrowRight, ChevronDown, Bot } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { projectsIllustration } from '@/lib/illustrations';
+import { projectsAPI, Project } from '@/lib/api';
 
 const Projects = () => {
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const projects = useMemo(
-    () => [
-      {
-        id: 'proj-1',
-        title: 'Smart Feedback Analyzer',
-        subtitle: 'AI-driven sentiment analysis for student feedback.',
-        category: 'Technology',
-        status: 'Active',
-        description: 'A machine learning model designed to categorize and analyze student feedback effectively, prioritizing urgent issues for administration.',
-        details: [
-          'Utilizes Natural Language Processing (NLP)',
-          'Current accuracy: 92%',
-          'Integrates directly with FXBOT'
-        ]
-      },
-      {
-        id: 'proj-2',
-        title: 'Campus Resource Tracker',
-        subtitle: 'Real-time inventory and resource management system.',
-        category: 'Student Support',
-        status: 'Pilot',
-        description: 'An IoT-based tracking system to monitor the availability of lab equipment and library resources in real-time.',
-        details: [
-          'RFID based tracking',
-          'Mobile app for student access',
-          'Deploying to 3 main labs next month'
-        ]
-      },
-      {
-        id: 'proj-3',
-        title: 'Automated Attendance System',
-        subtitle: 'Facial recognition based attendance logging.',
-        category: 'Education',
-        status: 'Planning',
-        description: 'A contactless attendance system aiming to eliminate proxy attendance and save instructional time.',
-        details: [
-          'Seeking faculty approval',
-          'Privacy-first on-device processing',
-          'Expected completion: Fall 2026'
-        ]
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const data = await projectsAPI.getAll();
+        setProjects(data || []);
+      } catch (error) {
+        console.error('Failed to fetch projects:', error);
+      } finally {
+        setIsLoading(false);
       }
-    ],
-    []
-  );
+    };
+    fetchProjects();
+  }, []);
 
   const toggleExpanded = useCallback((id: string) => {
     setExpandedProjectId((current) => (current === id ? null : id));
@@ -102,7 +74,11 @@ const Projects = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Projects List */}
         <div className="max-w-4xl mx-auto space-y-4">
-          {projects.length > 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center text-center text-muted-foreground py-20 bg-white/[0.02] border border-dashed rounded-3xl border-white/10">
+              <p className="text-sm font-bold uppercase tracking-widest animate-pulse">Loading projects...</p>
+            </div>
+          ) : projects.length > 0 ? (
             projects.map((project, index) => {
               const isExpanded = expandedProjectId === project.id;
               return (

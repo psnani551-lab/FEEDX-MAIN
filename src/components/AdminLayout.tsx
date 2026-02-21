@@ -25,6 +25,7 @@ const navItems = [
     { id: "resources", title: "Resources", icon: BookOpen, route: "/admin/resources" },
     { id: "events", title: "Events", icon: Calendar, route: "/admin/events" },
     { id: "gallery", title: "Gallery", icon: Image, route: "/admin/gallery" },
+    { id: "projects", title: "Projects", icon: Sparkles, route: "/admin/projects" },
     { id: "spotlight", title: "Spotlight", icon: Sparkles, route: "/admin/spotlight" },
     { id: "testimonials", title: "Testimonials", icon: MessageSquare, route: "/admin/testimonials" },
     { id: "institutes", title: "Institutes", icon: Building2, route: "/admin/institutes" },
