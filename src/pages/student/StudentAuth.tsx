@@ -208,7 +208,7 @@ const StudentAuth = () => {
                                         {!isOtpSent ? (
                                             <div className="space-y-6">
                                                 <div className="space-y-2.5">
-                                                    <Label htmlFor="email" className="text-slate-700 text-sm font-bold ml-1">Work Email Address</Label>
+                                                    <Label htmlFor="email" className="text-slate-700 text-sm font-bold ml-1">Email Address</Label>
                                                     <div className="relative group">
                                                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
                                                         <Input
