@@ -19,6 +19,16 @@ interface LoginLog {
   device_info?: string;
 }
 
+const parseDevice = (ua?: string): string => {
+  if (!ua) return 'Unknown Device';
+  if (/iPhone|iPad/.test(ua)) return '📱 iOS';
+  if (/Android/.test(ua)) return '📱 Android';
+  if (/Windows/.test(ua)) return '🖥 Windows';
+  if (/Mac OS/.test(ua)) return '🍎 macOS';
+  if (/Linux/.test(ua)) return '🐧 Linux';
+  return '🌐 Browser';
+};
+
 export default function LoginLogs() {
   const [logs, setLogs] = useState<LoginLog[]>([]);
   const [loading, setLoading] = useState(false);
@@ -50,8 +60,8 @@ export default function LoginLogs() {
         id: log.id,
         username: log.email || 'Unknown',
         login_time: log.created_at,
-        ip_address: log.ip_address || '0.0.0.0',
-        success: true, // Login logs in Supabase table are typically successful entries or attempts we want to track
+        ip_address: log.ip_address || '—',
+        success: log.success ?? true,
         device_info: log.user_agent
       }));
 
@@ -98,8 +108,15 @@ export default function LoginLogs() {
       render: (log: LoginLog) => (
         <div className="flex items-center gap-2">
           <Globe className="w-3.5 h-3.5 text-muted-foreground opacity-40" />
-          <span className="text-[10px] font-mono text-muted-foreground">{log.ip_address || '0.0.0.0'}</span>
+          <span className="text-[10px] font-mono text-muted-foreground">{log.ip_address}</span>
         </div>
+      )
+    },
+    {
+      key: "device_info",
+      label: "Device",
+      render: (log: LoginLog) => (
+        <span className="text-[10px] font-bold text-muted-foreground">{parseDevice(log.device_info)}</span>
       )
     },
     {
@@ -107,7 +124,7 @@ export default function LoginLogs() {
       label: "Status",
       render: (log: LoginLog) => (
         <Badge variant="outline" className={`uppercase text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full ${log.success ? 'bg-emerald-500/10 text-emerald-500 border-0' : 'bg-rose-500/10 text-rose-500 border-0'}`}>
-          {log.success ? 'Validated' : 'Rejected'}
+          {log.success ? '✓ Validated' : '✗ Rejected'}
         </Badge>
       )
     }

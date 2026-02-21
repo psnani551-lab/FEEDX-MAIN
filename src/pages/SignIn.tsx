@@ -11,6 +11,20 @@ import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
+// Records every login attempt (success or failure) to the login_logs table
+const recordLoginAttempt = async (email: string, success: boolean) => {
+  try {
+    await supabase.from('login_logs').insert({
+      email,
+      ip_address: '0.0.0.0', // Browser cannot access real IP; server-side trigger handles this
+      user_agent: navigator.userAgent,
+      success,
+    });
+  } catch (_) {
+    // Silently fail — don't block the user's login flow
+  }
+};
+
 const SignIn = () => {
   const [formData, setFormData] = useState({
     email: '',
@@ -41,11 +55,14 @@ const SignIn = () => {
       });
 
       if (error) {
+        await recordLoginAttempt(formData.email, false);
         setError(error.message);
       } else if (data.user) {
+        await recordLoginAttempt(formData.email, true);
         navigate('/');
       }
     } catch (error) {
+      await recordLoginAttempt(formData.email, false);
       setError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
