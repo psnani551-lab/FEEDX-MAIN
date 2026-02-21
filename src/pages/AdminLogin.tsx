@@ -34,8 +34,8 @@ const AdminLogin = () => {
         description: `Welcome, ${data.user.name}!`,
       });
 
-      // Force redirect using window.location for reliability
-      window.location.href = '/admin';
+      // Use React Router to safely navigate while preserving the basename
+      navigate('/admin');
     } catch (err: any) {
       const errorMsg = err.message || 'Connection error';
       setError(errorMsg);
