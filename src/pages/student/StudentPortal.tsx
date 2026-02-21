@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Student, FXBotIssue, fxbotAPI } from "@/lib/api";
+import { fxbotSupabase } from "@/integrations/supabase/fxbot-client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import SubmitIssue from "@/components/fxbot/SubmitIssue";
@@ -32,9 +33,19 @@ const StudentPortal = () => {
             navigate("/student/auth");
             return;
         }
-        const studentData = JSON.parse(session);
-        setStudent(studentData);
-        fetchIssues(studentData);
+
+        // Validate the Supabase auth session is still active
+        fxbotSupabase.auth.getSession().then(({ data: { session: authSession } }) => {
+            if (!authSession) {
+                // Auth session expired — clear stale local data and redirect
+                localStorage.removeItem("student_session");
+                navigate("/student/auth");
+                return;
+            }
+            const studentData = JSON.parse(session);
+            setStudent(studentData);
+            fetchIssues(studentData);
+        });
     }, [navigate]);
 
     const fetchIssues = async (user: Student) => {

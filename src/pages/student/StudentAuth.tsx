@@ -41,14 +41,17 @@ const StudentAuth = () => {
     }, [countdown]);
 
     const handleEmailBlur = async () => {
+        // Only trigger if: it's the login tab, email looks complete (has @), and OTP hasn't been sent yet
         if (!email || isOtpSent || activeTab === "signup") return;
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) return; // Don't check incomplete emails
         try {
             const exists = await fxbotAPI.checkEmailExists(email);
             if (!exists) {
                 setActiveTab("signup");
                 toast({
                     title: "Account Not Found",
-                    description: "We couldn't find an account with this email. Please sign up to continue.",
+                    description: "No account found with this email. Please sign up to continue.",
                 });
             }
         } catch (error) {
@@ -68,6 +71,24 @@ const StudentAuth = () => {
             if (missingFields) {
                 toast({ title: "All fields are required", variant: "destructive" });
                 return;
+            }
+        }
+
+        // On the login tab — pre-check that this email exists in our DB before sending OTP
+        if (activeTab === "login") {
+            try {
+                const exists = await fxbotAPI.checkEmailExists(email);
+                if (!exists) {
+                    setActiveTab("signup");
+                    toast({
+                        title: "Account Not Found",
+                        description: "No account found with this email. Please sign up first.",
+                    });
+                    return;
+                }
+            } catch (err) {
+                // Network error — let the OTP attempt proceed anyway
+                console.warn("Pre-check skipped due to error:", err);
             }
         }
 
@@ -106,8 +127,14 @@ const StudentAuth = () => {
                 type: 'email'
             });
 
-            if (error) throw error;
-            if (!session) throw new Error("Verification failed - No session returned.");
+            if (error) {
+                setOtp(""); // Clear OTP so user can re-enter
+                throw error;
+            }
+            if (!session) {
+                setOtp("");
+                throw new Error("Verification failed — no session returned. Try resending the code.");
+            }
 
             let profile;
             if (activeTab === "signup") {
@@ -123,13 +150,21 @@ const StudentAuth = () => {
                     role: userType,
                     designation: userType === "student" ? "student" : designation
                 });
-                toast({ title: "Account Created!", description: `Username: ${profile.username}` });
+                toast({ title: "Account Created!", description: `Welcome, ${profile.full_name}. Your username: ${profile.username}` });
             } else {
                 profile = await fxbotAPI.getStudentProfile(email);
                 if (!profile) {
-                    setActiveTab("signup");
+                    // Auth verified but student row missing — guide user to sign up
+                    await fxbotSupabase.auth.signOut();
                     setIsOtpSent(false);
-                    throw new Error("Profile not found. Please complete registration.");
+                    setOtp("");
+                    setActiveTab("signup");
+                    toast({
+                        title: "Profile Not Found",
+                        description: "Your email is verified but your student profile is missing. Please complete sign-up.",
+                        variant: "destructive"
+                    });
+                    return;
                 }
             }
 
