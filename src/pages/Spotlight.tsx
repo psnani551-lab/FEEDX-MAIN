@@ -53,7 +53,7 @@ const Spotlight = () => {
             height={360}
           />
           <div className="flex-1">
-            <h1 className="text-3xl sm:text-5xl font-bold mb-3 text-gradient">Spotlight</h1>
+            <h1 className="text-3xl sm:text-5xl font-bold mb-3 text-gradient pb-2">Spotlight</h1>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
               Capturing moments, celebrating achievements, and showcasing our vibrant community
             </p>
