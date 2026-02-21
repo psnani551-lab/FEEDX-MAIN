@@ -39,17 +39,16 @@ const AboutSection = () => {
     <section id="about" className="py-20 bg-background relative overflow-hidden">
       <div className="container relative z-10 mx-auto px-6 lg:px-12">
 
-        {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-2 gap-16 items-center mb-32">
-          {/* Left Content */}
+        {/* Main Content */}
+        <div className="max-w-4xl mx-auto text-center mb-32">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
             className="space-y-8"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 mx-auto">
               <span className="text-xs font-black uppercase tracking-[0.2em] text-primary">Our Mission</span>
             </div>
 
@@ -61,39 +60,13 @@ const AboutSection = () => {
               <p className="text-2xl sm:text-3xl text-foreground font-black tracking-tight">
                 FEEDX is an acronym for Feed + X (Exchange & Exposure).
               </p>
-              <p className="text-lg font-medium">
+              <p className="text-lg font-medium max-w-3xl mx-auto">
                 We believe Polytechnic education is the bedrock of industry. Our mission is to bridge the gap between classroom theory and career-ready mastery through our comprehensive S-O-K model.
               </p>
-              <p className="text-base">
+              <p className="text-base max-w-3xl mx-auto">
                 By connecting students with real-world skills, opportunities, and knowledge, we're building a generation of industry-ready professionals who don't just find jobs—they create careers.
               </p>
             </div>
-          </motion.div>
-
-          {/* Right Content - Features Grid */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="grid grid-cols-2 gap-6"
-          >
-            {features.map((feature, idx) => (
-              <Card
-                key={idx}
-                className="glass-card border-white/10 hover:border-primary/30 hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.3)] transition-all duration-500 group"
-              >
-                <CardContent className="p-6 space-y-3">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                    <feature.icon className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-black text-foreground tracking-tight">{feature.title}</p>
-                    <p className="text-xs text-muted-foreground font-medium mt-1">{feature.description}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
           </motion.div>
         </div>
 
