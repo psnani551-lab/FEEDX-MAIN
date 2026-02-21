@@ -69,7 +69,7 @@ const FacultyDashboard = ({ issues, onRefresh, facultyProfile }: FacultyDashboar
             >
                 <div className="flex items-center gap-6">
                     <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center overflow-hidden shadow-2xl border border-slate-100 group">
-                        <img src="/fxbot-logo.jpg" alt="FXBOT" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <img src={`${import.meta.env.BASE_URL}fxbot-logo.jpg`} alt="FXBOT" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     </div>
                     <div>
                         <div className="flex items-center gap-2 mb-1">
@@ -107,7 +107,7 @@ const FacultyDashboard = ({ issues, onRefresh, facultyProfile }: FacultyDashboar
                                 <TableCell colSpan={6} className="h-48 text-center text-slate-400">
                                     <div className="flex flex-col items-center gap-3">
                                         <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center overflow-hidden grayscale opacity-30 shadow-inner">
-                                            <img src="/fxbot-logo.jpg" alt="FXBOT" className="w-full h-full object-cover" />
+                                            <img src={`${import.meta.env.BASE_URL}fxbot-logo.jpg`} alt="FXBOT" className="w-full h-full object-cover" />
                                         </div>
                                         <p className="font-medium">No pending feedback detected in your sector.</p>
                                     </div>

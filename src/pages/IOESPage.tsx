@@ -45,7 +45,7 @@ const IOESPage = () => {
                 <div className="relative h-48 sm:h-64 md:h-72 w-full mt-16 overflow-hidden">
                     <div className="absolute inset-0 bg-black/20 z-10" />
                     <img
-                        src="/images/ioes_banner.jpg"
+                        src={`${import.meta.env.BASE_URL}images/ioes_banner.jpg`}
                         alt="IOES Banner"
                         className="w-full h-full object-cover"
                     />
@@ -57,7 +57,7 @@ const IOESPage = () => {
                         {/* Logo */}
                         <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-xl bg-white p-2 shadow-lg border border-slate-100 flex-shrink-0">
                             <img
-                                src="/images/gioe-logo.jpg"
+                                src={`${import.meta.env.BASE_URL}images/gioe-logo.jpg`}
                                 alt="IOES Logo"
                                 className="w-full h-full object-contain"
                             />

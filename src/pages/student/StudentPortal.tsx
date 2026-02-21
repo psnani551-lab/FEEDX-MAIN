@@ -95,7 +95,7 @@ const StudentPortal = () => {
                     <div className="flex items-center gap-6">
                         <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/10 relative overflow-hidden flex-shrink-0 border border-blue-100/50 group">
                             <img
-                                src="/fxbot-logo.jpg"
+                                src={`${import.meta.env.BASE_URL}fxbot-logo.jpg`}
                                 alt="FXBOT Logo"
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             />

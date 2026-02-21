@@ -165,7 +165,7 @@ const StudentAuth = () => {
                         className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-blue-500/20 relative overflow-hidden group border border-blue-50"
                     >
                         <img
-                            src="/fxbot-logo.jpg"
+                            src={`${import.meta.env.BASE_URL}fxbot-logo.jpg`}
                             alt="FXBOT Logo"
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />

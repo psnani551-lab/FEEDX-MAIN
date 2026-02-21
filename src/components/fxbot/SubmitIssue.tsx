@@ -97,7 +97,7 @@ const SubmitIssue = ({ studentId, department, onSuccess }: SubmitIssueProps) => 
                                 animate={{ y: 0, opacity: 1 }}
                                 className="w-24 h-24 bg-white rounded-[2rem] flex items-center justify-center overflow-hidden shadow-2xl border-4 border-slate-800"
                             >
-                                <img src="/fxbot-logo.jpg" alt="FXBOT" className="w-full h-full object-cover" />
+                                <img src={`${import.meta.env.BASE_URL}fxbot-logo.jpg`} alt="FXBOT" className="w-full h-full object-cover" />
                             </motion.div>
                             <motion.div
                                 initial={{ y: 20, opacity: 0 }}

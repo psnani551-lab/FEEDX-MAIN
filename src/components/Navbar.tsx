@@ -73,7 +73,7 @@ const Navbar = () => {
             {/* FXBOT Button - Desktop */}
             <Link to={localStorage.getItem("student_session") ? "/student/menu" : "/student/auth"} className="hidden lg:block">
               <Button size="sm" className="magnetic-glow bg-blue-600/10 text-blue-500 border-2 border-blue-500/20 hover:bg-blue-600 hover:text-white transition-all duration-500 rounded-full px-6 font-black tracking-widest gap-2">
-                <img src="/fxbot-logo.jpg" alt="FXBOT" className="w-5 h-5 rounded-sm object-cover" />
+                <img src={`${import.meta.env.BASE_URL}fxbot-logo.jpg`} alt="FXBOT" className="w-5 h-5 rounded-sm object-cover" />
                 FXBOT
               </Button>
             </Link>
@@ -124,7 +124,7 @@ const Navbar = () => {
           <div className="mt-auto space-y-4">
             <Link to={localStorage.getItem("student_session") ? "/student/menu" : "/student/auth"} onClick={() => setMobileMenuOpen(false)}>
               <Button className="w-full h-14 bg-blue-600 text-white rounded-2xl font-black tracking-widest text-lg gap-3">
-                <img src="/fxbot-logo.jpg" alt="FXBOT" className="w-6 h-6 rounded-md object-cover" />
+                <img src={`${import.meta.env.BASE_URL}fxbot-logo.jpg`} alt="FXBOT" className="w-6 h-6 rounded-md object-cover" />
                 FXBOT PORTAL
               </Button>
             </Link>

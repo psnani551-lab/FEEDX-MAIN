@@ -50,7 +50,7 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
             >
                 <div className="flex items-center gap-6">
                     <div className="w-20 h-20 bg-white rounded-[2rem] flex items-center justify-center overflow-hidden shadow-2xl border border-slate-100 p-0.5 group">
-                        <img src="/fxbot-logo.jpg" alt="FXBOT" className="w-full h-full object-cover rounded-[1.8rem] group-hover:scale-110 transition-transform duration-500" />
+                        <img src={`${import.meta.env.BASE_URL}fxbot-logo.jpg`} alt="FXBOT" className="w-full h-full object-cover rounded-[1.8rem] group-hover:scale-110 transition-transform duration-500" />
                     </div>
                     <div>
                         <div className="flex items-center gap-2 mb-1">

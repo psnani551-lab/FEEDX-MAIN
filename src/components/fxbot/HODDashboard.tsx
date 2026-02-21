@@ -69,7 +69,7 @@ const HODDashboard = ({ issues, onRefresh, hodProfile }: HODDashboardProps) => {
             >
                 <div className="flex items-center gap-6">
                     <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center overflow-hidden shadow-2xl border border-slate-100 group">
-                        <img src="/fxbot-logo.jpg" alt="FXBOT" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        <img src={`${import.meta.env.BASE_URL}fxbot-logo.jpg`} alt="FXBOT" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     </div>
                     <div>
                         <div className="flex items-center gap-2 mb-1">
