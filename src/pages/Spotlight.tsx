@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { spotlightAPI, Spotlight as SpotlightItem } from '@/lib/api';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import { getImageUrl } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -73,7 +74,7 @@ const Spotlight = () => {
                     {spotlight.images.length > 0 && (
                       <div className="relative h-64 overflow-hidden">
                         <img
-                          src={spotlight.images[0]}
+                          src={getImageUrl(spotlight.images[0])}
                           alt={spotlight.title}
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />

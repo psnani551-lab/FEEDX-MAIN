@@ -4,6 +4,7 @@ import { Calendar, MapPin, Clock, Users, FileText, Image as ImageIcon, Download,
 import { noDataIllustration } from '@/lib/illustrations';
 import { eventsAPI, Event } from '@/lib/api';
 import { useNavigate } from 'react-router-dom';
+import { getImageUrl } from '@/lib/utils';
 import {
     Dialog,
     DialogContent,
@@ -133,13 +134,13 @@ const EventsSection = () => {
                             {/* Header Image */}
                             <div className="relative h-64 sm:h-80 w-full overflow-hidden shrink-0">
                                 <img
-                                    src={selectedEvent.image || noDataIllustration}
+                                    src={getImageUrl(selectedEvent.image)}
                                     alt={selectedEvent.title}
                                     className="w-full h-full object-cover"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
                                 <div className="absolute top-6 right-6">
-                                    <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] backdrop-blur-md border ${selectedEvent.status === 'upcoming' ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/10 text-muted-foreground border-white/20'}`}>
+                                    <div className={`px - 4 py - 1.5 rounded - full text - [10px] font - black uppercase tracking - [0.2em] backdrop - blur - md border ${selectedEvent.status === 'upcoming' ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/10 text-muted-foreground border-white/20'} `}>
                                         {selectedEvent.status}
                                     </div>
                                 </div>
@@ -213,7 +214,7 @@ const EventCard = ({ event, onAction }: { event: Event; onAction: () => void }) 
                 loading="lazy"
             />
             <div className="absolute top-4 right-4">
-                <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md border ${event.status === 'upcoming' ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/10 text-muted-foreground border-white/20'}`}>
+                <div className={`px - 3 py - 1 rounded - full text - [9px] font - black uppercase tracking - widest backdrop - blur - md border ${event.status === 'upcoming' ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/10 text-muted-foreground border-white/20'} `}>
                     {event.status === 'upcoming' ? 'Upcoming' : 'Conducted'}
                 </div>
             </div>

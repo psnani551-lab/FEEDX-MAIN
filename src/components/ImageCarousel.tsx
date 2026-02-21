@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { galleryAPI } from '@/lib/api';
+import { getImageUrl } from '@/lib/utils';
 
 interface GalleryImage {
   id: string;
@@ -145,7 +146,7 @@ const ImageCarousel = ({ className = '' }: ImageCarouselProps) => {
           <AnimatePresence initial={false} custom={direction} mode="wait">
             <motion.img
               key={currentIndex}
-              src={carouselImages[currentIndex]}
+              src={getImageUrl(carouselImages[currentIndex])}
               alt={`Carousel image ${currentIndex + 1}`}
               custom={direction}
               variants={slideVariants}
@@ -185,7 +186,7 @@ const ImageCarousel = ({ className = '' }: ImageCarouselProps) => {
 
       {/* Dots Indicator */}
       <div className="flex justify-center gap-2 mt-4">
-        {carouselImages.map((_, index) => (
+        {carouselImages.map((imgUrl, index) => (
           <button
             key={index}
             onClick={() => {
