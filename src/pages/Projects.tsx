@@ -50,10 +50,10 @@ const Projects = () => {
           <img src={projectsIllustration} alt="Projects" className="w-full max-w-md" />
           <div className="flex-1">
             <h1 className="text-4xl sm:text-5xl font-bold mb-3">
-              Projects & Initiatives
+              Student Projects & Innovations
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              A curated list of initiatives we’re building for Polytechnic learners.
+              Showcasing exceptional projects built by Polytechnic students to connect with industry clients and investors.
             </p>
           </div>
         </div>
@@ -147,8 +147,8 @@ const Projects = () => {
           ) : (
             <div className="text-center py-20 bg-muted/20 rounded-3xl border border-dashed border-border">
               <Bot className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold mb-2">New Projects Coming Soon</h3>
-              <p className="text-muted-foreground">Check back later for our upcoming initiatives.</p>
+              <h3 className="text-xl font-semibold mb-2">Innovations Loading</h3>
+              <p className="text-muted-foreground">Check back soon to explore groundbreaking student projects and investment opportunities.</p>
             </div>
           )}
         </div>
