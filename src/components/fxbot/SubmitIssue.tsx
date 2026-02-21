@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
 import { fxbotAPI } from "@/lib/api";
 import { Upload, X, FileText, CheckCircle2, ChevronRight, AlertCircle, Info, MessageSquare, Shield, User as UserIcon, Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -128,7 +129,10 @@ const SubmitIssue = ({ studentId, department, onSuccess }: SubmitIssueProps) => 
                                 setSubmittedId(null);
                                 setType("Issue");
                                 setCategory("");
+                                setOtherCategory("");
+                                setStaffName("");
                                 setDescription("");
+                                setAttachments([]);
                                 setIsAnonymous(false);
                             }}
                             className="w-full h-16 rounded-2xl bg-white hover:bg-slate-100 text-slate-900 font-black uppercase tracking-widest text-xs transition-all shadow-xl active:scale-[0.98]"
