@@ -61,13 +61,40 @@ const FacultyDashboard = ({ issues, onRefresh, facultyProfile }: FacultyDashboar
     };
 
     return (
-        <div className="space-y-6">
-            <div className="glass-card border-white/40 shadow-2xl rounded-[1.5rem] overflow-hidden">
+        <div className="space-y-8">
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
+            >
+                <div className="flex items-center gap-6">
+                    <div className="w-16 h-16 bg-white rounded-3xl flex items-center justify-center overflow-hidden shadow-2xl border border-slate-100 group">
+                        <img src="/fxbot-logo.jpg" alt="FXBOT" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    </div>
+                    <div>
+                        <div className="flex items-center gap-2 mb-1">
+                            <ShieldAlert className="h-4 w-4 text-blue-600" />
+                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em]">Institutional Faculty Sector</span>
+                        </div>
+                        <h2 className="text-4xl font-black text-slate-900 tracking-tight uppercase leading-none">FACULTY COMMAND - {facultyProfile.department}</h2>
+                    </div>
+                </div>
+                <Badge variant="outline" className="px-6 py-3 font-black text-[10px] text-blue-600 border-blue-200 bg-blue-50/50 rounded-2xl shadow-sm tracking-[0.1em]">
+                    AUTHORIZED PERSONNEL ONLY
+                </Badge>
+            </motion.div>
+
+            <motion.div
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="glass-card border-white/40 shadow-2xl rounded-[1.5rem] overflow-hidden"
+            >
                 <Table>
                     <TableHeader className="bg-slate-50/50">
                         <TableRow className="hover:bg-transparent border-slate-200/60">
-                            <TableHead className="w-[140px] font-bold text-slate-500 py-5 pl-8 uppercase tracking-wider text-[10px]">Reference</TableHead>
-                            <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Core Classification</TableHead>
+                            <TableHead className="w-[140px] font-bold text-slate-500 py-5 pl-8 uppercase tracking-wider text-[10px]">Registry Key</TableHead>
+                            <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Registry Context</TableHead>
                             <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Recipient</TableHead>
                             <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Aging Report</TableHead>
                             <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Status</TableHead>
@@ -167,7 +194,7 @@ const FacultyDashboard = ({ issues, onRefresh, facultyProfile }: FacultyDashboar
                         )}
                     </TableBody>
                 </Table>
-            </div>
+            </motion.div>
 
             <Dialog open={!!selectedIssue} onOpenChange={(open) => !open && setSelectedIssue(null)}>
                 <DialogContent className="max-w-2xl rounded-[2.5rem] border-white/40 shadow-2xl glass-card p-0 overflow-hidden">
