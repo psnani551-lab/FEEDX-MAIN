@@ -283,13 +283,13 @@ export const eventsAPI = {
       return data.map(e => ({
         ...e,
         timestamp: e.created_at,
-        date: e.event_date,
-        time: e.event_time,
-        registerLink: e.register_link,
-        isComingSoon: e.is_coming_soon,
-        adminStatus: e.admin_status
+        date: e.event_date || e.date,
+        time: e.event_time || e.time,
+        registerLink: e.register_link || e.registerLink,
+        isComingSoon: e.is_coming_soon || e.isComingSoon,
+        adminStatus: e.admin_status || e.adminStatus
       }));
-    }, '/api/admin/events');
+    }, '/api/events');
   },
 
   create: async (data: any): Promise<Event> => {

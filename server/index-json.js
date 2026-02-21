@@ -571,6 +571,12 @@ const createCrudRoutes = (resourceName) => {
 const createAdminCrudRoutes = (resourceName) => {
   const filename = `${resourceName}.json`;
 
+  // GET all (public read access)
+  app.get(`/api/${resourceName}`, (req, res) => {
+    const data = readJsonFile(filename);
+    res.json(data);
+  });
+
   // GET all (protected, including drafts)
   app.get(`/api/admin/${resourceName}`, verifyToken, (req, res) => {
     const data = readJsonFile(filename);
@@ -594,6 +600,9 @@ const createAdminCrudRoutes = (resourceName) => {
       id: generateId(),
       status: 'published', // Default status
       ...req.body,
+      // Support both property styles for local JSON
+      date: req.body.date || req.body.event_date,
+      time: req.body.time || req.body.event_time,
       timestamp: new Date().toISOString()
     };
     data.unshift(newItem);
