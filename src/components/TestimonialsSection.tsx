@@ -107,9 +107,10 @@ const TestimonialsSection = () => {
         {/* Dynamic Testimonials Grid */}
         {testimonials.length > 0 && (
           <div className="mt-8">
-            <div className="text-left mb-12">
-              <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">
-                Community Feedback
+            <div className="text-left max-w-2xl mb-16 relative">
+              <div className="absolute -left-6 top-2 bottom-2 w-1 bg-primary/40 rounded-full hidden lg:block" />
+              <h3 className="text-4xl sm:text-5xl md:text-6xl font-black text-foreground mb-6 tracking-tighter uppercase leading-[0.9]">
+                COMMUNITY <span className="text-primary">FEEDBACK.</span>
               </h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
