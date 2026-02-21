@@ -116,17 +116,53 @@ export const projectsAPI = {
     }, '/api/projects');
   },
   create: async (data: Omit<Project, 'id' | 'timestamp'>): Promise<Project> => {
-    const { data: record, error } = await supabase.from('projects').insert([data]).select().single();
-    if (error) throw error;
-    return { ...record, timestamp: record.created_at };
+    try {
+      const { data: record, error } = await supabase.from('projects').insert([data]).select().single();
+      if (error) throw error;
+      return { ...record, timestamp: record.created_at };
+    } catch (e) {
+      console.warn("Supabase insert failed, trying local fallback", e);
+      const res = await fetch(`${API_BASE}/api/admin/projects`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+        },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error("Local API fallback failed");
+      return res.json();
+    }
   },
   delete: async (id: string): Promise<void> => {
-    const { error } = await supabase.from('projects').delete().eq('id', id);
-    if (error) throw error;
+    try {
+      const { error } = await supabase.from('projects').delete().eq('id', id);
+      if (error) throw error;
+    } catch (e) {
+      console.warn("Supabase delete failed, trying local fallback", e);
+      const res = await fetch(`${API_BASE}/api/admin/projects/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
+      });
+      if (!res.ok) throw new Error("Local API fallback failed");
+    }
   },
   update: async (id: string, data: Partial<Project>): Promise<void> => {
-    const { error } = await supabase.from('projects').update(data).eq('id', id);
-    if (error) throw error;
+    try {
+      const { error } = await supabase.from('projects').update(data).eq('id', id);
+      if (error) throw error;
+    } catch (e) {
+      console.warn("Supabase update failed, trying local fallback", e);
+      const res = await fetch(`${API_BASE}/api/admin/projects/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
+        },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error("Local API fallback failed");
+    }
   },
 };
 
