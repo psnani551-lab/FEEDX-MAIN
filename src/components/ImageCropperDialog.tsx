@@ -63,6 +63,7 @@ export default function ImageCropperDialog({
                         onCropChange={setCrop}
                         onCropComplete={onCropCompleteLocal}
                         onZoomChange={setZoom}
+                        mediaProps={{ crossOrigin: "anonymous" }}
                     />
                 </div>
 

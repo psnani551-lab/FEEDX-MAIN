@@ -4,6 +4,7 @@ export const getCroppedImg = async (
     fileName: string = 'cropped-image.jpg'
 ): Promise<File> => {
     const image = new window.Image();
+    image.setAttribute('crossOrigin', 'anonymous'); // allow cross-origin images
     image.src = imageSrc;
 
     await new Promise((resolve, reject) => {
