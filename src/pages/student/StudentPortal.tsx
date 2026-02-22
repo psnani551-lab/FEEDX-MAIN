@@ -18,6 +18,7 @@ import { LogOut, CheckCircle2, Clock, ShieldCheck, User as UserIcon, Building2, 
 import FacultyDashboard from "@/components/fxbot/FacultyDashboard";
 import HODDashboard from "@/components/fxbot/HODDashboard";
 import PrincipalDashboard from "@/components/fxbot/PrincipalDashboard";
+import AdminDashboard from "@/components/fxbot/AdminDashboard";
 
 const StudentPortal = () => {
     const [student, setStudent] = useState<Student | null>(null);
@@ -202,11 +203,19 @@ const StudentPortal = () => {
                                     />
                                 )}
                                 {(student.designation === 'Principal' || student.designation === 'Admin') ? (
-                                    <PrincipalDashboard
-                                        issues={issues}
-                                        principalProfile={student}
-                                        onRefresh={() => fetchIssues(student)}
-                                    />
+                                    student.designation === 'Admin' ? (
+                                        <AdminDashboard
+                                            issues={issues}
+                                            adminProfile={student}
+                                            onRefresh={() => fetchIssues(student)}
+                                        />
+                                    ) : (
+                                        <PrincipalDashboard
+                                            issues={issues}
+                                            principalProfile={student}
+                                            onRefresh={() => fetchIssues(student)}
+                                        />
+                                    )
                                 ) : null}
                             </motion.div>
                         ) : (

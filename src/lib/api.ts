@@ -776,6 +776,18 @@ export const fxbotAPI = {
     return data;
   },
 
+  // Admin-only: fetch full student identity by UUID (for audit view)
+  getStudentById: async (studentId: string): Promise<Student | null> => {
+    const { data, error } = await fxbotSupabase
+      .from('students')
+      .select('*')
+      .eq('id', studentId)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
+  },
+
   createStudent: async (student: Omit<Student, 'id' | 'created_at'>): Promise<Student> => {
     const { data, error } = await fxbotSupabase
       .from('students')
