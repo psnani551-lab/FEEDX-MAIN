@@ -138,19 +138,28 @@ const StudentAuth = () => {
 
             let profile;
             if (activeTab === "signup") {
-                const username = generateUsername();
-                const isPrincipalOrAdmin = userType === "faculty" && (designation === "Principal" || designation === "Admin");
-                profile = await fxbotAPI.createStudent({
-                    email,
-                    full_name: fullName.toUpperCase(),
-                    pin: userType === "student" ? pin : undefined,
-                    department: isPrincipalOrAdmin ? "GLOBAL" : department,
-                    mobile,
-                    username,
-                    role: userType,
-                    designation: userType === "student" ? "student" : designation
-                });
-                toast({ title: "Account Created!", description: `Welcome, ${profile.full_name}. Your username: ${profile.username}` });
+                // Check if profile already exists (user may have already signed up)
+                const existing = await fxbotAPI.getStudentProfile(email);
+                if (existing) {
+                    // Profile already exists — just log them in
+                    profile = existing;
+                    toast({ title: "Welcome back!", description: `Account already exists. Signing you in as ${profile.full_name}.` });
+                } else {
+                    const username = generateUsername();
+                    const isPrincipalOrAdmin = userType === "faculty" && (designation === "Principal" || designation === "Admin");
+                    profile = await fxbotAPI.createStudent({
+                        email,
+                        full_name: fullName.toUpperCase(),
+                        pin: userType === "student" ? pin : undefined,
+                        department: isPrincipalOrAdmin ? "GLOBAL" : department,
+                        mobile,
+                        username,
+                        role: userType,
+                        designation: userType === "student" ? "student" : designation
+                    });
+                    toast({ title: "Account Created!", description: `Welcome, ${profile.full_name}. Your username: ${profile.username}` });
+                }
+
             } else {
                 profile = await fxbotAPI.getStudentProfile(email);
                 if (!profile) {
