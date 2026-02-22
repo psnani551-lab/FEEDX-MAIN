@@ -25,6 +25,7 @@ export default function AddGallery() {
     const [images, setImages] = useState<GalleryImage[]>([]);
     const [imageUrl, setImageUrl] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
 
     // Cropper specific state
     const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
@@ -89,13 +90,19 @@ export default function AddGallery() {
 
         setIsLoading(true);
         try {
-            await galleryAPI.create({
-                url: imageUrl,
-                order: images.length + 1,
-            });
+            if (editingId) {
+                await galleryAPI.update(editingId, { url: imageUrl });
+                toast({ title: "Image Updated", description: "Gallery image updated successfully" });
+            } else {
+                await galleryAPI.create({
+                    url: imageUrl,
+                    order: images.length + 1,
+                });
+                toast({ title: "Image Added", description: "Gallery image added successfully" });
+            }
 
-            toast({ title: "Image Added", description: "Gallery image added successfully" });
             setImageUrl("");
+            setEditingId(null);
             setIsDialogOpen(false);
             fetchGalleryImages();
         } catch (error) {
@@ -103,6 +110,12 @@ export default function AddGallery() {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleEdit = (item: GalleryImage) => {
+        setEditingId(item.id);
+        setImageUrl(item.url);
+        setIsDialogOpen(true);
     };
 
     const handleDelete = async (item: GalleryImage) => {
@@ -194,6 +207,7 @@ export default function AddGallery() {
                         setIsDialogOpen(open);
                         if (!open) {
                             setImageUrl("");
+                            setEditingId(null);
                             setIsUploading(false);
                         }
                     }}>
@@ -205,7 +219,7 @@ export default function AddGallery() {
                         <DialogContent className="sm:max-w-[500px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
                             <DialogHeader>
                                 <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
-                                    Add New Image
+                                    {editingId ? "Edit Image" : "Add New Image"}
                                 </DialogTitle>
                             </DialogHeader>
                             <div className="space-y-6 pt-4">
@@ -250,12 +264,12 @@ export default function AddGallery() {
                                     {isLoading ? (
                                         <>
                                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                            Adding...
+                                            {editingId ? "Updating..." : "Adding..."}
                                         </>
                                     ) : (
                                         <>
                                             <Upload className="w-4 h-4 mr-2" />
-                                            Add to Gallery
+                                            {editingId ? "Update Gallery" : "Add to Gallery"}
                                         </>
                                     )}
                                 </Button>
@@ -284,6 +298,7 @@ export default function AddGallery() {
                             <AdminDataTable
                                 data={images}
                                 columns={columns}
+                                onEdit={handleEdit}
                                 onDelete={handleDelete}
                                 onBulkDelete={handleBulkDelete}
                                 searchPlaceholder="Search images..."
