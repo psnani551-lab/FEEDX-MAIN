@@ -41,22 +41,10 @@ const StudentAuth = () => {
     }, [countdown]);
 
     const handleEmailBlur = async () => {
-        // Only trigger if: it's the login tab, email looks complete (has @), and OTP hasn't been sent yet
-        if (!email || isOtpSent || activeTab === "signup") return;
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) return; // Don't check incomplete emails
-        try {
-            const exists = await fxbotAPI.checkEmailExists(email);
-            if (!exists) {
-                setActiveTab("signup");
-                toast({
-                    title: "Account Not Found",
-                    description: "No account found with this email. Please sign up to continue.",
-                });
-            }
-        } catch (error) {
-            console.error("Email check error:", error);
-        }
+        // Only validate email format — do NOT block on students table check.
+        // The students table is not authoritative for auth; Supabase Auth is.
+        // Aggressive tab-switching here caused false "Account Not Found" errors.
+        return;
     };
 
     const handleSendOTP = async () => {
@@ -74,23 +62,10 @@ const StudentAuth = () => {
             }
         }
 
-        // On the login tab — pre-check that this email exists in our DB before sending OTP
-        if (activeTab === "login") {
-            try {
-                const exists = await fxbotAPI.checkEmailExists(email);
-                if (!exists) {
-                    setActiveTab("signup");
-                    toast({
-                        title: "Account Not Found",
-                        description: "No account found with this email. Please sign up first.",
-                    });
-                    return;
-                }
-            } catch (err) {
-                // Network error — let the OTP attempt proceed anyway
-                console.warn("Pre-check skipped due to error:", err);
-            }
-        }
+        // For login tab, skip students-table pre-check.
+        // Let Supabase handle "email not in auth" — signInWithOtp with shouldCreateUser:false
+        // will return an error automatically if the email isn't registered.
+
 
         setIsLoading(true);
         try {
