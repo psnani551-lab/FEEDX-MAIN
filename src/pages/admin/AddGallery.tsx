@@ -9,6 +9,7 @@ import { uploadFile, galleryAPI } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { X, Upload, Loader2, GripVertical, Image as ImageIcon, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import ImageCropperDialog from "@/components/ImageCropperDialog";
 
 interface GalleryImage {
     id: string;
@@ -24,6 +25,10 @@ export default function AddGallery() {
     const [images, setImages] = useState<GalleryImage[]>([]);
     const [imageUrl, setImageUrl] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+    // Cropper specific state
+    const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+    const [isCropperOpen, setIsCropperOpen] = useState(false);
 
     useEffect(() => {
         fetchGalleryImages();
@@ -46,19 +51,33 @@ export default function AddGallery() {
         }
     };
 
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
+        // Open local file string for cropper
+        const fileUrl = URL.createObjectURL(files[0]);
+        setCropImageSrc(fileUrl);
+        setIsCropperOpen(true);
+
+        // Reset input immediately so user can select the same file again if aborted
+        e.target.value = '';
+    };
+
+    const handleCropComplete = async (croppedFile: File) => {
         setIsUploading(true);
+        setIsCropperOpen(false); // Close cropper UI
+
         try {
-            const url = await uploadFile(files[0]);
+            // Immediately upload the perfectly cropped image to Supabase
+            const url = await uploadFile(croppedFile);
             setImageUrl(url);
-            toast({ title: "Image Uploaded", description: files[0].name });
+            toast({ title: "Image Cropped & Uploaded", description: "Ready to add to gallery." });
         } catch (error) {
             toast({ title: "Upload Failed", variant: "destructive" });
         } finally {
             setIsUploading(false);
+            setCropImageSrc(null);
         }
     };
 
@@ -290,6 +309,20 @@ export default function AddGallery() {
                     </CardContent>
                 </Card>
             </div>
+
+            {/* Global Cropper Overlay */}
+            {cropImageSrc && (
+                <ImageCropperDialog
+                    isOpen={isCropperOpen}
+                    imageSrc={cropImageSrc}
+                    aspectRatio={16 / 9}
+                    onCropComplete={handleCropComplete}
+                    onCancel={() => {
+                        setIsCropperOpen(false);
+                        setCropImageSrc(null);
+                    }}
+                />
+            )}
         </AdminLayout>
     );
 }
