@@ -250,7 +250,10 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
                                                     <User className="h-4 w-4 text-red-400 shrink-0" />
                                                     <div>
                                                         <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Full Name</p>
-                                                        <p className="font-bold text-slate-900">{selectedIssue._studentData.full_name}</p>
+                                                        <p className="font-bold text-slate-900">
+                                                            {selectedIssue._studentData.full_name}
+                                                            {selectedIssue.is_anonymous && <span className="ml-2 text-[9px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-black uppercase tracking-widest">Anon</span>}
+                                                        </p>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center gap-2">
@@ -270,15 +273,21 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
                                                 <div className="flex items-center gap-2">
                                                     <Building2 className="h-4 w-4 text-red-400 shrink-0" />
                                                     <div>
-                                                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Department</p>
+                                                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Branch</p>
                                                         <p className="font-bold text-slate-900">{selectedIssue._studentData.department}</p>
+                                                    </div>
+                                                </div>
+                                                {/* Email — full width */}
+                                                <div className="flex items-center gap-2 col-span-2">
+                                                    <MessageSquare className="h-4 w-4 text-red-400 shrink-0" />
+                                                    <div>
+                                                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Email</p>
+                                                        <p className="font-bold text-slate-900">{selectedIssue._studentData.email}</p>
                                                     </div>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <p className="text-sm text-slate-400 italic">
-                                                {selectedIssue.is_anonymous ? "Student submitted anonymously — identity hidden by policy." : "Identity data unavailable."}
-                                            </p>
+                                            <p className="text-sm text-slate-400 italic">Student profile not found in records.</p>
                                         )}
                                     </div>
                                 </section>
@@ -340,9 +349,9 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
                                     </div>
                                     <div className="grid grid-cols-3 gap-3">
                                         {[
-                                            { label: "Submitted", value: format(new Date(selectedIssue.created_at), "MMM dd, yyyy\nHH:mm") },
-                                            { label: "Last Updated", value: format(new Date(selectedIssue.updated_at), "MMM dd, yyyy\nHH:mm") },
-                                            { label: "Resolved At", value: selectedIssue.resolved_at ? format(new Date(selectedIssue.resolved_at), "MMM dd, yyyy\nHH:mm") : "—" },
+                                            { label: "Submitted", value: format(new Date(selectedIssue.created_at), "MMM dd, yyyy") + "\n" + format(new Date(selectedIssue.created_at), "HH:mm") },
+                                            { label: "Last Updated", value: format(new Date(selectedIssue.updated_at), "MMM dd, yyyy") + "\n" + format(new Date(selectedIssue.updated_at), "HH:mm") },
+                                            { label: "Resolved At", value: selectedIssue.resolved_at ? format(new Date(selectedIssue.resolved_at), "MMM dd, yyyy") + "\n" + format(new Date(selectedIssue.resolved_at), "HH:mm") : "—" },
                                         ].map(ts => (
                                             <div key={ts.label} className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-center">
                                                 <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">{ts.label}</p>
