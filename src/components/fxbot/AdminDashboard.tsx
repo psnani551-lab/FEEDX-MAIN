@@ -287,7 +287,28 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
                                                 </div>
                                             </div>
                                         ) : (
-                                            <p className="text-sm text-slate-400 italic">Student profile not found in records.</p>
+                                            /* Fallback: student completed OTP but never finished profile setup */
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-2 text-amber-600 mb-3">
+                                                    <ShieldAlert className="h-4 w-4" />
+                                                    <p className="text-[10px] font-black uppercase tracking-widest">Incomplete Profile — Auth account exists, no student record</p>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <div className="bg-white rounded-xl p-3 border border-slate-100">
+                                                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">System UID</p>
+                                                        <p className="font-mono text-xs font-bold text-slate-700 break-all">{selectedIssue.student_id}</p>
+                                                    </div>
+                                                    <div className="bg-white rounded-xl p-3 border border-slate-100">
+                                                        <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Dept (from issue)</p>
+                                                        <p className="font-bold text-slate-900">{selectedIssue.department}</p>
+                                                    </div>
+                                                    {selectedIssue.is_anonymous && (
+                                                        <div className="bg-slate-100 rounded-xl p-3 border border-slate-200 col-span-2">
+                                                            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Submitted anonymously — name not disclosed by student</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
                                         )}
                                     </div>
                                 </section>
