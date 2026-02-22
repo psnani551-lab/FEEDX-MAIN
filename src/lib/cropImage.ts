@@ -4,15 +4,15 @@ export const getCroppedImg = async (
     fileName: string = 'cropped-image.jpg'
 ): Promise<File> => {
     const image = new window.Image();
-    // Only set crossOrigin for remote URLs. Blob URLs don't need it and can fail with it.
-    if (imageSrc.startsWith('http')) {
-        image.setAttribute('crossOrigin', 'anonymous');
-    }
+    image.crossOrigin = 'anonymous'; // Set this BEFORE setting src to handle CORS
     image.src = imageSrc;
 
     await new Promise((resolve, reject) => {
         image.onload = resolve;
-        image.onerror = reject;
+        image.onerror = (e) => {
+            console.error('Image load error:', e);
+            reject(new Error('Failed to load image for cropping. Ensure the source supports CORS.'));
+        };
     });
 
     const canvas = document.createElement('canvas');

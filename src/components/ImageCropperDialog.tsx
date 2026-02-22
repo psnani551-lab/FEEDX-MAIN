@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Loader2, Crop } from "lucide-react";
 import { getCroppedImg } from "@/lib/cropImage";
+import { useToast } from "@/hooks/use-toast";
 
 interface ImageCropperDialogProps {
     isOpen: boolean;
@@ -21,6 +22,7 @@ export default function ImageCropperDialog({
     onCropComplete,
     onCancel
 }: ImageCropperDialogProps) {
+    const { toast } = useToast();
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
@@ -38,6 +40,12 @@ export default function ImageCropperDialog({
             await onCropComplete(croppedFile);
         } catch (error) {
             console.error("Failed to crop image", error);
+            // Show toast error to user
+            toast({
+                title: "Cropping Failed",
+                description: "There was an error processing the image. Please try again or use a different image.",
+                variant: "destructive"
+            });
         } finally {
             setIsProcessing(false);
         }
@@ -63,11 +71,6 @@ export default function ImageCropperDialog({
                         onCropChange={setCrop}
                         onCropComplete={onCropCompleteLocal}
                         onZoomChange={setZoom}
-                        mediaProps={
-                            imageSrc.startsWith('http')
-                                ? { crossOrigin: 'anonymous' }
-                                : {}
-                        }
                     />
                 </div>
 
