@@ -14,7 +14,20 @@ import { generateUsername } from "@/lib/utils/username";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Mail, Lock, User, Phone, ArrowRight, Loader2, ShieldCheck, GraduationCap, Building2 } from "lucide-react";
+import { Lock, GraduationCap, ShieldCheck, Mail, User, Building2, Ticket, CheckCircle2, ChevronRight, Hash, X, Loader2, ArrowRight, Phone } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const DIPLOMA_BRANCHES = [
+    { id: "CME", name: "Computer Science Engineering" },
+    { id: "ECE", name: "Electronics and Communications" },
+    { id: "BME", name: "Biomedical Engineering" },
+    { id: "EIE", name: "Electronics and Instrumentation" },
+    { id: "EVE", name: "Electronics and Video Engineering" },
+    { id: "ESE", name: "Embedded Systems Engineering" },
+    { id: "CPS", name: "Cyber Physical Systems" },
+    { id: "AIML", name: "AI and Machine Learning" },
+    { id: "CCB", name: "Cloud Computing and Big Data" }
+];
 
 const StudentAuth = () => {
     const [activeTab, setActiveTab] = useState("login");
@@ -412,12 +425,21 @@ const StudentAuth = () => {
                                                     </div>
                                                     <div className="space-y-2">
                                                         <Label className="text-slate-700 text-xs font-bold uppercase tracking-wider ml-1">Branch</Label>
-                                                        <Input
-                                                            placeholder="CSE / ECE"
-                                                            value={department}
-                                                            onChange={(e) => setDepartment(e.target.value.toUpperCase())}
-                                                            className="h-12 bg-white/50 border-slate-200 rounded-xl"
-                                                        />
+                                                        <Select value={department} onValueChange={setDepartment}>
+                                                            <SelectTrigger className="h-12 bg-white/50 border-slate-200 rounded-xl font-bold text-slate-700">
+                                                                <SelectValue placeholder="Select Branch" />
+                                                            </SelectTrigger>
+                                                            <SelectContent className="rounded-xl border-slate-200 shadow-xl max-h-[300px]">
+                                                                {DIPLOMA_BRANCHES.map(b => (
+                                                                    <SelectItem key={b.id} value={b.id} className="font-medium cursor-pointer rounded-lg focus:bg-blue-50 focus:text-blue-700 py-2.5">
+                                                                        <div className="flex flex-col">
+                                                                            <span>{b.id}</span>
+                                                                            <span className="text-[10px] text-slate-400 font-normal">{b.name}</span>
+                                                                        </div>
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
                                                     </div>
                                                 </div>
                                             )}
@@ -448,13 +470,21 @@ const StudentAuth = () => {
                                                         <div className="space-y-2">
                                                             <Label className="text-slate-700 text-xs font-bold uppercase tracking-wider ml-1">Department</Label>
                                                             <div className="relative">
-                                                                <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                                                                <Input
-                                                                    placeholder="e.g. CSE"
-                                                                    value={department}
-                                                                    onChange={(e) => setDepartment(e.target.value.toUpperCase())}
-                                                                    className="h-12 bg-white/50 border-slate-200 rounded-xl pl-12"
-                                                                />
+                                                                <Select value={department} onValueChange={setDepartment}>
+                                                                    <SelectTrigger className="h-12 bg-white/50 border-slate-200 rounded-xl font-bold text-slate-700 pl-11">
+                                                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 z-10">
+                                                                            <Building2 className="h-4 w-4" />
+                                                                        </div>
+                                                                        <SelectValue placeholder="Select Department" />
+                                                                    </SelectTrigger>
+                                                                    <SelectContent className="rounded-xl border-slate-200 shadow-xl">
+                                                                        {DIPLOMA_BRANCHES.map(b => (
+                                                                            <SelectItem key={b.id} value={b.id} className="font-medium cursor-pointer rounded-lg focus:bg-blue-50 focus:text-blue-700">
+                                                                                {b.id} — {b.name}
+                                                                            </SelectItem>
+                                                                        ))}
+                                                                    </SelectContent>
+                                                                </Select>
                                                             </div>
                                                         </div>
                                                     )}
