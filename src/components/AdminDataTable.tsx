@@ -215,10 +215,12 @@ export default function AdminDataTable({
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-48 bg-card/95 backdrop-blur-xl border-white/10 rounded-xl p-2">
                                                     <DropdownMenuLabel className="text-[10px] uppercase tracking-widest font-black opacity-50 px-2 py-1.5">Actions</DropdownMenuLabel>
-                                                    <DropdownMenuItem onClick={() => onEdit?.(item)} className="gap-2 rounded-lg py-2 cursor-pointer focus:bg-white/10">
-                                                        <Edit3 className="w-4 h-4 text-primary" />
-                                                        <span className="font-semibold text-xs">Edit Item</span>
-                                                    </DropdownMenuItem>
+                                                    {onEdit && (
+                                                        <DropdownMenuItem onClick={() => onEdit(item)} className="gap-2 rounded-lg py-2 cursor-pointer focus:bg-white/10">
+                                                            <Edit3 className="w-4 h-4 text-primary" />
+                                                            <span className="font-semibold text-xs">Edit Item</span>
+                                                        </DropdownMenuItem>
+                                                    )}
                                                     <DropdownMenuItem onClick={() => onStatusToggle?.(item)} className="gap-2 rounded-lg py-2 cursor-pointer focus:bg-white/10 text-emerald-500">
                                                         {item.status === 'published' ? <FileX className="w-4 h-4" /> : <FileCheck className="w-4 h-4" />}
                                                         <span className="font-semibold text-xs">{item.status === 'published' ? 'Move to Draft' : 'Publish Live'}</span>

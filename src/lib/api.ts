@@ -517,11 +517,6 @@ export const galleryAPI = {
     return data;
   },
 
-  update: async (id: string, data: { url: string }) => {
-    const { error } = await supabase.from('gallery').update(data).eq('id', id);
-    if (error) throw error;
-  },
-
   delete: async (id: string) => {
     const { error } = await supabase.from('gallery').delete().eq('id', id);
     if (error) throw error;
@@ -532,6 +527,15 @@ export const galleryAPI = {
       supabase.from('gallery').update({ display_order: img.order }).eq('id', img.id)
     );
     await Promise.all(promises);
+  },
+
+  update: async (id: string, updates: Partial<{ url: string; order: number }>) => {
+    const { data, error } = await supabase.from('gallery').update({
+      ...(updates.url && { url: updates.url }),
+      ...(updates.order && { display_order: updates.order })
+    }).eq('id', id).select().single();
+    if (error) throw error;
+    return data;
   },
 };
 

@@ -25,11 +25,11 @@ export default function AddGallery() {
     const [images, setImages] = useState<GalleryImage[]>([]);
     const [imageUrl, setImageUrl] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingId, setEditingId] = useState<string | null>(null);
 
-    // Cropper specific state
+    // Cropper and Edit state
     const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
     const [isCropperOpen, setIsCropperOpen] = useState(false);
+    const [editingItem, setEditingItem] = useState<GalleryImage | null>(null);
 
     useEffect(() => {
         fetchGalleryImages();
@@ -72,14 +72,30 @@ export default function AddGallery() {
         try {
             // Immediately upload the perfectly cropped image to Supabase
             const url = await uploadFile(croppedFile);
-            setImageUrl(url);
-            toast({ title: "Image Cropped & Uploaded", description: "Ready to add to gallery." });
+
+            if (editingItem) {
+                // If editing, update the item directly in DB
+                await galleryAPI.update(editingItem.id, { url });
+                toast({ title: "Image Updated", description: "The image has been re-cropped and saved." });
+                setEditingItem(null);
+                fetchGalleryImages();
+            } else {
+                // If adding new, set the URL for the next step
+                setImageUrl(url);
+                toast({ title: "Image Adjusted", description: "Ready to add to gallery." });
+            }
         } catch (error) {
             toast({ title: "Upload Failed", variant: "destructive" });
         } finally {
             setIsUploading(false);
             setCropImageSrc(null);
         }
+    };
+
+    const handleEdit = (item: GalleryImage) => {
+        setEditingItem(item);
+        setCropImageSrc(item.url);
+        setIsCropperOpen(true);
     };
 
     const handleAddImage = async () => {
@@ -90,19 +106,13 @@ export default function AddGallery() {
 
         setIsLoading(true);
         try {
-            if (editingId) {
-                await galleryAPI.update(editingId, { url: imageUrl });
-                toast({ title: "Image Updated", description: "Gallery image updated successfully" });
-            } else {
-                await galleryAPI.create({
-                    url: imageUrl,
-                    order: images.length + 1,
-                });
-                toast({ title: "Image Added", description: "Gallery image added successfully" });
-            }
+            await galleryAPI.create({
+                url: imageUrl,
+                order: images.length + 1,
+            });
 
+            toast({ title: "Image Added", description: "Gallery image added successfully" });
             setImageUrl("");
-            setEditingId(null);
             setIsDialogOpen(false);
             fetchGalleryImages();
         } catch (error) {
@@ -110,12 +120,6 @@ export default function AddGallery() {
         } finally {
             setIsLoading(false);
         }
-    };
-
-    const handleEdit = (item: GalleryImage) => {
-        setEditingId(item.id);
-        setImageUrl(item.url);
-        setIsDialogOpen(true);
     };
 
     const handleDelete = async (item: GalleryImage) => {
@@ -207,7 +211,6 @@ export default function AddGallery() {
                         setIsDialogOpen(open);
                         if (!open) {
                             setImageUrl("");
-                            setEditingId(null);
                             setIsUploading(false);
                         }
                     }}>
@@ -219,7 +222,7 @@ export default function AddGallery() {
                         <DialogContent className="sm:max-w-[500px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl">
                             <DialogHeader>
                                 <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
-                                    {editingId ? "Edit Image" : "Add New Image"}
+                                    Add New Image
                                 </DialogTitle>
                             </DialogHeader>
                             <div className="space-y-6 pt-4">
@@ -241,18 +244,33 @@ export default function AddGallery() {
                                         )}
                                     </div>
                                     {imageUrl && (
-                                        <div className="relative mt-4 inline-block">
+                                        <div className="relative mt-4 group">
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2 z-10">
+                                                <Button
+                                                    size="sm"
+                                                    variant="secondary"
+                                                    className="h-8 rounded-lg font-bold text-[10px] uppercase tracking-widest"
+                                                    onClick={() => {
+                                                        setCropImageSrc(imageUrl);
+                                                        setIsCropperOpen(true);
+                                                    }}
+                                                >
+                                                    <Plus className="w-3 h-3 mr-1" /> Re-adjust
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="destructive"
+                                                    className="h-8 rounded-lg font-bold text-[10px] uppercase tracking-widest"
+                                                    onClick={() => setImageUrl("")}
+                                                >
+                                                    <X className="w-3 h-3 mr-1" /> Remove
+                                                </Button>
+                                            </div>
                                             <img
                                                 src={imageUrl}
                                                 alt="Preview"
                                                 className="w-full max-w-md h-48 object-cover rounded-lg border border-white/10"
                                             />
-                                            <button
-                                                onClick={() => setImageUrl("")}
-                                                className="absolute top-2 right-2 p-1 bg-destructive rounded-full hover:bg-destructive/80"
-                                            >
-                                                <X className="w-4 h-4 text-white" />
-                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -264,12 +282,12 @@ export default function AddGallery() {
                                     {isLoading ? (
                                         <>
                                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                            {editingId ? "Updating..." : "Adding..."}
+                                            Adding...
                                         </>
                                     ) : (
                                         <>
                                             <Upload className="w-4 h-4 mr-2" />
-                                            {editingId ? "Update Gallery" : "Add to Gallery"}
+                                            Add to Gallery
                                         </>
                                     )}
                                 </Button>
