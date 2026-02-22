@@ -135,14 +135,14 @@ const ImageCarousel = ({ className = '' }: ImageCarouselProps) => {
     <div className={`relative w-full ${className}`}>
       {/* Carousel Container */}
       <div
-        className="relative overflow-hidden rounded-2xl shadow-xl bg-white/50 backdrop-blur-sm border border-white/20"
+        className="relative overflow-hidden rounded-2xl shadow-xl bg-slate-50 backdrop-blur-sm border border-slate-200/50"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         onMouseEnter={() => setIsAutoPlaying(false)}
         onMouseLeave={() => setIsAutoPlaying(true)}
       >
-        <div className="relative aspect-[3/2] sm:aspect-[16/9] lg:aspect-[2.2/1]">
+        <div className="relative aspect-[3/2] sm:aspect-[16/9] lg:aspect-[2.2/1] flex items-center justify-center">
           <AnimatePresence initial={false} custom={direction} mode="wait">
             <motion.img
               key={currentIndex}
@@ -159,7 +159,7 @@ const ImageCarousel = ({ className = '' }: ImageCarouselProps) => {
               }}
               loading="lazy"
               decoding="async"
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-contain p-2"
             />
           </AnimatePresence>
 
