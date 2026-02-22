@@ -202,50 +202,50 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
 
             {/* Detail Dialog — Full Identity */}
             <Dialog open={!!selectedIssue} onOpenChange={(open) => !open && setSelectedIssue(null)}>
-                <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col rounded-[2.5rem] border-white/40 shadow-2xl glass-card p-0 overflow-hidden">
+                <DialogContent className="max-w-2xl rounded-[2.5rem] border-white/40 shadow-2xl glass-card p-0 overflow-hidden">
                     {selectedIssue && (
                         <>
                             {/* Header */}
-                            <div className="bg-slate-900 p-8 text-white relative overflow-hidden shrink-0">
+                            <div className="bg-slate-900 p-5 text-white relative overflow-hidden">
                                 <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[150%] bg-red-600/20 rounded-full blur-[100px] pointer-events-none" />
                                 <div className="relative z-10">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Badge className="bg-red-600 text-white border-none px-3 py-1 text-[10px] font-black tracking-widest">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Badge className="bg-red-600 text-white border-none px-2 py-0.5 text-[10px] font-black tracking-widest">
                                             ADMIN AUDIT · {selectedIssue.id}
                                         </Badge>
-                                        <Badge className={cn("px-3 py-1 text-[10px] font-black border-2", getStatusVariant(selectedIssue.status))}>
+                                        <Badge className={cn("px-2 py-0.5 text-[10px] font-black border", getStatusVariant(selectedIssue.status))}>
                                             {selectedIssue.status}
                                         </Badge>
                                     </div>
-                                    <DialogTitle className="text-3xl font-black tracking-tight leading-none mb-1">
+                                    <DialogTitle className="text-xl font-black tracking-tight leading-none mb-1">
                                         {selectedIssue.type} — {selectedIssue.category}
                                     </DialogTitle>
-                                    <DialogDescription className="text-slate-400 font-bold flex items-center gap-2">
-                                        <Building2 className="h-4 w-4 text-red-400" />
-                                        {selectedIssue.department} · Submitted {format(new Date(selectedIssue.created_at), "MMM dd, yyyy HH:mm")}
+                                    <DialogDescription className="text-slate-400 font-bold flex items-center gap-2 text-xs">
+                                        <Building2 className="h-3.5 w-3.5 text-red-400" />
+                                        {selectedIssue.department} · {format(new Date(selectedIssue.created_at), "MMM dd, yyyy HH:mm")}
                                     </DialogDescription>
                                 </div>
                             </div>
 
-                            {/* Scrollable body */}
-                            <div className="p-8 space-y-6 overflow-y-auto flex-1">
+                            {/* Body — no scroll, compact */}
+                            <div className="p-5 space-y-3">
 
                                 {/* ── Issuer Identity (Admin Only) ── */}
-                                <section className="space-y-3">
+                                <section className="space-y-2">
                                     <div className="flex items-center gap-2">
                                         <div className="p-2 bg-red-50 rounded-xl border border-red-100">
                                             <User className="h-4 w-4 text-red-600" />
                                         </div>
                                         <h3 className="font-black uppercase tracking-widest text-xs text-red-600">Issuer Identity — Admin Only</h3>
                                     </div>
-                                    <div className="bg-red-50/50 border border-red-100 rounded-2xl p-5">
+                                    <div className="bg-red-50/50 border border-red-100 rounded-xl p-3">
                                         {identityLoading ? (
                                             <div className="flex items-center gap-3 text-slate-400">
                                                 <Loader2 className="h-4 w-4 animate-spin" />
                                                 <span className="text-sm font-medium">Loading identity...</span>
                                             </div>
                                         ) : selectedIssue._studentData ? (
-                                            <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-2 gap-2">
                                                 <div className="flex items-center gap-2">
                                                     <User className="h-4 w-4 text-red-400 shrink-0" />
                                                     <div>
@@ -314,28 +314,28 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
                                 </section>
 
                                 {/* ── Issue Content ── */}
-                                <section className="space-y-3">
+                                <section className="space-y-2">
                                     <div className="flex items-center gap-2">
-                                        <div className="p-2 bg-slate-100 rounded-xl">
-                                            <FileText className="h-4 w-4 text-blue-600" />
+                                        <div className="p-1.5 bg-slate-100 rounded-lg">
+                                            <FileText className="h-3.5 w-3.5 text-blue-600" />
                                         </div>
                                         <h3 className="font-black uppercase tracking-widest text-xs">Issue Description</h3>
                                     </div>
-                                    <div className="bg-slate-50 border border-slate-200/60 p-6 rounded-2xl text-slate-700 leading-relaxed whitespace-pre-wrap font-medium shadow-inner">
+                                    <div className="bg-slate-50 border border-slate-200/60 p-3 rounded-xl text-slate-700 text-sm leading-relaxed font-medium">
                                         {selectedIssue.description}
                                     </div>
                                 </section>
 
                                 {/* ── HOD Directive ── */}
                                 {selectedIssue.internal_directive && (
-                                    <section className="space-y-3">
+                                    <section className="space-y-2">
                                         <div className="flex items-center gap-2">
-                                            <div className="p-2 bg-amber-50 rounded-xl border border-amber-100">
-                                                <ShieldAlert className="h-4 w-4 text-amber-600" />
+                                            <div className="p-1.5 bg-amber-50 rounded-lg border border-amber-100">
+                                                <ShieldAlert className="h-3.5 w-3.5 text-amber-600" />
                                             </div>
-                                            <h3 className="font-black uppercase tracking-widest text-xs text-amber-600">HOD Administrative Directive</h3>
+                                            <h3 className="font-black uppercase tracking-widest text-xs text-amber-600">HOD Directive</h3>
                                         </div>
-                                        <div className="bg-amber-50/50 p-5 rounded-2xl text-amber-900 border border-amber-100 italic font-bold text-sm">
+                                        <div className="bg-amber-50/50 p-3 rounded-xl text-amber-900 border border-amber-100 italic font-bold text-sm">
                                             "{selectedIssue.internal_directive}"
                                         </div>
                                     </section>
@@ -343,40 +343,39 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
 
                                 {/* ── Faculty Resolution ── */}
                                 {selectedIssue.resolution_message && (
-                                    <section className="space-y-3">
+                                    <section className="space-y-2">
                                         <div className="flex items-center gap-2">
-                                            <div className="p-2 bg-emerald-50 rounded-xl border border-emerald-100">
-                                                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                                            <div className="p-1.5 bg-emerald-50 rounded-lg border border-emerald-100">
+                                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
                                             </div>
                                             <h3 className="font-black uppercase tracking-widest text-xs text-emerald-600">Faculty Resolution</h3>
                                         </div>
-                                        <div className="bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100 font-bold text-sm text-emerald-900">
-                                            <p className="text-[9px] font-black uppercase text-emerald-600 tracking-widest mb-2">
-                                                Resolved by: {selectedIssue.staff_name || "Unknown Faculty"} ·{" "}
-                                                {selectedIssue.resolved_at ? format(new Date(selectedIssue.resolved_at), "MMM dd, yyyy HH:mm") : ""}
+                                        <div className="bg-emerald-50/50 p-3 rounded-xl border border-emerald-100 text-sm text-emerald-900">
+                                            <p className="text-[9px] font-black uppercase text-emerald-600 tracking-widest mb-1">
+                                                By: {selectedIssue.staff_name || "Unknown"} · {selectedIssue.resolved_at ? format(new Date(selectedIssue.resolved_at), "MMM dd, yyyy HH:mm") : ""}
                                             </p>
-                                            {selectedIssue.resolution_message}
+                                            <p className="font-bold">{selectedIssue.resolution_message}</p>
                                         </div>
                                     </section>
                                 )}
 
                                 {/* ── Timestamps ── */}
-                                <section className="space-y-3">
+                                <section className="space-y-2">
                                     <div className="flex items-center gap-2">
-                                        <div className="p-2 bg-slate-100 rounded-xl">
-                                            <CalendarClock className="h-4 w-4 text-slate-600" />
+                                        <div className="p-1.5 bg-slate-100 rounded-lg">
+                                            <CalendarClock className="h-3.5 w-3.5 text-slate-600" />
                                         </div>
-                                        <h3 className="font-black uppercase tracking-widest text-xs">System Timestamps</h3>
+                                        <h3 className="font-black uppercase tracking-widest text-xs">Timestamps</h3>
                                     </div>
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-3 gap-2">
                                         {[
                                             { label: "Submitted", value: format(new Date(selectedIssue.created_at), "MMM dd, yyyy") + "\n" + format(new Date(selectedIssue.created_at), "HH:mm") },
-                                            { label: "Last Updated", value: format(new Date(selectedIssue.updated_at), "MMM dd, yyyy") + "\n" + format(new Date(selectedIssue.updated_at), "HH:mm") },
-                                            { label: "Resolved At", value: selectedIssue.resolved_at ? format(new Date(selectedIssue.resolved_at), "MMM dd, yyyy") + "\n" + format(new Date(selectedIssue.resolved_at), "HH:mm") : "—" },
+                                            { label: "Updated", value: format(new Date(selectedIssue.updated_at), "MMM dd, yyyy") + "\n" + format(new Date(selectedIssue.updated_at), "HH:mm") },
+                                            { label: "Resolved", value: selectedIssue.resolved_at ? format(new Date(selectedIssue.resolved_at), "MMM dd, yyyy") + "\n" + format(new Date(selectedIssue.resolved_at), "HH:mm") : "—" },
                                         ].map(ts => (
-                                            <div key={ts.label} className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-center">
-                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">{ts.label}</p>
-                                                <p className="text-xs font-bold text-slate-900 whitespace-pre-line">{ts.value}</p>
+                                            <div key={ts.label} className="bg-slate-50 border border-slate-100 rounded-lg p-2 text-center">
+                                                <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-0.5">{ts.label}</p>
+                                                <p className="text-xs font-bold text-slate-900 whitespace-pre-line leading-tight">{ts.value}</p>
                                             </div>
                                         ))}
                                     </div>
@@ -384,11 +383,11 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
                             </div>
 
                             {/* Footer */}
-                            <div className="bg-slate-50 p-6 border-t border-slate-100 shrink-0">
+                            <div className="bg-slate-50 px-5 py-3 border-t border-slate-100">
                                 <Button
                                     variant="ghost"
                                     onClick={() => setSelectedIssue(null)}
-                                    className="h-12 rounded-2xl px-8 font-bold text-slate-500 hover:bg-white transition-all"
+                                    className="h-9 rounded-xl px-6 font-bold text-slate-500 hover:bg-white transition-all text-sm"
                                 >
                                     Close Audit View
                                 </Button>
