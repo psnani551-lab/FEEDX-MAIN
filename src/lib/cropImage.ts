@@ -4,7 +4,10 @@ export const getCroppedImg = async (
     fileName: string = 'cropped-image.jpg'
 ): Promise<File> => {
     const image = new window.Image();
-    image.setAttribute('crossOrigin', 'anonymous'); // allow cross-origin images
+    // Only set crossOrigin for remote URLs. Blob URLs don't need it and can fail with it.
+    if (imageSrc.startsWith('http')) {
+        image.setAttribute('crossOrigin', 'anonymous');
+    }
     image.src = imageSrc;
 
     await new Promise((resolve, reject) => {
