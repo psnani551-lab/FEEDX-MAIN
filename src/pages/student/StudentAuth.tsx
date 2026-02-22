@@ -29,6 +29,7 @@ const StudentAuth = () => {
     const [isOtpSent, setIsOtpSent] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [countdown, setCountdown] = useState(0);
+    const [accessCode, setAccessCode] = useState(""); // Required for Principal/Admin signup
     const { toast } = useToast();
     const navigate = useNavigate();
 
@@ -66,6 +67,32 @@ const StudentAuth = () => {
         // Let Supabase handle "email not in auth" — signInWithOtp with shouldCreateUser:false
         // will return an error automatically if the email isn't registered.
 
+        // ── Principal / Admin access code gate ──────────────────────────────
+        if (activeTab === "signup" && userType === "faculty" && (designation === "Principal" || designation === "Admin")) {
+            if (!accessCode.trim()) {
+                toast({ title: "Authorization Code Required", description: `A valid institutional code is required to register as ${designation}.`, variant: "destructive" });
+                return;
+            }
+            setIsLoading(true);
+            try {
+                const isValid = await fxbotAPI.validateAdminCode(accessCode, designation as 'Principal' | 'Admin');
+                if (!isValid) {
+                    toast({
+                        title: "Invalid Authorization Code",
+                        description: `The code you entered is not valid for ${designation} registration. Contact your system administrator.`,
+                        variant: "destructive"
+                    });
+                    setIsLoading(false);
+                    return;
+                }
+            } catch (err) {
+                toast({ title: "Validation Error", description: "Could not validate authorization code. Please try again.", variant: "destructive" });
+                setIsLoading(false);
+                return;
+            }
+            setIsLoading(false);
+        }
+        // ─────────────────────────────────────────────────────────────────────
 
         setIsLoading(true);
         try {
@@ -429,6 +456,29 @@ const StudentAuth = () => {
                                                                     className="h-12 bg-white/50 border-slate-200 rounded-xl pl-12"
                                                                 />
                                                             </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* ── Principal / Admin Access Code Gate ── */}
+                                                    {(designation === "Principal" || designation === "Admin") && (
+                                                        <div className="space-y-2">
+                                                            <Label className="text-red-700 text-xs font-black uppercase tracking-widest ml-1 flex items-center gap-1">
+                                                                <Lock className="h-3.5 w-3.5" />
+                                                                Institutional Authorization Code
+                                                            </Label>
+                                                            <div className="relative">
+                                                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-red-400" />
+                                                                <Input
+                                                                    type="password"
+                                                                    placeholder="Enter confidential access code"
+                                                                    value={accessCode}
+                                                                    onChange={(e) => setAccessCode(e.target.value)}
+                                                                    className="h-12 bg-red-50/50 border-red-200 focus:border-red-500 rounded-xl pl-12 font-mono text-sm"
+                                                                />
+                                                            </div>
+                                                            <p className="text-[10px] text-red-500 font-semibold ml-1">
+                                                                🔒 Access restricted. Only authorized personnel may register as {designation}.
+                                                            </p>
                                                         </div>
                                                     )}
                                                 </div>

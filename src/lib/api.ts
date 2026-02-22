@@ -739,6 +739,20 @@ export interface FXBotIssue {
 }
 
 export const fxbotAPI = {
+  // ── Access Code Validation (Principal / Admin signup protection) ──────────
+  validateAdminCode: async (code: string, designation: 'Principal' | 'Admin'): Promise<boolean> => {
+    const { data, error } = await fxbotSupabase
+      .from('fxbot_admin_codes')
+      .select('id')
+      .eq('code', code.trim().toUpperCase())
+      .eq('designation', designation)
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (error) throw error;
+    return !!data;
+  },
+
   // Student Auth & Record Management
   checkEmailExists: async (email: string): Promise<boolean> => {
     const { data, error } = await fxbotSupabase
