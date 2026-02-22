@@ -225,7 +225,7 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
             </div>
 
             <Dialog open={!!selectedIssue} onOpenChange={(open) => !open && setSelectedIssue(null)}>
-                <DialogContent className="max-w-2xl rounded-[3rem] border-white/40 shadow-2xl glass-card p-0 overflow-hidden">
+                <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col rounded-[3rem] border-white/40 shadow-2xl glass-card p-0 overflow-hidden">
                     {selectedIssue && (
                         <>
                             <div className="bg-slate-900 p-10 text-white relative">
@@ -245,7 +245,7 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
                                 </div>
                             </div>
 
-                            <div className="p-10 space-y-10">
+                            <div className="p-8 space-y-8 overflow-y-auto flex-1">
                                 <section className="space-y-4">
                                     <div className="flex items-center gap-3 text-slate-900">
                                         <div className="p-2 bg-slate-100 rounded-xl">
@@ -287,7 +287,7 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
                                 )}
                             </div>
 
-                            <div className="p-10 pt-0">
+                            <div className="p-8 pt-0 shrink-0">
                                 <Button
                                     className="w-full h-16 rounded-[1.5rem] bg-slate-900 hover:bg-black text-white font-black uppercase tracking-widest text-xs transition-all shadow-2xl"
                                     onClick={() => setSelectedIssue(null)}

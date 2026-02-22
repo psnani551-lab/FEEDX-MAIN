@@ -184,7 +184,7 @@ const HODDashboard = ({ issues, onRefresh, hodProfile }: HODDashboardProps) => {
             </div>
 
             <Dialog open={!!selectedIssue} onOpenChange={(open) => !open && setSelectedIssue(null)}>
-                <DialogContent className="max-w-2xl rounded-[2.5rem] border-white/40 shadow-2xl glass-card p-0 overflow-hidden">
+                <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col rounded-[2.5rem] border-white/40 shadow-2xl glass-card p-0 overflow-hidden">
                     {selectedIssue && (
                         <>
                             <div className="bg-slate-900 p-10 text-white relative">
@@ -210,7 +210,7 @@ const HODDashboard = ({ issues, onRefresh, hodProfile }: HODDashboardProps) => {
                                 </div>
                             </div>
 
-                            <div className="p-10 space-y-10">
+                            <div className="p-8 space-y-8 overflow-y-auto flex-1">
                                 <section className="space-y-4">
                                     <div className="flex items-center gap-3 text-slate-900">
                                         <div className="p-2 bg-slate-100 rounded-xl">
@@ -269,7 +269,7 @@ const HODDashboard = ({ issues, onRefresh, hodProfile }: HODDashboardProps) => {
                                 )}
                             </div>
 
-                            <DialogFooter className="bg-slate-50 p-10 border-t border-slate-100">
+                            <DialogFooter className="bg-slate-50 p-8 border-t border-slate-100 shrink-0">
                                 <Button variant="ghost" onClick={() => setSelectedIssue(null)} className="h-14 rounded-2xl px-12 font-black uppercase tracking-widest text-[10px] text-slate-500 hover:bg-white transition-all">Dismiss Commander Interface</Button>
                             </DialogFooter>
                         </>

@@ -144,7 +144,7 @@ const TrackIssues = ({ issues, onRefresh }: TrackIssuesProps) => {
 
             {/* Track Status Dialog */}
             <Dialog open={!!selectedIssue && !isEscalateOpen} onOpenChange={(open) => !open && setSelectedIssue(null)}>
-                <DialogContent className="max-w-md rounded-[2rem] border-white/40 shadow-2xl glass-card p-0 overflow-hidden">
+                <DialogContent className="max-w-md max-h-[90vh] flex flex-col rounded-[2rem] border-white/40 shadow-2xl glass-card p-0 overflow-hidden">
                     {selectedIssue && (
                         <>
                             <div className="p-8 bg-slate-50/50 border-b border-slate-200/50">
@@ -155,7 +155,7 @@ const TrackIssues = ({ issues, onRefresh }: TrackIssuesProps) => {
                                 </DialogDescription>
                             </div>
 
-                            <div className="px-8 py-8 space-y-8">
+                            <div className="px-8 py-8 space-y-8 overflow-y-auto flex-1">
                                 {/* Timeline Visualization */}
                                 <div className="relative space-y-6 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-blue-600/30 before:via-blue-600/30 before:to-transparent">
                                     <div className="relative flex items-center justify-between gap-4">
@@ -221,7 +221,7 @@ const TrackIssues = ({ issues, onRefresh }: TrackIssuesProps) => {
                                 )}
                             </div>
 
-                            <div className="p-8 pt-0">
+                            <div className="p-8 pt-0 shrink-0">
                                 <Button
                                     onClick={() => setSelectedIssue(null)}
                                     className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-black text-white font-bold"
@@ -236,7 +236,7 @@ const TrackIssues = ({ issues, onRefresh }: TrackIssuesProps) => {
 
             {/* Escalate Dialog */}
             <Dialog open={isEscalateOpen} onOpenChange={setIsEscalateOpen}>
-                <DialogContent className="rounded-[2.5rem] border-white/40 shadow-2xl glass-card p-8">
+                <DialogContent className="max-w-md max-h-[90vh] flex flex-col rounded-[2.5rem] border-white/40 shadow-2xl glass-card p-8 overflow-hidden">
                     <div className="flex items-center gap-4 mb-6">
                         <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center border border-red-100">
                             <ShieldAlert className="h-6 w-6 text-red-600" />
