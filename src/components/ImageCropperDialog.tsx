@@ -1,103 +1,111 @@
-import { useState, useCallback } from "react";
-import Cropper from "react-easy-crop";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
-import { Loader2, Crop } from "lucide-react";
-import { getCroppedImg } from "@/lib/cropImage";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState, useCallback } from 'react';
+import Cropper from 'react-easy-crop';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Slider } from '@/components/ui/slider';
+import { getCroppedImg } from '@/lib/cropImage';
+import { ZoomIn, ZoomOut, Scissors } from 'lucide-react';
 
 interface ImageCropperDialogProps {
-    isOpen: boolean;
-    imageSrc: string;
-    aspectRatio?: number; // e.g. 16/9 for gallery, 1/1 for profile pics
-    onCropComplete: (croppedFile: File) => Promise<void>;
-    onCancel: () => void;
+    image: string | null;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onCropComplete: (croppedImage: Blob) => void;
+    aspectRatio?: number;
 }
 
-export default function ImageCropperDialog({
-    isOpen,
-    imageSrc,
-    aspectRatio = 16 / 9,
+export function ImageCropperDialog({
+    image,
+    open,
+    onOpenChange,
     onCropComplete,
-    onCancel
+    aspectRatio = 16 / 9,
 }: ImageCropperDialogProps) {
-    const { toast } = useToast();
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
-    const [isProcessing, setIsProcessing] = useState(false);
 
-    const onCropCompleteLocal = useCallback((croppedArea: any, croppedAreaPixels: any) => {
+    const onCropChange = (crop: { x: number; y: number }) => {
+        setCrop(crop);
+    };
+
+    const onZoomChange = (zoom: number) => {
+        setZoom(zoom);
+    };
+
+    const onCropCompleteInternal = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
         setCroppedAreaPixels(croppedAreaPixels);
     }, []);
 
-    const handleConfirm = async () => {
-        if (!croppedAreaPixels) return;
-        setIsProcessing(true);
+    const handleCrop = async () => {
+        if (!image || !croppedAreaPixels) return;
+
         try {
-            const croppedFile = await getCroppedImg(imageSrc, croppedAreaPixels, "cropped-image.jpg");
-            await onCropComplete(croppedFile);
-        } catch (error) {
-            console.error("Failed to crop image", error);
-            // Show toast error to user
-            toast({
-                title: "Cropping Failed",
-                description: "There was an error processing the image. Please try again or use a different image.",
-                variant: "destructive"
-            });
-        } finally {
-            setIsProcessing(false);
+            const croppedBlob = await getCroppedImg(image, croppedAreaPixels);
+            if (croppedBlob) {
+                onCropComplete(croppedBlob);
+                onOpenChange(false);
+            }
+        } catch (e) {
+            console.error(e);
         }
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={(open) => { if (!isProcessing && !open) onCancel(); }}>
-            <DialogContent className="sm:max-w-[600px] border-white/10 bg-slate-950 p-0 overflow-hidden shadow-2xl glass-card">
-                <div className="p-6 bg-slate-900 border-b border-white/10">
-                    <DialogTitle className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-                        <Crop className="w-5 h-5 text-blue-400" />
-                        Crop Image
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="sm:max-w-[600px] border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl p-0 overflow-hidden">
+                <DialogHeader className="p-6 pb-2">
+                    <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
+                        Adjust <span className="text-primary">Photo.</span>
                     </DialogTitle>
-                    <p className="text-xs text-slate-400 mt-1 font-medium">Position and scale the image to fit perfectly without getting cut off.</p>
+                </DialogHeader>
+
+                <div className="relative w-full h-[400px] bg-black/20">
+                    {image && (
+                        <Cropper
+                            image={image}
+                            crop={crop}
+                            zoom={zoom}
+                            aspect={aspectRatio}
+                            onCropChange={onCropChange}
+                            onCropComplete={onCropCompleteInternal}
+                            onZoomChange={onZoomChange}
+                            classes={{
+                                containerClassName: "bg-slate-900/50",
+                            }}
+                        />
+                    )}
                 </div>
 
-                <div className="relative w-full h-[400px] bg-slate-950">
-                    <Cropper
-                        image={imageSrc}
-                        crop={crop}
-                        zoom={zoom}
-                        aspect={aspectRatio}
-                        onCropChange={setCrop}
-                        onCropComplete={onCropCompleteLocal}
-                        onZoomChange={setZoom}
-                    />
-                </div>
-
-                <div className="p-6 bg-slate-900 border-t border-white/10 space-y-6">
-                    <div className="space-y-3">
-                        <div className="flex justify-between text-xs font-bold text-slate-400 uppercase tracking-widest">
-                            <span>Zoom</span>
-                            <span>{Math.round(zoom * 100)}%</span>
-                        </div>
+                <div className="p-6 space-y-6">
+                    <div className="flex items-center gap-4">
+                        <ZoomOut className="w-4 h-4 text-muted-foreground" />
                         <Slider
                             value={[zoom]}
                             min={1}
                             max={3}
                             step={0.1}
-                            onValueChange={(val) => setZoom(val[0])}
-                            className="w-full"
+                            onValueChange={(val: number[]) => setZoom(val[0])}
+                            className="flex-1"
                         />
+                        <ZoomIn className="w-4 h-4 text-muted-foreground" />
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-2">
-                        <Button variant="ghost" onClick={onCancel} disabled={isProcessing} className="text-slate-400 hover:text-white hover:bg-white/10 transition-all font-bold">
+                    <DialogFooter className="flex sm:justify-between gap-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => onOpenChange(false)}
+                            className="font-bold border-white/10 hover:bg-white/5"
+                        >
                             Cancel
                         </Button>
-                        <Button onClick={handleConfirm} disabled={isProcessing} className="bg-blue-600 hover:bg-blue-700 text-white font-bold tracking-wide transition-all shadow-lg hover:shadow-blue-500/20">
-                            {isProcessing ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Processing...</> : "Confirm Crop"}
+                        <Button
+                            onClick={handleCrop}
+                            className="gap-2 font-bold uppercase tracking-widest text-xs px-8 shadow-lg shadow-primary/20"
+                        >
+                            <Scissors className="w-4 h-4" /> Finish & Upload
                         </Button>
-                    </div>
+                    </DialogFooter>
                 </div>
             </DialogContent>
         </Dialog>

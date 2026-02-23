@@ -9,7 +9,7 @@ import { uploadFile, galleryAPI } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { X, Upload, Loader2, GripVertical, Image as ImageIcon, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import ImageCropperDialog from "@/components/ImageCropperDialog";
+import { ImageCropperDialog } from "@/components/ImageCropperDialog";
 
 interface GalleryImage {
     id: string;
@@ -25,11 +25,9 @@ export default function AddGallery() {
     const [images, setImages] = useState<GalleryImage[]>([]);
     const [imageUrl, setImageUrl] = useState("");
     const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-    // Cropper and Edit state
-    const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
     const [isCropperOpen, setIsCropperOpen] = useState(false);
-    const [editingItem, setEditingItem] = useState<GalleryImage | null>(null);
+    const [selectedFileForCrop, setSelectedFileForCrop] = useState<string | null>(null);
+    const [pendingFileName, setPendingFileName] = useState("");
 
     useEffect(() => {
         fetchGalleryImages();
@@ -52,50 +50,35 @@ export default function AddGallery() {
         }
     };
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (!files || files.length === 0) return;
 
-        // Open local file string for cropper
-        const fileUrl = URL.createObjectURL(files[0]);
-        setCropImageSrc(fileUrl);
-        setIsCropperOpen(true);
+        const file = files[0];
+        setPendingFileName(file.name);
 
-        // Reset input immediately so user can select the same file again if aborted
-        e.target.value = '';
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+            setSelectedFileForCrop(reader.result?.toString() || null);
+            setIsCropperOpen(true);
+        });
+        reader.readAsDataURL(file);
     };
 
-    const handleCropComplete = async (croppedFile: File) => {
+    const onCropComplete = async (croppedBlob: Blob) => {
         setIsUploading(true);
-        setIsCropperOpen(false); // Close cropper UI
-
         try {
-            // Immediately upload the perfectly cropped image to Supabase
-            const url = await uploadFile(croppedFile);
-
-            if (editingItem) {
-                // If editing, update the item directly in DB
-                await galleryAPI.update(editingItem.id, { url });
-                toast({ title: "Image Updated", description: "The image has been re-cropped and saved." });
-                setEditingItem(null);
-                fetchGalleryImages();
-            } else {
-                // If adding new, set the URL for the next step
-                setImageUrl(url);
-                toast({ title: "Image Adjusted", description: "Ready to add to gallery." });
-            }
+            // Convert blob to file for upload
+            const file = new File([croppedBlob], pendingFileName, { type: "image/jpeg" });
+            const url = await uploadFile(file);
+            setImageUrl(url);
+            toast({ title: "Image Adjusted & Uploaded", description: pendingFileName });
         } catch (error) {
             toast({ title: "Upload Failed", variant: "destructive" });
         } finally {
             setIsUploading(false);
-            setCropImageSrc(null);
+            setSelectedFileForCrop(null);
         }
-    };
-
-    const handleEdit = (item: GalleryImage) => {
-        setEditingItem(item);
-        setCropImageSrc(item.url);
-        setIsCropperOpen(true);
     };
 
     const handleAddImage = async () => {
@@ -244,33 +227,18 @@ export default function AddGallery() {
                                         )}
                                     </div>
                                     {imageUrl && (
-                                        <div className="relative mt-4 group">
-                                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2 z-10">
-                                                <Button
-                                                    size="sm"
-                                                    variant="secondary"
-                                                    className="h-8 rounded-lg font-bold text-[10px] uppercase tracking-widest"
-                                                    onClick={() => {
-                                                        setCropImageSrc(imageUrl);
-                                                        setIsCropperOpen(true);
-                                                    }}
-                                                >
-                                                    <Plus className="w-3 h-3 mr-1" /> Re-adjust
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="destructive"
-                                                    className="h-8 rounded-lg font-bold text-[10px] uppercase tracking-widest"
-                                                    onClick={() => setImageUrl("")}
-                                                >
-                                                    <X className="w-3 h-3 mr-1" /> Remove
-                                                </Button>
-                                            </div>
+                                        <div className="relative mt-4 inline-block">
                                             <img
                                                 src={imageUrl}
                                                 alt="Preview"
                                                 className="w-full max-w-md h-48 object-cover rounded-lg border border-white/10"
                                             />
+                                            <button
+                                                onClick={() => setImageUrl("")}
+                                                className="absolute top-2 right-2 p-1 bg-destructive rounded-full hover:bg-destructive/80"
+                                            >
+                                                <X className="w-4 h-4 text-white" />
+                                            </button>
                                         </div>
                                     )}
                                 </div>
@@ -316,7 +284,6 @@ export default function AddGallery() {
                             <AdminDataTable
                                 data={images}
                                 columns={columns}
-                                onEdit={handleEdit}
                                 onDelete={handleDelete}
                                 onBulkDelete={handleBulkDelete}
                                 searchPlaceholder="Search images..."
@@ -341,21 +308,14 @@ export default function AddGallery() {
                         </ul>
                     </CardContent>
                 </Card>
-            </div>
 
-            {/* Global Cropper Overlay */}
-            {cropImageSrc && (
                 <ImageCropperDialog
-                    isOpen={isCropperOpen}
-                    imageSrc={cropImageSrc}
-                    aspectRatio={16 / 9}
-                    onCropComplete={handleCropComplete}
-                    onCancel={() => {
-                        setIsCropperOpen(false);
-                        setCropImageSrc(null);
-                    }}
+                    image={selectedFileForCrop}
+                    open={isCropperOpen}
+                    onOpenChange={setIsCropperOpen}
+                    onCropComplete={onCropComplete}
                 />
-            )}
+            </div>
         </AdminLayout>
     );
 }

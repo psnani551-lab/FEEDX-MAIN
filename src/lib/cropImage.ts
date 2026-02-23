@@ -1,29 +1,35 @@
-export const getCroppedImg = async (
-    imageSrc: string,
-    pixelCrop: { x: number; y: number; width: number; height: number },
-    fileName: string = 'cropped-image.jpg'
-): Promise<File> => {
-    const image = new window.Image();
-    image.crossOrigin = 'anonymous'; // Set this BEFORE setting src to handle CORS
-    image.src = imageSrc;
-
-    await new Promise((resolve, reject) => {
-        image.onload = resolve;
-        image.onerror = (e) => {
-            console.error('Image load error:', e);
-            reject(new Error('Failed to load image for cropping. Ensure the source supports CORS.'));
-        };
+/**
+ * Helper function to create an image from a URL
+ */
+export const createImage = (url: string): Promise<HTMLImageElement> =>
+    new Promise((resolve, reject) => {
+        const image = new Image();
+        image.addEventListener('load', () => resolve(image));
+        image.addEventListener('error', (error) => reject(error));
+        image.setAttribute('crossOrigin', 'anonymous'); // needed to avoid cross-origin issues
+        image.src = url;
     });
 
+/**
+ * Utility to get cropped image blob from source and pixel coordinates
+ */
+export async function getCroppedImg(
+    imageSrc: string,
+    pixelCrop: { x: number; y: number; width: number; height: number }
+): Promise<Blob | null> {
+    const image = await createImage(imageSrc);
     const canvas = document.createElement('canvas');
-    canvas.width = pixelCrop.width;
-    canvas.height = pixelCrop.height;
     const ctx = canvas.getContext('2d');
 
     if (!ctx) {
-        throw new Error('No 2d context');
+        return null;
     }
 
+    // set canvas size to match the desired crop size
+    canvas.width = pixelCrop.width;
+    canvas.height = pixelCrop.height;
+
+    // draw the cropped image onto the canvas
     ctx.drawImage(
         image,
         pixelCrop.x,
@@ -36,15 +42,10 @@ export const getCroppedImg = async (
         pixelCrop.height
     );
 
-    return new Promise((resolve, reject) => {
+    // return as a blob
+    return new Promise((resolve) => {
         canvas.toBlob((blob) => {
-            if (!blob) {
-                reject(new Error('Canvas is empty'));
-                return;
-            }
-            const file = new File([blob], fileName, { type: 'image/jpeg' });
-            resolve(file);
+            resolve(blob);
         }, 'image/jpeg');
     });
-};
-
+}
