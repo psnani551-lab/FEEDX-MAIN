@@ -143,8 +143,9 @@ export default function AdminDataTable({
                                 size="sm"
                                 className="h-11 rounded-xl gap-2 font-bold px-4"
                                 onClick={() => onBulkDelete?.(selectedIds)}
+                                aria-label={`Delete ${selectedIds.length} selected items`}
                             >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4" aria-hidden="true" />
                                 Delete ({selectedIds.length})
                             </Button>
                         </motion.div>
@@ -173,9 +174,14 @@ export default function AdminDataTable({
                                         key={col.key}
                                         className="p-4 text-[10px] uppercase tracking-widest font-black text-muted-foreground"
                                     >
-                                        <div className="flex items-center gap-2 cursor-pointer hover:text-foreground transition-colors" onClick={() => col.sortable && handleSort(col.key)}>
+                                        <div
+                                            className="flex items-center gap-2 cursor-pointer hover:text-foreground transition-colors"
+                                            onClick={() => col.sortable && handleSort(col.key)}
+                                            role={col.sortable ? "button" : undefined}
+                                            aria-label={col.sortable ? `Sort by ${col.label}` : undefined}
+                                        >
                                             {col.label}
-                                            {col.sortable && <ArrowUpDown className="w-3 h-3 opacity-50" />}
+                                            {col.sortable && <ArrowUpDown className="w-3 h-3 opacity-50" aria-hidden="true" />}
                                         </div>
                                     </th>
                                 ))}
@@ -209,18 +215,16 @@ export default function AdminDataTable({
                                         <td className="p-4 text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all focus-glow hover:scale-110">
-                                                        <MoreHorizontal className="w-4 h-4" />
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-all focus-glow hover:scale-110" aria-label="Open item actions">
+                                                        <MoreHorizontal className="w-4 h-4" aria-hidden="true" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end" className="w-48 bg-card/95 backdrop-blur-xl border-white/10 rounded-xl p-2">
                                                     <DropdownMenuLabel className="text-[10px] uppercase tracking-widest font-black opacity-50 px-2 py-1.5">Actions</DropdownMenuLabel>
-                                                    {onEdit && (
-                                                        <DropdownMenuItem onClick={() => onEdit(item)} className="gap-2 rounded-lg py-2 cursor-pointer focus:bg-white/10">
-                                                            <Edit3 className="w-4 h-4 text-primary" />
-                                                            <span className="font-semibold text-xs">Edit Item</span>
-                                                        </DropdownMenuItem>
-                                                    )}
+                                                    <DropdownMenuItem onClick={() => onEdit?.(item)} className="gap-2 rounded-lg py-2 cursor-pointer focus:bg-white/10">
+                                                        <Edit3 className="w-4 h-4 text-primary" />
+                                                        <span className="font-semibold text-xs">Edit Item</span>
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => onStatusToggle?.(item)} className="gap-2 rounded-lg py-2 cursor-pointer focus:bg-white/10 text-emerald-500">
                                                         {item.status === 'published' ? <FileX className="w-4 h-4" /> : <FileCheck className="w-4 h-4" />}
                                                         <span className="font-semibold text-xs">{item.status === 'published' ? 'Move to Draft' : 'Publish Live'}</span>
@@ -261,8 +265,9 @@ export default function AdminDataTable({
                         className="h-10 w-10 border-white/5 rounded-xl hover:bg-white/5 transition-all focus-glow hover:scale-110"
                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                         disabled={currentPage === 1}
+                        aria-label="Previous page"
                     >
-                        <ChevronLeft className="w-4 h-4" />
+                        <ChevronLeft className="w-4 h-4" aria-hidden="true" />
                     </Button>
                     <div className="flex gap-1">
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
@@ -282,8 +287,9 @@ export default function AdminDataTable({
                         className="h-10 w-10 border-white/5 rounded-xl hover:bg-white/5 transition-all focus-glow hover:scale-110"
                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                         disabled={currentPage === totalPages}
+                        aria-label="Next page"
                     >
-                        <ChevronRight className="w-4 h-4" />
+                        <ChevronRight className="w-4 h-4" aria-hidden="true" />
                     </Button>
                 </div>
             </div>

@@ -55,9 +55,14 @@ const Navbar = () => {
             </a>
 
             <div className="relative group">
-              <button className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/80 hover:text-primary transition-all flex items-center gap-1.5 py-2">
+              <button
+                className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/80 hover:text-primary transition-all flex items-center gap-1.5 py-2"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-label="More navigation links"
+              >
                 More
-                <ChevronRight className="w-3.5 h-3.5 rotate-90 transition-transform group-hover:translate-y-0.5" />
+                <ChevronRight className="w-3.5 h-3.5 rotate-90 transition-transform group-hover:translate-y-0.5" aria-hidden="true" />
               </button>
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-56 bg-card/95 backdrop-blur-3xl border border-white/[0.08] rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-500 z-50 p-2 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
@@ -89,15 +94,22 @@ const Navbar = () => {
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 text-foreground/80 hover:text-primary transition-colors"
+              aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
             </button>
           </div>
         </div>
       </div>
 
       {/* Mobile Menu Overlay */}
-      <div className={`lg:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-3xl transition-all duration-500 ${mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
+      <div
+        id="mobile-menu"
+        className={`lg:hidden fixed inset-0 z-40 bg-background/95 backdrop-blur-3xl transition-all duration-500 ${mobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
+        aria-hidden={!mobileMenuOpen}
+      >
         <div className="flex flex-col h-full pt-24 px-8 pb-10 overflow-y-auto">
           <div className="space-y-4">
             {[

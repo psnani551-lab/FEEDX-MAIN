@@ -10,7 +10,7 @@ const Footer = () => {
       <div className="container mx-auto px-6 lg:px-12 relative z-10">
         <div className="flex flex-col items-center text-center max-w-4xl mx-auto mb-20 space-y-10">
           {/* Brand */}
-          <Link to="/" className="flex flex-col items-center gap-6 group">
+          <Link to="/" className="flex flex-col items-center gap-6 group" aria-label="FEEDX - Back to Homepage">
             <Logo size="xl" className="hover:scale-110 transition-transform duration-500" />
             <div>
               <h2 className="text-4xl sm:text-5xl font-black tracking-tighter text-foreground group-hover:text-primary transition-colors mb-2">FEEDX</h2>
