@@ -169,7 +169,7 @@ const Notifications = () => {
       </div>
 
       {/* Main content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-16 -mt-4">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-32 -mt-4">
         <Card className="glass-card border-border/30 shadow-2xl overflow-hidden bg-card/90">
           {/* Search and filter header */}
           <CardHeader className="bg-gradient-to-r from-muted/50 to-transparent border-b border-border/30 p-6">
@@ -186,15 +186,15 @@ const Notifications = () => {
                 </CardDescription>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 {/* Search input */}
-                <div className="relative">
+                <div className="relative flex-1 sm:flex-none">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     placeholder="Search notifications..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 w-64 bg-background border-border rounded-xl focus:border-cyan-500/50 focus:ring-cyan-500/20"
+                    className="pl-10 w-full sm:w-64 bg-background border-border rounded-xl focus:border-cyan-500/50 focus:ring-cyan-500/20"
                   />
                 </div>
 
@@ -202,7 +202,7 @@ const Notifications = () => {
                   variant="outline"
                   size="sm"
                   onClick={loadNotifications}
-                  className="border-border hover:bg-muted rounded-xl h-10 px-4"
+                  className="border-border hover:bg-muted rounded-xl h-10 px-4 whitespace-nowrap"
                 >
                   <RefreshCcw className="w-4 h-4 mr-2" />
                   Refresh
@@ -212,82 +212,78 @@ const Notifications = () => {
           </CardHeader>
 
           <CardContent className="p-0">
-            <ScrollArea className="max-h-[70vh]">
-              {filteredNotifications.length === 0 && !loading ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 flex items-center justify-center mb-6">
-                    <Bell className="w-10 h-10 text-cyan-600/50" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground/80 mb-2">No notifications found</h3>
-                  <p className="text-muted-foreground max-w-md">
-                    {searchQuery ? `No results for "${searchQuery}"` : "New notifications will appear here when available."}
-                  </p>
+            {filteredNotifications.length === 0 && !loading ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center px-4">
+                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-cyan-500/20 to-blue-600/20 flex items-center justify-center mb-6">
+                  <Bell className="w-10 h-10 text-cyan-600/50" />
                 </div>
-              ) : (
-                <div className="p-4 grid gap-3">
-                  {filteredNotifications.map((notification, index) => {
-                    const style = getCategoryStyle(index);
-                    const IconComponent = style.icon;
+                <h3 className="text-xl font-semibold text-foreground/80 mb-2">No notifications found</h3>
+                <p className="text-muted-foreground max-w-md">
+                  {searchQuery ? `No results for "${searchQuery}"` : "New notifications will appear here when available."}
+                </p>
+              </div>
+            ) : (
+              <div className="p-3 sm:p-4 grid gap-3">
+                {filteredNotifications.map((notification, index) => {
+                  const style = getCategoryStyle(index);
+                  const IconComponent = style.icon;
 
-                    return (
-                      <div
-                        key={notification.id}
-                        onClick={() => handleNotificationClick(notification)}
-                        className="group relative p-5 rounded-2xl bg-muted/30 hover:bg-muted/50 border border-transparent hover:border-border/50 
+                  return (
+                    <div
+                      key={notification.id}
+                      onClick={() => handleNotificationClick(notification)}
+                      className="group relative p-4 sm:p-5 rounded-2xl bg-muted/30 hover:bg-muted/50 border border-transparent hover:border-border/50 
                           transition-all duration-300 cursor-pointer hover:shadow-xl hover:shadow-cyan-500/5"
-                      >
-                        {/* Left accent */}
-                        <div className={`absolute left-0 top-4 bottom-4 w-1 rounded-full bg-gradient-to-b ${style.color}`} />
+                    >
+                      {/* Left accent */}
+                      <div className={`absolute left-0 top-4 bottom-4 w-1 rounded-full bg-gradient-to-b ${style.color}`} />
 
-                        <div className="flex gap-4 pl-4">
-                          {/* Icon */}
-                          <div className={`p-3 rounded-xl ${style.bg} shrink-0`}>
-                            <IconComponent className={`w-5 h-5 ${style.text}`} />
+                      <div className="flex gap-3 sm:gap-4 pl-2 sm:pl-4">
+                        {/* Icon */}
+                        <div className={`p-2.5 sm:p-3 rounded-xl ${style.bg} shrink-0 h-fit`}>
+                          <IconComponent className={`w-4 h-4 sm:w-5 sm:h-5 ${style.text}`} />
+                        </div>
+
+                        {/* Content */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1 sm:gap-4 mb-2">
+                            <h3 className="text-base sm:text-lg font-semibold text-foreground group-hover:text-cyan-600 transition-colors line-clamp-2 sm:line-clamp-1">
+                              {notification.title}
+                            </h3>
+                            <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
+                              <Calendar className="w-3.5 h-3.5" />
+                              {formatRelativeTime(notification.timestamp)}
+                            </div>
                           </div>
 
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-4 mb-2">
-                              <div className="flex items-center gap-3">
-                                <h3 className="text-lg font-semibold text-foreground group-hover:text-cyan-600 transition-colors line-clamp-1">
-                                  {notification.title}
-                                </h3>
-                              </div>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground whitespace-nowrap">
-                                <Calendar className="w-4 h-4" />
-                                {formatRelativeTime(notification.timestamp)}
-                              </div>
-                            </div>
+                          <p className="text-muted-foreground text-sm leading-relaxed line-clamp-3 sm:line-clamp-2">
+                            {notification.description
+                              .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1') // Remove links but keep text
+                              .replace(/[#*`~_[]]/g, '') // Remove other markdown
+                              .substring(0, 200)}...
+                          </p>
 
-                            <p className="text-muted-foreground text-sm leading-relaxed line-clamp-2">
-                              {notification.description
-                                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1') // Remove links but keep text
-                                .replace(/[#*`~_[]]/g, '') // Remove other markdown
-                                .substring(0, 200)}...
-                            </p>
-
-                            {/* Read more indicator */}
-                            <div className="mt-3 flex items-center gap-1 text-cyan-600 text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                              <span>Read full notification</span>
-                              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                            </div>
+                          {/* Read more indicator */}
+                          <div className="mt-3 flex items-center gap-1 text-cyan-600 text-xs sm:text-sm font-medium sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span>Read full notification</span>
+                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
-
-                  {loading && (
-                    <div className="p-8 text-center">
-                      <div className="inline-flex items-center gap-3 text-muted-foreground">
-                        <RefreshCcw className="w-5 h-5 animate-spin" />
-                        Loading notifications...
-                      </div>
                     </div>
-                  )}
-                </div>
-              )}
-            </ScrollArea>
+                  );
+                })}
+
+                {loading && (
+                  <div className="p-8 text-center text-sm sm:text-base">
+                    <div className="inline-flex items-center gap-3 text-muted-foreground">
+                      <RefreshCcw className="w-5 h-5 animate-spin" />
+                      Loading notifications...
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -297,13 +293,13 @@ const Notifications = () => {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden bg-card border-border p-0">
           {/* Header */}
           <div className="bg-gradient-to-r from-cyan-600/10 via-blue-600/10 to-purple-600/10 p-6 border-b border-border">
-            <DialogHeader>
+            <DialogHeader className="pr-10 lg:pr-0">
               <div className="flex items-start gap-4">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/25">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/25 shrink-0">
                   <Bell className="w-6 h-6 text-white" />
                 </div>
-                <div className="flex-1">
-                  <DialogTitle className="text-2xl font-bold text-foreground leading-tight">
+                <div className="flex-1 min-w-0">
+                  <DialogTitle className="text-xl sm:text-2xl font-bold text-foreground leading-tight whitespace-normal">
                     {selectedNotification?.title}
                   </DialogTitle>
                   <DialogDescription className="flex items-center gap-3 mt-3">
