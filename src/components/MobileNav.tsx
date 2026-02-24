@@ -50,10 +50,10 @@ const MobileNav = () => {
                         >
                             {item.isFXBot ? (
                                 <div className={cn(
-                                    "relative -mt-6 mb-1 w-12 h-12 rounded-full overflow-hidden border-4 transition-all duration-300 shadow-[0_10px_30px_rgba(37,99,235,0.4)]",
-                                    isActive ? "border-primary scale-110 shadow-[0_0_30px_rgba(45,185,214,0.5)]" : "border-white/10 opacity-90"
+                                    "relative -mt-10 mb-1 w-16 h-16 rounded-full overflow-hidden border-4 transition-all duration-300 shadow-[0_12px_40px_rgba(37,99,235,0.45)]",
+                                    isActive ? "border-primary scale-110 shadow-[0_0_40px_rgba(45,185,214,0.6)]" : "border-white/10 opacity-95"
                                 )}>
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-white/10" />
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-primary/30 via-transparent to-white/20" />
                                     <img
                                         src={`${import.meta.env.BASE_URL}fxbot-logo.jpg`}
                                         alt="FXBOT"
