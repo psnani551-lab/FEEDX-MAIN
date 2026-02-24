@@ -44,7 +44,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
     useEffect(() => {
         if (!isAuthLoading && !isAuthenticated) {
-            navigate('/signin?redirect=/admin');
+            navigate('/admin-login');
         }
     }, [isAuthenticated, isAuthLoading, navigate]);
 
@@ -168,8 +168,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                     <div className="flex items-center gap-4">
                         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                             <SheetTrigger asChild>
-                                <Button variant="ghost" size="icon" className="lg:hidden">
-                                    <Menu className="h-5 w-5" />
+                                <Button variant="ghost" size="icon" className="lg:hidden h-12 w-12 rounded-xl hover:bg-white/5 active:scale-90 transition-all">
+                                    <Menu className="h-6 w-6" />
                                 </Button>
                             </SheetTrigger>
                             <SheetContent side="left" className="p-0 w-72">

@@ -84,103 +84,176 @@ const HODDashboard = ({ issues, onRefresh, hodProfile }: HODDashboardProps) => {
                 </Badge>
             </motion.div>
 
-            <div className="glass-card border-white/40 shadow-2xl rounded-[1.5rem] overflow-hidden">
-                <Table>
-                    <TableHeader className="bg-slate-50/50">
-                        <TableRow className="hover:bg-transparent border-slate-200/60">
-                            <TableHead className="w-[140px] font-bold text-slate-500 py-5 pl-8 uppercase tracking-wider text-[10px]">Registry Key</TableHead>
-                            <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Intelligence Context</TableHead>
-                            <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Aging Report</TableHead>
-                            <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Status</TableHead>
-                            <TableHead className="text-right pr-8 font-bold text-slate-500 uppercase tracking-wider text-[10px]">Command</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {issues.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="h-48 text-center text-slate-400">
-                                    <div className="flex flex-col items-center gap-3">
-                                        <History className="h-8 w-8 opacity-20" />
-                                        <p className="font-medium">No active synchronization found in this sector.</p>
-                                    </div>
-                                </TableCell>
+            <div className="space-y-6">
+                {/* Desktop View - Table */}
+                <div className="hidden md:block glass-card border-white/40 shadow-2xl rounded-[1.5rem] overflow-hidden">
+                    <Table>
+                        <TableHeader className="bg-slate-50/50">
+                            <TableRow className="hover:bg-transparent border-slate-200/60">
+                                <TableHead className="w-[140px] font-bold text-slate-500 py-5 pl-8 uppercase tracking-wider text-[10px]">Registry Key</TableHead>
+                                <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Intelligence Context</TableHead>
+                                <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Aging Report</TableHead>
+                                <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Status</TableHead>
+                                <TableHead className="text-right pr-8 font-bold text-slate-500 uppercase tracking-wider text-[10px]">Command</TableHead>
                             </TableRow>
-                        ) : (
-                            issues.map((issue, idx) => {
-                                const age = differenceInHours(new Date(), new Date(issue.created_at));
-                                const isUnresolved = issue.status !== 'Resolved';
-                                const escalationTier = !isUnresolved ? 0 : age > 96 ? 2 : age > 48 ? 1 : 0;
+                        </TableHeader>
+                        <TableBody>
+                            {issues.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-48 text-center text-slate-400">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <History className="h-8 w-8 opacity-20" />
+                                            <p className="font-medium">No active synchronization found in this sector.</p>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                issues.map((issue, idx) => {
+                                    const age = differenceInHours(new Date(), new Date(issue.created_at));
+                                    const isUnresolved = issue.status !== 'Resolved';
+                                    const escalationTier = !isUnresolved ? 0 : age > 96 ? 2 : age > 48 ? 1 : 0;
 
-                                return (
-                                    <motion.tr
-                                        key={issue.id}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
-                                        className={cn(
-                                            "hover:bg-blue-50/40 transition-colors border-slate-200/40 group",
-                                            escalationTier === 1 && "bg-amber-50/20",
-                                            escalationTier === 2 && "bg-red-50/20"
-                                        )}
-                                    >
-                                        <TableCell className="font-mono font-black text-blue-600 pl-8">
-                                            <div className="flex flex-col gap-1.5">
-                                                <span>{issue.id}</span>
-                                                {escalationTier > 0 && (
+                                    return (
+                                        <motion.tr
+                                            key={issue.id}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            className={cn(
+                                                "hover:bg-blue-50/40 transition-colors border-slate-200/40 group",
+                                                escalationTier === 1 && "bg-amber-50/20",
+                                                escalationTier === 2 && "bg-red-50/20"
+                                            )}
+                                        >
+                                            <TableCell className="font-mono font-black text-blue-600 pl-8">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <span>{issue.id}</span>
+                                                    {escalationTier > 0 && (
+                                                        <span className={cn(
+                                                            "text-[8px] font-black uppercase px-2 py-0.5 rounded-lg w-fit shadow-sm border",
+                                                            escalationTier === 1 ? "bg-amber-100 text-amber-600 border-amber-200" : "bg-red-100 text-red-600 border-red-200"
+                                                        )}>
+                                                            {escalationTier === 1 ? "SECTOR REVIEW" : "COMMAND OVERSIGHT"}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-slate-900 leading-none mb-1">{issue.type}</span>
+                                                    <span className="text-[11px] text-slate-400 font-medium truncate max-w-[240px] italic">"{issue.description}"</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col">
                                                     <span className={cn(
-                                                        "text-[8px] font-black uppercase px-2 py-0.5 rounded-lg w-fit shadow-sm border",
-                                                        escalationTier === 1 ? "bg-amber-100 text-amber-600 border-amber-200" : "bg-red-100 text-red-600 border-red-200"
-                                                    )}>
-                                                        {escalationTier === 1 ? "SECTOR REVIEW" : "COMMAND OVERSIGHT"}
+                                                        "font-black tracking-tight",
+                                                        escalationTier === 1 ? "text-amber-600" :
+                                                            escalationTier === 2 ? "text-red-600" : "text-slate-700"
+                                                    )}>{age}h</span>
+                                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">In Pipeline</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge className={cn("gap-1.5 px-3 py-1 rounded-full border shadow-sm font-bold text-[10px]", getStatusBadgeVariant(issue.status))}>
+                                                    <span className="relative flex h-2 w-2">
+                                                        <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", issue.status === 'Resolved' ? 'bg-emerald-400' : 'bg-current')}></span>
+                                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
                                                     </span>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col">
-                                                <span className="font-bold text-slate-900 leading-none mb-1">{issue.type}</span>
-                                                <span className="text-[11px] text-slate-400 font-medium truncate max-w-[240px] italic">"{issue.description}"</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col">
+                                                    {issue.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right pr-8">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => {
+                                                        setSelectedIssue(issue);
+                                                        setDirective(issue.internal_directive || "");
+                                                    }}
+                                                    className="rounded-xl text-blue-600 font-bold hover:bg-blue-600 hover:text-white transition-all gap-2 group"
+                                                >
+                                                    Oversight
+                                                    <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                                                </Button>
+                                            </TableCell>
+                                        </motion.tr>
+                                    );
+                                })
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+
+                {/* Mobile View - Card Stack */}
+                <div className="md:hidden space-y-4">
+                    {issues.length === 0 ? (
+                        <div className="glass-card p-12 text-center rounded-[2rem] border-white/40">
+                            <History className="h-10 w-10 opacity-20 mx-auto mb-4" />
+                            <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Sector Synchronized</p>
+                        </div>
+                    ) : (
+                        issues.map((issue, idx) => {
+                            const age = differenceInHours(new Date(), new Date(issue.created_at));
+                            const isUnresolved = issue.status !== 'Resolved';
+                            const escalationTier = !isUnresolved ? 0 : age > 96 ? 2 : age > 48 ? 1 : 0;
+
+                            return (
+                                <motion.div
+                                    key={issue.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    onClick={() => {
+                                        setSelectedIssue(issue);
+                                        setDirective(issue.internal_directive || "");
+                                    }}
+                                    className={cn(
+                                        "glass-card p-6 rounded-[2rem] border-white/40 shadow-xl active:scale-[0.98] transition-all relative overflow-hidden group",
+                                        escalationTier === 1 && "bg-amber-50/10",
+                                        escalationTier === 2 && "bg-red-50/10"
+                                    )}
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="font-mono font-black text-blue-600 text-xs tracking-tighter">{issue.id}</span>
+                                            {escalationTier > 0 && (
                                                 <span className={cn(
-                                                    "font-black tracking-tight",
-                                                    escalationTier === 1 ? "text-amber-600" :
-                                                        escalationTier === 2 ? "text-red-600" : "text-slate-700"
-                                                )}>{age}h</span>
-                                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">In Pipeline</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={cn("gap-1.5 px-3 py-1 rounded-full border shadow-sm font-bold text-[10px]", getStatusBadgeVariant(issue.status))}>
-                                                <span className="relative flex h-2 w-2">
-                                                    <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", issue.status === 'Resolved' ? 'bg-emerald-400' : 'bg-current')}></span>
-                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
+                                                    "text-[8px] font-black uppercase px-2 py-0.5 rounded-md w-fit",
+                                                    escalationTier === 1 ? "bg-amber-100 text-amber-600" : "bg-red-100 text-red-600"
+                                                )}>
+                                                    Priority: {escalationTier === 1 ? "L1" : "L2"}
                                                 </span>
-                                                {issue.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right pr-8">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => {
-                                                    setSelectedIssue(issue);
-                                                    setDirective(issue.internal_directive || "");
-                                                }}
-                                                className="rounded-xl text-blue-600 font-bold hover:bg-blue-600 hover:text-white transition-all gap-2 group"
-                                            >
-                                                Oversight
-                                                <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                                            </Button>
-                                        </TableCell>
-                                    </motion.tr>
-                                );
-                            })
-                        )}
-                    </TableBody>
-                </Table>
+                                            )}
+                                        </div>
+                                        <Badge className={cn("gap-1.5 px-3 py-1 rounded-full border font-bold text-[9px]", getStatusBadgeVariant(issue.status))}>
+                                            {issue.status}
+                                        </Badge>
+                                    </div>
+                                    <div className="space-y-1 mb-6">
+                                        <h3 className="text-xl font-black text-slate-900 tracking-tight leading-none uppercase">{issue.type}</h3>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest line-clamp-1 italic">"{issue.description}"</p>
+                                    </div>
+                                    <div className="flex items-center justify-between pt-4 border-t border-slate-100/50">
+                                        <div className="flex items-center gap-3">
+                                            <div className="flex flex-col">
+                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Age</span>
+                                                <span className={cn(
+                                                    "text-xs font-bold",
+                                                    escalationTier === 1 ? "text-amber-600" :
+                                                        escalationTier === 2 ? "text-red-600" : "text-slate-600"
+                                                )}>{age}h</span>
+                                            </div>
+                                        </div>
+                                        <div className="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-lg group-hover:translate-x-1 transition-transform">
+                                            <ChevronRight size={18} />
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })
+                    )}
+                </div>
             </div>
 
             <Dialog open={!!selectedIssue} onOpenChange={(open) => !open && setSelectedIssue(null)}>

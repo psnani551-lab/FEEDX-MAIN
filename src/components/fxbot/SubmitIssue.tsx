@@ -90,7 +90,7 @@ const SubmitIssue = ({ studentId, department, onSuccess }: SubmitIssueProps) => 
             >
                 <Card className="border-slate-800 bg-slate-900 overflow-hidden rounded-[2.5rem] shadow-2xl relative">
                     <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[150%] bg-emerald-600/10 rounded-full blur-[100px] pointer-events-none" />
-                    <CardContent className="pt-20 pb-16 text-center max-w-sm mx-auto relative z-10">
+                    <CardContent className="pt-16 lg:pt-20 pb-12 lg:pb-16 text-center max-w-sm mx-auto relative z-10 px-6 sm:px-10">
                         <div className="flex justify-center mb-10 gap-6 items-center">
                             <motion.div
                                 initial={{ y: 20, opacity: 0 }}
@@ -146,10 +146,10 @@ const SubmitIssue = ({ studentId, department, onSuccess }: SubmitIssueProps) => 
     }
 
     return (
-        <Card className="glass-card border-white/40 shadow-2xl rounded-[2.5rem] overflow-hidden">
-            <CardContent className="pt-12 px-10 pb-12">
-                <form onSubmit={handleSubmit} className="space-y-10">
-                    <div className="grid md:grid-cols-2 gap-10">
+        <Card className="glass-card border-white/40 shadow-2xl rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden">
+            <CardContent className="pt-8 sm:pt-12 px-5 sm:px-10 pb-8 sm:pb-12">
+                <form onSubmit={handleSubmit} className="space-y-8 sm:space-y-10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
                         <div className="space-y-4">
                             <Label className="text-slate-900 text-[10px] font-black uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
                                 <Shield className="h-3.5 w-3.5 text-blue-600" />
@@ -238,7 +238,7 @@ const SubmitIssue = ({ studentId, department, onSuccess }: SubmitIssueProps) => 
                         <Label className="text-slate-900 text-[10px] font-black uppercase tracking-[0.2em] ml-1">Detailed Log Record</Label>
                         <Textarea
                             placeholder={`Provide technical details for this ${type.toLowerCase()}...`}
-                            className="min-h-[200px] rounded-[2rem] bg-white border-slate-200 focus:border-blue-500 p-8 leading-relaxed text-base font-medium shadow-sm"
+                            className="min-h-[160px] sm:min-h-[200px] rounded-[1.5rem] sm:rounded-[2rem] bg-white border-slate-200 focus:border-blue-500 p-6 sm:p-8 leading-relaxed text-base font-medium shadow-sm active:ring-2 active:ring-blue-500/10 transition-all"
                             value={description}
                             onChange={e => setDescription(e.target.value)}
                         />
@@ -247,7 +247,7 @@ const SubmitIssue = ({ studentId, department, onSuccess }: SubmitIssueProps) => 
                     {type === "Issue" && (
                         <div className="space-y-4">
                             <Label className="text-slate-900 text-[10px] font-black uppercase tracking-[0.2em] ml-1">Supporting Documentation</Label>
-                            <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-12 text-center hover:border-blue-500 transition-all cursor-pointer relative bg-slate-50/50 group overflow-hidden">
+                            <div className="border-2 border-dashed border-slate-200 rounded-[1.5rem] sm:rounded-[2rem] p-8 sm:p-12 text-center hover:border-blue-500 transition-all cursor-pointer relative bg-slate-50/50 group overflow-hidden active:scale-[0.99]">
                                 <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/[0.02] transition-colors" />
                                 <Input
                                     type="file"
@@ -264,11 +264,11 @@ const SubmitIssue = ({ studentId, department, onSuccess }: SubmitIssueProps) => 
                                     }}
                                 />
                                 <div className="flex flex-col items-center group-hover:scale-105 transition-transform relative z-10">
-                                    <div className="w-16 h-16 rounded-2xl bg-white flex items-center justify-center shadow-xl border border-slate-100 mb-6 group-hover:translate-y-[-4px] transition-transform">
-                                        <Upload className="h-8 w-8 text-blue-600" />
+                                    <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-2xl bg-white flex items-center justify-center shadow-xl border border-slate-100 mb-4 sm:mb-6 group-hover:translate-y-[-4px] transition-transform">
+                                        <Upload className="h-6 w-6 lg:h-8 lg:w-8 text-blue-600" />
                                     </div>
-                                    <p className="text-lg font-black text-slate-900 tracking-tight">Synchronize Evidence</p>
-                                    <p className="text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-widest">JPG, PNG, PDF (LIMIT: 03)</p>
+                                    <p className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Synchronize Evidence</p>
+                                    <p className="text-[9px] sm:text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-widest">JPG, PNG, PDF (LIMIT: 03)</p>
                                 </div>
                             </div>
 
@@ -320,7 +320,7 @@ const SubmitIssue = ({ studentId, department, onSuccess }: SubmitIssueProps) => 
 
                     <Button
                         type="submit"
-                        className="w-full h-20 text-xs font-black bg-blue-600 hover:bg-blue-700 rounded-[1.5rem] shadow-2xl shadow-blue-500/20 group transition-all active:scale-[0.98] uppercase tracking-[0.2em]"
+                        className="w-full h-16 lg:h-20 text-[10px] lg:text-xs font-black bg-blue-600 hover:bg-blue-700 rounded-2xl lg:rounded-[1.5rem] shadow-2xl shadow-blue-500/20 group transition-all active:scale-[0.98] uppercase tracking-[0.2em]"
                         disabled={isLoading}
                     >
                         {isLoading ? (

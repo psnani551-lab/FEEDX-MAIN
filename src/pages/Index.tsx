@@ -65,8 +65,8 @@ const Index = () => {
             {/* Gallery Region */}
             <div className="py-20 bg-background relative z-40 -mt-8 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] overflow-hidden border-t border-white/5">
               <div className="container mx-auto px-6 lg:px-12 relative z-10">
-                <div className="text-left mb-12">
-                  <h2 className="text-4xl sm:text-5xl md:text-6xl font-black text-foreground tracking-tighter uppercase leading-[0.9]">
+                <div className="text-left mb-10 lg:mb-12">
+                  <h2 className="text-fluid-h2 font-black text-foreground tracking-tighter uppercase">
                     THE <span className="text-primary">GALLERY.</span>
                   </h2>
                 </div>

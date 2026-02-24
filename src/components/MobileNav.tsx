@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Search, BarChart2, Bell, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 const MobileNav = () => {
     const navigate = useNavigate();
@@ -9,33 +10,65 @@ const MobileNav = () => {
     const navItems = [
         { icon: Home, label: 'Home', path: '/' },
         { icon: Search, label: 'Search', path: '/resources' },
-        { icon: BarChart2, label: 'Results', path: '/analytics' },
+        {
+            isFXBot: true,
+            label: 'FXBot',
+            path: localStorage.getItem("student_session") ? "/student/menu" : "/student/auth"
+        },
         { icon: Bell, label: 'Alerts', path: '/notifications' },
-        { icon: User, label: 'Admin', path: '/admin' },
+        { icon: BarChart2, label: 'Results', path: '/analytics' },
     ];
 
     return (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-t border-border px-6 py-3 flex items-center justify-between shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md bg-background/60 backdrop-blur-2xl border border-white/10 px-4 py-3 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-[2.5rem]">
             {navItems.map((item) => {
                 const isActive = location.pathname === item.path;
-                const Icon = item.icon;
 
                 return (
                     <button
                         key={item.path}
-                        onClick={() => navigate(item.path)}
+                        onClick={() => {
+                            if (navigator.vibrate) navigator.vibrate(10); // Haptic feel
+                            navigate(item.path);
+                        }}
                         className={cn(
-                            "flex flex-col items-center justify-center gap-1 transition-all duration-300",
-                            isActive ? "text-primary scale-110" : "text-muted-foreground hover:text-primary"
+                            "relative flex flex-col items-center justify-center gap-1 transition-all duration-500 min-w-[64px] h-12",
+                            isActive ? "text-primary" : "text-muted-foreground"
                         )}
+                        aria-label={item.label}
                     >
-                        <div className={cn(
-                            "p-2 rounded-xl transition-all duration-300",
-                            isActive ? "bg-primary/10 text-primary" : ""
+                        {isActive && (
+                            <motion.div
+                                layoutId="mobile-nav-pill"
+                                className="absolute inset-0 bg-primary/10 rounded-2xl -z-10"
+                                transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
+                            />
+                        )}
+                        <motion.div
+                            animate={isActive ? { y: -2, scale: 1.15 } : { y: 0, scale: 1 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        >
+                            {item.isFXBot ? (
+                                <div className={cn(
+                                    "w-7 h-7 rounded-full overflow-hidden border-2 transition-all duration-300",
+                                    isActive ? "border-primary scale-110 shadow-lg shadow-primary/20" : "border-transparent opacity-70 group-hover:opacity-100"
+                                )}>
+                                    <img
+                                        src={`${import.meta.env.BASE_URL}fxbot-logo.jpg`}
+                                        alt="FXBOT"
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            ) : (
+                                <item.icon className={cn("w-6 h-6", isActive ? "stroke-[2.5px]" : "stroke-2")} />
+                            )}
+                        </motion.div>
+                        <span className={cn(
+                            "text-[9px] font-black uppercase tracking-[0.1em] transition-all duration-300",
+                            isActive ? "opacity-100 translate-y-0" : "opacity-0 translate-y-1"
                         )}>
-                            <Icon className="w-6 h-6" />
-                        </div>
-                        <span className="text-[10px] font-medium uppercase tracking-wider">{item.label}</span>
+                            {item.label}
+                        </span>
                     </button>
                 );
             })}

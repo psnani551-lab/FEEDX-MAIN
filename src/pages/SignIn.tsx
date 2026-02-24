@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,26 +25,6 @@ const recordLoginAttempt = async (email: string, success: boolean) => {
   }
 };
 
-// Admins are identified by their Supabase user_metadata.role OR by being in the admin_users table.
-// As a fast client-side check we also store the token in localStorage (set by AdminLogin.tsx).
-const checkIsAdmin = async (): Promise<boolean> => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
-    // Check role in user metadata
-    if (user.user_metadata?.role === 'admin') return true;
-    // Check admin_users table
-    const { data } = await supabase
-      .from('admin_users')
-      .select('id')
-      .eq('email', user.email)
-      .limit(1);
-    return (data && data.length > 0) ?? false;
-  } catch {
-    return false;
-  }
-};
-
 const SignIn = () => {
   const [formData, setFormData] = useState({
     email: '',
@@ -54,7 +34,6 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { user } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,27 +59,7 @@ const SignIn = () => {
         setError(error.message);
       } else if (data.user) {
         await recordLoginAttempt(formData.email, true);
-
-        // Store token for legacy AdminLayout compatibility
-        if (data.session?.access_token) {
-          localStorage.setItem('adminToken', data.session.access_token);
-          localStorage.setItem('adminUser', JSON.stringify({
-            id: data.user.id,
-            email: data.user.email,
-            name: data.user.user_metadata?.full_name || data.user.email?.split('@')[0],
-          }));
-        }
-
-        // Determine redirect destination
-        const redirectTo = searchParams.get('redirect');
-        if (redirectTo) {
-          navigate(redirectTo);
-          return;
-        }
-
-        // Check if admin → send to admin panel, otherwise homepage
-        const isAdmin = await checkIsAdmin();
-        navigate(isAdmin ? '/admin' : '/');
+        navigate('/');
       }
     } catch (error) {
       await recordLoginAttempt(formData.email, false);

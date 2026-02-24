@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/hooks/use-toast";
 import Navbar from '@/components/Navbar';
@@ -9,13 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, BarChart3, GraduationCap } from 'lucide-react';
+import { Loader2, BarChart3, GraduationCap, Trophy, TrendingUp, TrendingDown, AlertCircle, BookOpen, Star, Award, Calendar, MapPin, Hash } from 'lucide-react';
 import { dataAnalysisIllustration as analyticsIllustration } from '@/lib/illustrations';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import * as RechartsPrimitive from 'recharts';
 import RecommendedResources from '@/components/RecommendedResources';
-// import StreakTracker from '@/components/StreakTracker';
 
 type AttendanceSummary = {
   attendancePercentage: number | null;
@@ -56,8 +57,24 @@ type StudentResults = {
   topSubjects: SubjectRow[];
   allSubjects: SubjectRow[];
   gradeCounts: Record<string, number>;
+  maxMarks: number;
+  source: string;
 };
 
+// ── SBTET Filter Options ────────────────────────────────────────────────
+const SCHEME_OPTIONS = [{ label: 'C24', value: '11' }, { label: 'C18', value: '9' }, { label: 'C16', value: '8' }];
+const SEM_OPTIONS = [{ label: '1st Sem', value: '1' }, { label: '2nd Sem', value: '2' }, { label: '3rd Sem', value: '3' }, { label: '4th Sem', value: '4' }, { label: '5th Sem', value: '5' }, { label: '6th Sem', value: '6' }];
+const EXAM_OPTIONS = [{ label: 'Mid 1', value: '1' }, { label: 'Mid 2', value: '2' }, { label: 'Semester (Final)', value: 'semester' }, { label: 'Regular', value: '3' }, { label: 'Supplementary', value: '4' }];
+// Fallback exam sessions (used only if /api/exam-sessions is unreachable)
+const FALLBACK_EXAM_SESSIONS = [
+  { label: 'APR-2025', value: '91' },
+  { label: 'NOV-2024', value: '90' },
+  { label: 'APR-2024', value: '88' },
+  { label: 'NOV-2023', value: '86' },
+];
+
+
+// ── Helpers (must be defined before parsers below) ────────────────────
 const toNumber = (s: string | undefined): number | null => {
   if (!s) return null;
   const cleaned = s.replace(/[^0-9.]/g, '');
@@ -66,176 +83,191 @@ const toNumber = (s: string | undefined): number | null => {
   return Number.isFinite(n) ? n : null;
 };
 
-type ResultsApiPayload = {
-  Table?: Array<{
-    CenterCode?: string;
-    CenterName?: string;
-    Pin?: string;
-    StudentName?: string;
-    BranchCode?: string;
-    Scheme?: string;
-  }>;
-  Table1?: Array<{
-    TotalMaxCredits?: number | string;
-    CreditsGained?: number | string;
-    CGPA?: number | string;
-  }>;
-  Table2?: Array<{
-    Subject_Code?: string;
-    SubjectName?: string;
-    Semester?: string;
-    SemId?: number | string;
-    SubjectTotal?: number | string;
-    HybridGrade?: string;
-    GradePoint?: number | string;
-    MaxCredits?: number | string;
-  }>;
-  Table3?: Array<{
-    Semester?: string;
-    Credits?: number | string;
-    TotalGradePoints?: number | string;
-    SGPA?: number | string;
-    SemId?: number | string;
-  }>;
-};
-
 const normalizePin = (p: string) => (p || '').trim().toUpperCase();
-
 const fmtOne = (n: number | null) => (n == null ? '—' : n.toFixed(1));
 
 const inferType = (subject: string, credits: number | null) => {
   const s = (subject || '').toLowerCase();
-  if (s.includes(' lab') || s.endsWith(' lab') || s.includes('laboratory')) return 'Lab';
-  if (credits != null && credits <= 1.26) return 'Lab';
+  // Credits are 0 for mid-terms, so they aren't reliable for type inference there.
+  // We use keyword matching as a fallback/primary for mid-terms.
+  const isLabKeyword = s.includes(' lab') || s.endsWith(' lab') || s.includes('laboratory') || s.includes('drawing') || s.includes('workshop') || s.includes('practice') || s.includes('project');
+
+  if (isLabKeyword) return 'Lab';
+  if (credits != null && credits > 0 && credits <= 1.25) return 'Lab';
+  if (credits != null && credits > 1.25) return 'Theory';
+
   return 'Theory';
+};
+
+// ── Old API format (Table/Table1/Table2/Table3 — C18 final results) ───
+type ResultsApiPayload = {
+  Table?: Array<{ CenterCode?: string; CenterName?: string; Pin?: string; StudentName?: string; BranchCode?: string; Scheme?: string }>;
+  Table1?: Array<{ TotalMaxCredits?: number | string; CreditsGained?: number | string; CGPA?: number | string }>;
+  Table2?: Array<{ Subject_Code?: string; SubjectName?: string; Semester?: string; SemId?: number | string; SubjectTotal?: number | string; HybridGrade?: string; GradePoint?: number | string; MaxCredits?: number | string }>;
+  Table3?: Array<{ Semester?: string; Credits?: number | string; TotalGradePoints?: number | string; SGPA?: number | string; SemId?: number | string }>;
 };
 
 const parseResultsJson = (payload: ResultsApiPayload, fallbackPin: string): StudentResults => {
   const student = payload.Table?.[0] || {};
   const summary = payload.Table1?.[0] || {};
-
   const studentName = (student.StudentName || '').trim() || undefined;
   const studentPin = normalizePin(student.Pin || fallbackPin) || undefined;
   const branchFromApi = (student as any).Branch || (student as any).BranchName || student.BranchCode || '';
   const scheme = (student.Scheme || '').trim();
   const branch = branchFromApi ? `${branchFromApi}${scheme ? ` (${scheme})` : ''}` : undefined;
-
   const centerName = (student.CenterName || '').trim();
   const centerCode = (student.CenterCode || '').trim();
   const center = centerName ? `${centerName}${centerCode ? ` (${centerCode})` : ''}` : undefined;
-
   const cgpa = typeof summary.CGPA === 'number' ? summary.CGPA : toNumber(String(summary.CGPA ?? ''));
-  const totalMaxCredits = typeof summary.TotalMaxCredits === 'number'
-    ? summary.TotalMaxCredits
-    : toNumber(String(summary.TotalMaxCredits ?? ''));
-  const creditsGained = typeof summary.CreditsGained === 'number'
-    ? summary.CreditsGained
-    : toNumber(String(summary.CreditsGained ?? ''));
-  const credits =
-    creditsGained != null && totalMaxCredits != null ? `${fmtOne(creditsGained)}/${fmtOne(totalMaxCredits)}` : undefined;
+  const totalMaxCredits = typeof summary.TotalMaxCredits === 'number' ? summary.TotalMaxCredits : toNumber(String(summary.TotalMaxCredits ?? ''));
+  const creditsGained = typeof summary.CreditsGained === 'number' ? summary.CreditsGained : toNumber(String(summary.CreditsGained ?? ''));
+  const credits = creditsGained != null && totalMaxCredits != null ? `${fmtOne(creditsGained)}/${fmtOne(totalMaxCredits)}` : undefined;
+  const semesterSgpa: SemesterSgpaRow[] = (payload.Table3 || []).map((r) => {
+    const c = toNumber(String(r.Credits ?? ''));
+    const tgp = toNumber(String(r.TotalGradePoints ?? ''));
+    const sgpaFromApi = toNumber(String(r.SGPA ?? ''));
+    const computedSgpa = sgpaFromApi != null ? sgpaFromApi : (c != null && c > 0 && tgp != null ? Number((tgp / c).toFixed(2)) : null);
+    return { semester: String(r.Semester || '').trim(), credits: c, totalGradePoints: tgp, sgpa: computedSgpa };
+  }).filter((r) => r.semester);
+  const allSubjects: SubjectRow[] = (payload.Table2 || []).map((r) => {
+    const subject = String(r.SubjectName || '').trim();
+    const code = String(r.Subject_Code || '').trim();
+    const semester = String(r.Semester || '').trim();
+    const marks = toNumber(String(r.SubjectTotal ?? ''));
+    const grade = String(r.HybridGrade || '').trim();
+    const gradePoint = toNumber(String(r.GradePoint ?? ''));
+    const creditsNum = toNumber(String(r.MaxCredits ?? ''));
+    const type = inferType(subject, creditsNum);
+    return { semester, subject, code, type, marks, grade, gradePoint, credits: creditsNum };
+  }).filter((s) => s.subject && s.code);
+  const swm = allSubjects.filter((s) => typeof s.marks === 'number');
+  const bestTheory = (() => { const b = swm.filter(s => s.type === 'Theory').sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0))[0]; return b ? { subject: b.subject, marks: b.marks ?? null, grade: b.grade } : undefined; })();
+  const bestLab = (() => { const b = swm.filter(s => s.type === 'Lab').sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0))[0]; return b ? { subject: b.subject, marks: b.marks ?? null, grade: b.grade } : undefined; })();
+  const weakSubjects = swm.slice().sort((a, b) => (a.marks ?? 0) - (b.marks ?? 0)).slice(0, 5).map(s => ({ subject: s.subject, marks: s.marks ?? null, grade: s.grade }));
+  const topSubjects = swm.slice().sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0)).slice(0, 5);
+  const gradeCounts: Record<string, number> = {};
+  for (const s of allSubjects) { const g = (s.grade || '').trim(); if (g) gradeCounts[g] = (gradeCounts[g] || 0) + 1; }
+  return { name: studentName, pin: studentPin, branch, center, cgpa, credits, semesterSgpa, bestTheory, bestLab, weakSubjects, topSubjects, allSubjects, gradeCounts, maxMarks: 100, source: 'final' };
+};
 
-  const semesterSgpa: SemesterSgpaRow[] = (payload.Table3 || [])
-    .map((r) => {
-      const credits = toNumber(String(r.Credits ?? ''));
-      const totalGradePoints = toNumber(String(r.TotalGradePoints ?? ''));
-      const sgpaFromApi = toNumber(String(r.SGPA ?? ''));
-      const computedSgpa =
-        sgpaFromApi != null
-          ? sgpaFromApi
-          : credits != null && credits > 0 && totalGradePoints != null
-            ? Number((totalGradePoints / credits).toFixed(2))
-            : null;
-
-      return {
-        semester: String(r.Semester || '').trim(),
-        credits,
-        totalGradePoints,
-        sgpa: computedSgpa,
-      };
-    })
-    .filter((r) => r.semester);
-
-  const allSubjects: SubjectRow[] = (payload.Table2 || [])
-    .map((r) => {
+// ── New mid-term parser (GetC18MidStudentWiseReport) ─────────────────
+const parseMidResultsJson = (rawData: any, fallbackPin: string, sem: string): StudentResults => {
+  const record = Array.isArray(rawData) ? rawData[0] : rawData;
+  const studentInfo = record?.studentInfo?.[0] || {};
+  const subjects: any[] = record?.studentWiseReport || [];
+  const semLabel = SEM_OPTIONS.find(s => s.value === sem)?.label || sem;
+  const allSubjects: SubjectRow[] = subjects
+    .filter(r => r.Subject_Code && r.SubjectName)
+    .map(r => {
       const subject = String(r.SubjectName || '').trim();
       const code = String(r.Subject_Code || '').trim();
-      const semester = String(r.Semester || '').trim();
-      const marks = toNumber(String(r.SubjectTotal ?? ''));
+      const marks = toNumber(String(r.MID1_MARKS ?? r.MID2_MARKS ?? r.Internal_MARKS ?? ''));
+      const grade = String(r.Grade || r.HybridGrade || '').trim();
+      const gradePoint = toNumber(String(r.GradePoint ?? ''));
+      const creditsNum = toNumber(String(r.MaxCredits ?? r.Credits ?? ''));
+      const type = inferType(subject, creditsNum);
+      return { semester: semLabel, subject, code, type, marks, grade, gradePoint, credits: creditsNum };
+    });
+  const swm = allSubjects.filter(s => typeof s.marks === 'number');
+  const bestTheory = (() => { const b = swm.filter(s => s.type === 'Theory').sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0))[0]; return b ? { subject: b.subject, marks: b.marks ?? null, grade: b.grade } : undefined; })();
+  const bestLab = (() => { const b = swm.filter(s => s.type === 'Lab').sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0))[0]; return b ? { subject: b.subject, marks: b.marks ?? null, grade: b.grade } : undefined; })();
+  const weakSubjects = swm.slice().sort((a, b) => (a.marks ?? 0) - (b.marks ?? 0)).slice(0, 5).map(s => ({ subject: s.subject, marks: s.marks ?? null, grade: s.grade }));
+  const topSubjects = swm.slice().sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0)).slice(0, 5);
+  const gradeCounts: Record<string, number> = {};
+  for (const s of allSubjects) { const g = (s.grade || '').trim(); if (g) gradeCounts[g] = (gradeCounts[g] || 0) + 1; }
+  return {
+    name: (studentInfo.StudentName || '').trim() || undefined,
+    pin: normalizePin(studentInfo.Pin || fallbackPin) || undefined,
+    branch: (studentInfo.BranchName || studentInfo.BranchCode || '').trim() || undefined,
+    center: (studentInfo.CollegeName || studentInfo.CenterName || '').trim() || undefined,
+    cgpa: null, credits: undefined, semesterSgpa: [],
+    bestTheory, bestLab, weakSubjects, topSubjects, allSubjects, gradeCounts,
+    maxMarks: 25,
+    source: 'mid',
+  };
+};
+
+// ── Semester final-exam parser (GetStudentWiseReport) ─────────────────────
+const parseSemesterResultsJson = (rawData: any, fallbackPin: string): StudentResults => {
+  const record = Array.isArray(rawData) ? rawData[0] : rawData;
+  const studentInfo = record?.studentInfo?.[0] || {};
+  const sgpaCgpaInfo = record?.studentSGPACGPAInfo?.[0] || {};
+  const subjects: any[] = record?.studentWiseReport || [];
+
+  const cgpa = toNumber(String(sgpaCgpaInfo.CGPA ?? ''));
+  const sgpa = toNumber(String(sgpaCgpaInfo.SGPA ?? ''));
+  const totalCredits = toNumber(String(sgpaCgpaInfo.SgpaTotalCredits ?? ''));
+
+  const semesterSgpa: SemesterSgpaRow[] = sgpa != null ? [{
+    semester: studentInfo.Sem || '—',
+    credits: totalCredits,
+    totalGradePoints: toNumber(String(sgpaCgpaInfo.SgpaTotalPoints ?? '')),
+    sgpa,
+  }] : [];
+
+  const allSubjects: SubjectRow[] = subjects
+    .filter(r => r.Subject_Code && r.SubjectName)
+    .map(r => {
+      const subject = String(r.SubjectName || '').trim();
+      const code = String(r.Subject_Code || '').trim();
+      const semester = String(r.Semester || studentInfo.Sem || '').trim();
+      // SubjectTotal is out of 100; for mid-only context use Internal_MARKS
+      const marks = toNumber(String(r.SubjectTotal ?? r.Internal_MARKS ?? ''));
       const grade = String(r.HybridGrade || '').trim();
       const gradePoint = toNumber(String(r.GradePoint ?? ''));
-      const creditsNum = toNumber(String(r.MaxCredits ?? ''));
+      const creditsNum = toNumber(String(r.MaxCredits ?? r.CreditsGained ?? ''));
       const type = inferType(subject, creditsNum);
-      return {
-        semester,
-        subject,
-        code,
-        type,
-        marks,
-        grade,
-        gradePoint,
-        credits: creditsNum,
-      };
-    })
-    .filter((s) => s.subject && s.code);
+      return { semester, subject, code, type, marks, grade, gradePoint, credits: creditsNum };
+    });
 
-  const subjectsWithMarks = allSubjects.filter((s) => typeof s.marks === 'number');
-  const bestTheorySubject = subjectsWithMarks
-    .filter((s) => s.type === 'Theory')
-    .sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0))[0];
-  const bestLabSubject = subjectsWithMarks
-    .filter((s) => s.type === 'Lab')
-    .sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0))[0];
-
-  const bestTheory = bestTheorySubject
-    ? { subject: bestTheorySubject.subject, marks: bestTheorySubject.marks ?? null, grade: bestTheorySubject.grade }
-    : undefined;
-  const bestLab = bestLabSubject
-    ? { subject: bestLabSubject.subject, marks: bestLabSubject.marks ?? null, grade: bestLabSubject.grade }
-    : undefined;
-
-  const weakSubjects = subjectsWithMarks
-    .slice()
-    .sort((a, b) => (a.marks ?? 0) - (b.marks ?? 0))
-    .slice(0, 5)
-    .map((s) => ({ subject: s.subject, marks: s.marks ?? null, grade: s.grade }));
-
-  const topSubjects = subjectsWithMarks
-    .slice()
-    .sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0))
-    .slice(0, 5);
-
+  const swm = allSubjects.filter(s => typeof s.marks === 'number');
+  const bestTheory = (() => { const b = swm.filter(s => s.type === 'Theory').sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0))[0]; return b ? { subject: b.subject, marks: b.marks ?? null, grade: b.grade } : undefined; })();
+  const bestLab = (() => { const b = swm.filter(s => s.type === 'Lab').sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0))[0]; return b ? { subject: b.subject, marks: b.marks ?? null, grade: b.grade } : undefined; })();
+  const weakSubjects = swm.slice().sort((a, b) => (a.marks ?? 0) - (b.marks ?? 0)).slice(0, 5).map(s => ({ subject: s.subject, marks: s.marks ?? null, grade: s.grade }));
+  const topSubjects = swm.slice().sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0)).slice(0, 5);
   const gradeCounts: Record<string, number> = {};
-  for (const s of allSubjects) {
-    const g = (s.grade || '').trim();
-    if (!g) continue;
-    gradeCounts[g] = (gradeCounts[g] || 0) + 1;
-  }
+  for (const s of allSubjects) { const g = (s.grade || '').trim(); if (g) gradeCounts[g] = (gradeCounts[g] || 0) + 1; }
 
+  const credits = totalCredits != null ? `${totalCredits}` : undefined;
   return {
-    name: studentName,
-    pin: studentPin,
-    branch,
-    center,
-    cgpa,
-    credits,
-    semesterSgpa,
-    bestTheory,
-    bestLab,
-    weakSubjects,
-    topSubjects,
-    allSubjects,
-    gradeCounts,
+    name: (studentInfo.StudentName || '').trim() || undefined,
+    pin: normalizePin(studentInfo.Pin || fallbackPin) || undefined,
+    branch: (studentInfo.BranchName || studentInfo.BranchCode || '').trim() || undefined,
+    center: (studentInfo.CollegeName || '').trim() || undefined,
+    cgpa, credits, semesterSgpa,
+    bestTheory, bestLab, weakSubjects, topSubjects, allSubjects, gradeCounts,
+    maxMarks: 100,
+    source: 'semester',
   };
 };
 
 const StudentAnalytics = () => {
   const navigate = useNavigate();
-  const FEATURE_SOON = false;
   const [pin, setPin] = useState('');
+  const [schemeId, setSchemeId] = useState('11');
+  const [semYearId, setSemYearId] = useState('2');
+  const [examTypeId, setExamTypeId] = useState('1');
+  const [examMonthYearId, setExamMonthYearId] = useState('91');
+  const [examSessions, setExamSessions] = useState<{ label: string; value: string }[]>(FALLBACK_EXAM_SESSIONS);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [results, setResults] = useState<StudentResults | null>(null);
-  const [attendance, setAttendance] = useState<AttendanceSummary | null>(null);
+
+  // Fetch live exam sessions from SBTET on mount
+  useEffect(() => {
+    const API_BASE = import.meta.env.VITE_API_URL || '';
+    fetch(`${API_BASE}/api/exam-sessions`)
+      .then(r => r.json())
+      .then(json => {
+        if (json?.success && json.sessions?.length) {
+          setExamSessions(json.sessions);
+          // Auto-select most recent (first in sorted list)
+          setExamMonthYearId(json.sessions[0].value);
+        }
+      })
+      .catch(() => { /* keep fallback list */ });
+  }, []);
+
 
   const chartConfig = useMemo(
     () => ({
@@ -246,11 +278,6 @@ const StudentAnalytics = () => {
   );
 
   const fetchAll = async () => {
-    if (FEATURE_SOON) {
-      setError('Student analytics feature will be available soon.');
-      return;
-    }
-
     const normalized = normalizePin(pin);
     if (!normalized) {
       setError('Please enter a valid PIN.');
@@ -259,117 +286,39 @@ const StudentAnalytics = () => {
 
     setIsLoading(true);
     setError('');
-
-    // Check cache first for immediate feedback (optional, but let's do it for offline-first)
-    const cacheKey = `feedx_analytics_cache_${normalized.toLowerCase()}`;
-    const cachedData = localStorage.getItem(cacheKey);
-    let initialResults = null;
-    let initialAttendance = null;
-
-    if (cachedData) {
-      try {
-        const { results: cResults, attendance: cAttendance } = JSON.parse(cachedData);
-        initialResults = cResults;
-        initialAttendance = cAttendance;
-        setResults(cResults);
-        setAttendance(cAttendance);
-        console.log('[DEBUG] Loaded from cache:', normalized);
-      } catch (err) {
-        console.error('[DEBUG] Cache parse error:', err);
-      }
-    } else {
-      setResults(null);
-      setAttendance(null);
-    }
+    setResults(null);
 
     const API_BASE = import.meta.env.VITE_API_URL || '';
-    console.log(`[DEBUG] Fetching analytics for PIN: ${normalized}`);
 
     try {
-      const [resultsResp, attendanceResp] = await Promise.allSettled([
-        fetch(`${API_BASE}/api/results?pin=${encodeURIComponent(normalized)}`),
-        fetch(`${API_BASE}/api/attendance?pin=${encodeURIComponent(normalized)}`),
-      ]);
+      const params = new URLSearchParams({ pin: normalized, schemeId, semYearId, examTypeId });
+      if (examTypeId === 'semester') params.set('examMonthYearId', examMonthYearId);
 
-      let resultsError: string | null = null;
-      let attendanceError: string | null = null;
-      let newResults = initialResults;
-      let newAttendance = initialAttendance;
 
-      if (resultsResp.status === 'fulfilled') {
-        const resRes = resultsResp.value;
-        if (!resRes.ok) {
-          const maybe = await resRes.json().catch(() => null);
-          resultsError = maybe?.error || 'Failed to fetch results';
+      const resultsResp = await fetch(`${API_BASE}/api/results?${params.toString()}`);
+
+      // ── Results ─────────────────────────────────────────────────────
+      if (resultsResp.ok) {
+        const resJson = await resultsResp.json().catch(() => null);
+        if (!resJson?.success || !resJson?.data) {
+          setError(resJson?.error || 'No data found. Try a different Scheme, Semester, or Exam Type.');
         } else {
-          const resJson = await resRes.json();
-          if (!resJson?.success || !resJson?.data) {
-            resultsError = resJson?.error || 'Invalid results response';
-          } else {
-            newResults = parseResultsJson(resJson.data as ResultsApiPayload, normalized);
-            setResults(newResults);
-          }
+          // Route to correct parser: semester → parseSemesterResultsJson, final → parseResultsJson, mid → parseMidResultsJson
+          const src = resJson.source as string;
+          const parsed = src === 'semester'
+            ? parseSemesterResultsJson(resJson.data, normalized)
+            : src === 'final'
+              ? parseResultsJson(resJson.data, normalized)
+              : parseMidResultsJson(resJson.data, normalized, semYearId);
+          setResults(parsed);
         }
       } else {
-        resultsError = resultsResp.reason?.message || 'Failed to fetch results';
+        const resJson = await resultsResp.json().catch(() => null);
+        setError(resJson?.error || 'Failed to connect to backend. Is the server running?');
       }
 
-      if (attendanceResp.status === 'fulfilled') {
-        const attRes = attendanceResp.value;
-        if (!attRes.ok) {
-          const maybe = await attRes.json().catch(() => null);
-          attendanceError = maybe?.error || maybe?.message || 'Failed to fetch attendance';
-        } else {
-          const attJson = await attRes.json();
-          if (!attJson?.success) {
-            attendanceError = attJson?.error || 'Invalid attendance response';
-          } else {
-            newAttendance = (attJson.attendanceSummary || null) as AttendanceSummary | null;
-            setAttendance(newAttendance);
-          }
-        }
-      } else {
-        attendanceError = attendanceResp.reason?.message || 'Failed to fetch attendance';
-      }
-
-      // If we have new data, update the cache
-      if (newResults || newAttendance) {
-        localStorage.setItem(cacheKey, JSON.stringify({
-          results: newResults,
-          attendance: newAttendance,
-          timestamp: new Date().toISOString()
-        }));
-      }
-
-      // Only show a blocking error if results failed AND we have no cache
-      if (resultsError) {
-        if (!newResults) {
-          setError(resultsError);
-        } else {
-          toast({
-            title: "Offline Mode",
-            description: "Showing cached data. Updates currently unavailable.",
-            variant: "destructive"
-          });
-        }
-      } else if (attendanceError && !newAttendance) {
-        toast({
-          title: "Attendance Offline",
-          description: "Could not sync latest attendance data.",
-          variant: "default"
-        });
-      }
     } catch (e: any) {
-      console.error('[DEBUG] Access Error:', e);
-      if (!results && !attendance) {
-        setError(e?.message || 'Failed to fetch analytics. Please try again.');
-      } else {
-        toast({
-          title: "Network Error",
-          description: "Using cached data due to network issues.",
-          variant: "destructive"
-        });
-      }
+      setError(e?.message || 'Unexpected error. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -409,19 +358,68 @@ const StudentAnalytics = () => {
                 <BarChart3 className="w-5 h-5" />
                 Fetch by PIN
               </CardTitle>
-              <CardDescription></CardDescription>
+              <CardDescription>Select your exam details exactly as on the SBTET portal, then enter your PIN.</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 items-end">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end mb-4">
+                {/* Scheme */}
+                <div className="space-y-2">
+                  <Label>Scheme</Label>
+                  <Select value={schemeId} onValueChange={setSchemeId}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {SCHEME_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Semester */}
+                <div className="space-y-2">
+                  <Label>Semester</Label>
+                  <Select value={semYearId} onValueChange={setSemYearId}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {SEM_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Exam Type */}
+                <div className="space-y-2">
+                  <Label>Exam Type</Label>
+                  <Select value={examTypeId} onValueChange={setExamTypeId}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {EXAM_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {/* Exam Month/Year — only for Semester Final */}
+                {examTypeId === 'semester' && (
+                  <div className="space-y-2">
+                    <Label>Exam Month/Year</Label>
+                    <Select value={examMonthYearId} onValueChange={setExamMonthYearId}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {examSessions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                {/* PIN */}
                 <div className="space-y-2">
                   <Label htmlFor="pin">PIN</Label>
-                  <Input id="pin" value={pin} onChange={(e) => setPin(e.target.value)} placeholder="Enter PIN" />
+                  <Input
+                    id="pin"
+                    value={pin}
+                    onChange={(e) => setPin(e.target.value)}
+                    placeholder="e.g. 24054-AI-019"
+                    onKeyDown={(e) => e.key === 'Enter' && fetchAll()}
+                  />
                 </div>
-                <Button onClick={fetchAll} className="bg-gradient-brand hover:opacity-90" disabled={isLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Fetch analytics
-                </Button>
               </div>
+              <Button onClick={fetchAll} className="w-full sm:w-auto bg-gradient-brand hover:opacity-90" disabled={isLoading}>
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Fetch Analytics
+              </Button>
               {error && (
                 <Alert className="mt-4">
                   <AlertDescription>{error}</AlertDescription>
@@ -430,322 +428,321 @@ const StudentAnalytics = () => {
             </CardContent>
           </Card>
 
-          {/* Student Summary */}
-          {(results || attendance) && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <GraduationCap className="w-5 h-5" />
-                  Student Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Name</Label>
-                    <div className="font-semibold break-words">{results?.name || '—'}</div>
-                  </div>
-                  <div>
-                    <Label className="text-sm text-muted-foreground">PIN</Label>
-                    <div className="font-semibold">{results?.pin || pin}</div>
-                  </div>
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Branch</Label>
-                    <div className="font-semibold">{results?.branch || '—'}</div>
-                  </div>
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Center</Label>
-                    <div className="font-semibold break-words">{results?.center || '—'}</div>
-                  </div>
-                  <div>
-                    <Label className="text-sm text-muted-foreground">CGPA</Label>
-                    <div className="font-semibold">{results?.cgpa == null ? '—' : results.cgpa.toFixed(1)}</div>
-                  </div>
-                  <div>
-                    <Label className="text-sm text-muted-foreground">Credits</Label>
-                    <div className="font-semibold">{results?.credits || '—'}</div>
+
+          {/* ── RESULTS DASHBOARD ──────────────────────────────────────── */}
+          {results && (() => {
+            const allMarks = results.allSubjects.filter(s => typeof s.marks === 'number').map(s => s.marks as number);
+            const avgMark = allMarks.length ? allMarks.reduce((a, b) => a + b, 0) / allMarks.length : null;
+            const maxPossible = results.maxMarks;
+            const perfScore = avgMark != null ? Math.min(100, Math.round((avgMark / maxPossible) * 100)) : null;
+            const perfColor = perfScore == null ? '#6366f1' : perfScore >= 80 ? '#22c55e' : perfScore >= 60 ? '#f59e0b' : '#ef4444';
+            const perfLabel = perfScore == null ? '—' : perfScore >= 80 ? 'Excellent' : perfScore >= 60 ? 'Good' : perfScore >= 40 ? 'Average' : 'Needs Work';
+            const strongSubjects = results.allSubjects
+              .filter(s => typeof s.marks === 'number' && (s.marks as number) >= (avgMark ?? 0))
+              .sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0));
+            const weakSubjects = results.allSubjects
+              .filter(s => typeof s.marks === 'number' && (s.marks as number) < (avgMark ?? 0))
+              .sort((a, b) => (a.marks ?? 0) - (b.marks ?? 0));
+
+            return (
+              <>
+                {/* ── HERO PROFILE CARD ── */}
+                <div className="relative overflow-hidden rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/10 via-background to-secondary/10 backdrop-blur-sm p-6 md:p-8">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+                  <div className="relative flex flex-col md:flex-row gap-6 items-start md:items-center">
+                    {/* Avatar / Performance Ring */}
+                    <div className="flex-shrink-0">
+                      <div className="relative w-24 h-24">
+                        <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
+                          <circle cx="48" cy="48" r="40" fill="none" stroke="currentColor" strokeWidth="6" className="text-muted/20" />
+                          <circle
+                            cx="48" cy="48" r="40" fill="none" stroke={perfColor} strokeWidth="6"
+                            strokeDasharray={`${2 * Math.PI * 40}`}
+                            strokeDashoffset={`${2 * Math.PI * 40 * (1 - (perfScore ?? 0) / 100)}`}
+                            strokeLinecap="round" className="transition-all duration-1000"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className="text-xl font-black" style={{ color: perfColor }}>{perfScore ?? '—'}</span>
+                          <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Score</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Student Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <h2 className="text-2xl md:text-3xl font-black tracking-tight truncate">{results.name || 'Student'}</h2>
+                        <Badge className="text-xs font-bold px-3" style={{ background: perfColor + '22', color: perfColor, border: `1px solid ${perfColor}44` }}>
+                          {perfLabel}
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                        {results.pin && <span className="flex items-center gap-1"><Hash className="w-3 h-3" />{results.pin}</span>}
+                        {results.branch && <span className="flex items-center gap-1 truncate"><Award className="w-3 h-3 flex-shrink-0" />{results.branch}</span>}
+                        {results.center && <span className="flex items-center gap-1 truncate"><MapPin className="w-3 h-3 flex-shrink-0" />{results.center}</span>}
+                      </div>
+                      {results.cgpa != null && (
+                        <div className="mt-3 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                          <Star className="w-4 h-4 text-primary" />
+                          <span className="font-black text-primary text-sm">CGPA: {results.cgpa.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Quick Stats */}
+                    <div className="grid grid-cols-3 md:grid-cols-1 gap-2 md:gap-3 w-full md:w-auto md:min-w-[140px]">
+                      {[
+                        { label: 'Subjects', value: results.allSubjects.length, icon: <BookOpen className="w-3.5 h-3.5" /> },
+                        { label: 'Avg Marks', value: avgMark != null ? avgMark.toFixed(1) : '—', icon: <BarChart3 className="w-3.5 h-3.5" /> },
+                        { label: 'Credits', value: results.source === 'mid' ? 'Mid-term' : (results.credits || (results.cgpa != null ? '—' : 'Mid')), icon: <Calendar className="w-3.5 h-3.5" /> },
+                      ].map(stat => (
+                        <div key={stat.label} className="rounded-2xl bg-background/60 border border-border/60 px-3 py-2 text-center">
+                          <div className="flex items-center justify-center gap-1 text-muted-foreground mb-0.5">{stat.icon}<span className="text-[10px] font-bold uppercase tracking-wider">{stat.label}</span></div>
+                          <div className="text-lg font-black">{stat.value}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                {/* Attendance (summary only) */}
-                {(attendance || results) && (
-                  <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="rounded-xl border border-border bg-card p-4">
-                      <Label className="text-sm text-muted-foreground">Attendance %</Label>
-                      <div className="text-2xl font-semibold text-primary">
-                        {attendance?.attendancePercentage == null ? '0.0%' : `${attendance.attendancePercentage.toFixed(1)}%`}
+                {/* ── SUBJECT MARKS VISUALIZER ── */}
+                {results.allSubjects.length > 0 && (
+                  <Card className="border-border/60">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-lg">
+                        <BarChart3 className="w-5 h-5 text-primary" />
+                        Subject Performance
+                      </CardTitle>
+                      <CardDescription>Visual breakdown of marks for each subject</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {results.allSubjects
+                          .filter(s => typeof s.marks === 'number')
+                          .sort((a, b) => (b.marks ?? 0) - (a.marks ?? 0))
+                          .map((s) => {
+                            const pct = Math.min(100, Math.round(((s.marks ?? 0) / maxPossible) * 100));
+                            const barColor = pct >= 80 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444';
+                            return (
+                              <div key={`${s.code}-${s.type}`} className="flex items-center gap-3">
+                                <div className="w-[140px] md:w-[220px] flex-shrink-0">
+                                  <div className="text-xs font-semibold text-foreground line-clamp-1" title={s.subject}>{s.subject}</div>
+                                  <div className="text-[10px] text-muted-foreground">{s.code} · {s.type}</div>
+                                </div>
+                                <div className="flex-1 flex items-center gap-2">
+                                  <div className="flex-1 h-2.5 bg-muted rounded-full overflow-hidden">
+                                    <div
+                                      className="h-full rounded-full transition-all duration-700"
+                                      style={{ width: `${pct}%`, background: barColor }}
+                                    />
+                                  </div>
+                                  <span className="text-sm font-black w-8 text-right" style={{ color: barColor }}>{s.marks}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
                       </div>
-                    </div>
-                    <div className="rounded-xl border border-border bg-card p-4">
-                      <Label className="text-sm text-muted-foreground">Total days</Label>
-                      <div className="text-2xl font-semibold">{attendance?.totalDays ?? '0'}</div>
-                    </div>
-                    <div className="rounded-xl border border-border bg-card p-4">
-                      <Label className="text-sm text-muted-foreground">Present days</Label>
-                      <div className="text-2xl font-semibold">{attendance?.presentDays ?? '0'}</div>
-                    </div>
+
+                      {/* Recharts bar chart */}
+                      {results.allSubjects.filter(s => s.marks != null).length > 0 && (
+                        <div className="mt-6">
+                          <ChartContainer config={chartConfig} className="h-[220px] w-full">
+                            <RechartsPrimitive.BarChart
+                              data={results.allSubjects.filter(s => s.marks != null).map(s => ({ name: s.code, marks: s.marks }))}
+                              margin={{ left: 4, right: 4, top: 4 }}
+                            >
+                              <RechartsPrimitive.CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
+                              <RechartsPrimitive.XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
+                              <RechartsPrimitive.YAxis tickLine={false} axisLine={false} tick={{ fontSize: 10 }} domain={[0, maxPossible]} />
+                              <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                              <RechartsPrimitive.Bar dataKey="marks" fill="var(--color-sgpa)" radius={[6, 6, 0, 0]} />
+                            </RechartsPrimitive.BarChart>
+                          </ChartContainer>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* ── STRONG / WEAK SUBJECTS ── */}
+                {(strongSubjects.length > 0 || weakSubjects.length > 0) && (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {/* Strong Subjects */}
+                    <Card className="border-green-500/20 bg-green-500/5">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center gap-2 text-green-600 dark:text-green-400 text-base">
+                          <TrendingUp className="w-5 h-5" />Strong Subjects
+                          <Badge className="ml-auto bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30 text-xs">{strongSubjects.length}</Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {strongSubjects.slice(0, 5).map(s => {
+                            const pct = Math.min(100, Math.round(((s.marks ?? 0) / maxPossible) * 100));
+                            return (
+                              <div key={`${s.code}-strong`} className="space-y-1">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-semibold line-clamp-1 text-foreground">{s.subject}</span>
+                                  <span className="text-sm font-black text-green-600 dark:text-green-400 ml-2 flex-shrink-0">{s.marks}</span>
+                                </div>
+                                <div className="h-1.5 bg-green-500/15 rounded-full overflow-hidden">
+                                  <div className="h-full bg-green-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {strongSubjects.length === 0 && <p className="text-sm text-muted-foreground">No strong subjects yet.</p>}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Weak Subjects */}
+                    <Card className="border-red-500/20 bg-red-500/5">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400 text-base">
+                          <TrendingDown className="w-5 h-5" />Needs Improvement
+                          <Badge className="ml-auto bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30 text-xs">{weakSubjects.length}</Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-3">
+                          {weakSubjects.slice(0, 5).map(s => {
+                            const pct = Math.min(100, Math.round(((s.marks ?? 0) / maxPossible) * 100));
+                            return (
+                              <div key={`${s.code}-weak`} className="space-y-1">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-sm font-semibold line-clamp-1 text-foreground">{s.subject}</span>
+                                  <div className="flex items-center gap-2 flex-shrink-0">
+                                    <span className="text-sm font-black text-red-500">{s.marks}</span>
+                                    <button
+                                      onClick={() => navigate(`/resources?q=${encodeURIComponent(s.subject.split(' ').slice(0, 2).join(' '))}`)}
+                                      className="text-[10px] font-bold text-primary underline hover:no-underline"
+                                    >Resources →</button>
+                                  </div>
+                                </div>
+                                <div className="h-1.5 bg-red-500/15 rounded-full overflow-hidden">
+                                  <div className="h-full bg-red-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {weakSubjects.length === 0 && <p className="text-sm text-muted-foreground text-green-600">All subjects above average! 🎉</p>}
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          )}
 
-          {/* SGPA chart */}
-          {results && results.semesterSgpa.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Semester-wise SGPA</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="w-full overflow-auto mb-6">
-                  {/* Desktop Table View */}
-                  <div className="hidden md:block">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Semester</TableHead>
-                          <TableHead className="text-right">Credits</TableHead>
-                          <TableHead className="text-right">Total Grade Points</TableHead>
-                          <TableHead className="text-right">SGPA</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {results.semesterSgpa.map((r) => (
-                          <TableRow key={r.semester}>
-                            <TableCell className="font-medium">{r.semester}</TableCell>
-                            <TableCell className="text-right">{r.credits == null ? '—' : r.credits.toFixed(1)}</TableCell>
-                            <TableCell className="text-right">{r.totalGradePoints == null ? '—' : r.totalGradePoints.toFixed(1)}</TableCell>
-                            <TableCell className="text-right">{r.sgpa == null ? '—' : r.sgpa.toFixed(2)}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
 
-                  {/* Mobile Card View */}
-                  <div className="md:hidden space-y-4">
-                    {results.semesterSgpa.map((r) => (
-                      <div key={r.semester} className="p-4 rounded-xl border border-border bg-muted/20 space-y-2">
-                        <div className="flex justify-between items-center">
-                          <span className="font-bold text-primary">{r.semester}</span>
-                          <Badge variant="outline" className="text-primary font-bold">SGPA: {r.sgpa == null ? '—' : r.sgpa.toFixed(2)}</Badge>
+                {/* ── RECOMMENDED RESOURCES ── */}
+                {results.weakSubjects.length > 0 && (
+                  <RecommendedResources weakSubjects={results.weakSubjects} topSubjects={results.topSubjects} />
+                )}
+
+                {/* ── Best Theory & Lab ── */}
+                {(results.bestTheory || results.bestLab) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {results.bestTheory && (
+                      <div className="flex items-center gap-4 p-5 rounded-2xl border border-yellow-500/20 bg-yellow-500/5">
+                        <div className="p-3 rounded-xl bg-yellow-500/10">
+                          <Trophy className="w-6 h-6 text-yellow-500" />
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                          <div>Credits: <span className="text-foreground font-medium">{r.credits == null ? '—' : r.credits.toFixed(1)}</span></div>
-                          <div className="text-right">Grade Points: <span className="text-foreground font-medium">{r.totalGradePoints == null ? '—' : r.totalGradePoints.toFixed(1)}</span></div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Best Theory</div>
+                          <div className="font-black text-foreground line-clamp-1">{results.bestTheory.subject}</div>
+                          <div className="text-sm text-muted-foreground">Marks: <span className="font-bold text-yellow-600 dark:text-yellow-400">{results.bestTheory.marks ?? '—'}</span></div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-                <ChartContainer config={chartConfig} className="h-[280px] w-full">
-                  <RechartsPrimitive.BarChart data={sgpaChartData} margin={{ left: 12, right: 12 }}>
-                    <RechartsPrimitive.CartesianGrid vertical={false} />
-                    <RechartsPrimitive.XAxis dataKey="semester" tickLine={false} axisLine={false} />
-                    <RechartsPrimitive.YAxis tickLine={false} axisLine={false} domain={[0, 10]} />
-                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                    <RechartsPrimitive.Bar dataKey="sgpa" fill="var(--color-sgpa)" radius={[8, 8, 0, 0]} />
-                  </RechartsPrimitive.BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Recommended Resources */}
-          {results && results.weakSubjects.length > 0 && (
-            <RecommendedResources
-              weakSubjects={results.weakSubjects}
-              topSubjects={results.topSubjects}
-            />
-          )}
-
-          {/* Highlights */}
-          {results && (results.bestTheory || results.bestLab || results.weakSubjects.length > 0) && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Best Theory</CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
-                  {results.bestTheory ? (
-                    <div>
-                      <div className="font-semibold text-foreground">{results.bestTheory.subject}</div>
-                      <div>Marks: {results.bestTheory.marks ?? '—'} • Grade: {results.bestTheory.grade}</div>
-                    </div>
-                  ) : (
-                    '—'
-                  )}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Best Lab</CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
-                  {results.bestLab ? (
-                    <div>
-                      <div className="font-semibold text-foreground">{results.bestLab.subject}</div>
-                      <div>Marks: {results.bestLab.marks ?? '—'} • Grade: {results.bestLab.grade}</div>
-                    </div>
-                  ) : (
-                    '—'
-                  )}
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Weak Subjects</CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground">
-                  {results.weakSubjects.length ? (
-                    <ul className="space-y-4">
-                      {results.weakSubjects.map((s) => (
-                        <li key={`${s.subject}-${s.grade}`} className="flex flex-col gap-1 p-3 rounded-lg border border-border bg-muted/30">
-                          <div className="flex justify-between items-start">
-                            <span className="font-semibold text-foreground line-clamp-1">{s.subject}</span>
-                            <Badge variant="outline" className="text-[10px] h-5">{s.grade}</Badge>
-                          </div>
-                          <div className="flex justify-between items-center mt-1">
-                            <span className="text-xs">Marks: {s.marks ?? '—'}</span>
-                            <Button
-                              variant="link"
-                              size="sm"
-                              className="h-auto p-0 text-xs text-primary font-bold"
-                              onClick={() => navigate(`/resources?q=${encodeURIComponent(s.subject.split(' ').slice(0, 2).join(' '))}`)}
-                            >
-                              Search Materials →
-                            </Button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    'All subjects are performing well!'
-                  )}
-                </CardContent>
-              </Card>
-            </div>
-          )}
-
-          {/* Top subjects */}
-          {results && results.topSubjects.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Top Subjects</CardTitle>
-                <CardDescription>Best scoring subjects from the results page.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="w-full">
-                  {/* Desktop View */}
-                  <div className="hidden md:block">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Subject</TableHead>
-                          <TableHead>Code</TableHead>
-                          <TableHead>Type</TableHead>
-                          <TableHead>Semester</TableHead>
-                          <TableHead className="text-right">Marks</TableHead>
-                          <TableHead className="text-right">Grade</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {results.topSubjects.slice(0, 10).map((s) => (
-                          <TableRow key={`${s.code}-${s.semester}`}>
-                            <TableCell className="font-medium">{s.subject}</TableCell>
-                            <TableCell>{s.code}</TableCell>
-                            <TableCell>{s.type}</TableCell>
-                            <TableCell>{s.semester}</TableCell>
-                            <TableCell className="text-right">{s.marks ?? '—'}</TableCell>
-                            <TableCell className="text-right font-bold text-primary">{s.grade}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-
-                  {/* Mobile View */}
-                  <div className="md:hidden space-y-4">
-                    {results.topSubjects.slice(0, 8).map((s) => (
-                      <div key={`${s.code}-${s.semester}`} className="p-4 rounded-xl border border-border bg-muted/20 space-y-3">
-                        <div className="flex justify-between items-start gap-2">
-                          <div className="font-semibold text-foreground line-clamp-1">{s.subject}</div>
-                          <Badge className="bg-primary/20 text-primary border-primary/20">{s.grade}</Badge>
+                    )}
+                    {results.bestLab && (
+                      <div className="flex items-center gap-4 p-5 rounded-2xl border border-purple-500/20 bg-purple-500/5">
+                        <div className="p-3 rounded-xl bg-purple-500/10">
+                          <Star className="w-6 h-6 text-purple-500" />
                         </div>
-                        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
-                          <div>Semester: <span className="text-foreground">{s.semester}</span></div>
-                          <div className="text-right">Marks: <span className="text-foreground">{s.marks ?? '—'}</span></div>
-                          <div>Code: <span className="text-foreground">{s.code}</span></div>
-                          <div className="text-right">Type: <span className="text-foreground">{s.type}</span></div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Best Lab</div>
+                          <div className="font-black text-foreground line-clamp-1">{results.bestLab.subject}</div>
+                          <div className="text-sm text-muted-foreground">Marks: <span className="font-bold text-purple-600 dark:text-purple-400">{results.bestLab.marks ?? '—'}</span></div>
                         </div>
                       </div>
-                    ))}
+                    )}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                )}
 
-          {/* All subjects */}
-          {results && results.allSubjects.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>All Subjects</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="w-full max-h-[340px] overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Sem</TableHead>
-                        <TableHead>Subject</TableHead>
-                        <TableHead>Code</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead className="text-right">Marks</TableHead>
-                        <TableHead className="text-right">Grade</TableHead>
-                        <TableHead className="text-right">GP</TableHead>
-                        <TableHead className="text-right">Credits</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {results.allSubjects.map((s) => (
-                        <TableRow key={`${s.code}-${s.semester}-${s.type}`}>
-                          <TableCell>{s.semester}</TableCell>
-                          <TableCell className="font-medium">{s.subject}</TableCell>
-                          <TableCell>{s.code}</TableCell>
-                          <TableCell>{s.type}</TableCell>
-                          <TableCell className="text-right">{s.marks ?? '—'}</TableCell>
-                          <TableCell className="text-right">{s.grade}</TableCell>
-                          <TableCell className="text-right">{s.gradePoint ?? '—'}</TableCell>
-                          <TableCell className="text-right">{s.credits ?? '—'}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                {/* ── SGPA Chart (final results only) ── */}
+                {results.semesterSgpa.length > 0 && (
+                  <Card className="border-border/60">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-lg"><BarChart3 className="w-5 h-5 text-primary" />Semester SGPA</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ChartContainer config={chartConfig} className="h-[260px] w-full">
+                        <RechartsPrimitive.BarChart data={results.semesterSgpa.map(r => ({ semester: r.semester, sgpa: r.sgpa ?? 0 }))} margin={{ left: 12, right: 12 }}>
+                          <RechartsPrimitive.CartesianGrid vertical={false} strokeDasharray="3 3" opacity={0.3} />
+                          <RechartsPrimitive.XAxis dataKey="semester" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+                          <RechartsPrimitive.YAxis tickLine={false} axisLine={false} domain={[0, 10]} tick={{ fontSize: 11 }} />
+                          <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                          <RechartsPrimitive.Bar dataKey="sgpa" fill="var(--color-sgpa)" radius={[8, 8, 0, 0]} />
+                        </RechartsPrimitive.BarChart>
+                      </ChartContainer>
+                    </CardContent>
+                  </Card>
+                )}
 
-          {/* Grade distribution */}
-          {results && gradeChartData.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Grade Distribution</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ChartContainer config={chartConfig} className="h-[260px] w-full">
-                  <RechartsPrimitive.BarChart data={gradeChartData} margin={{ left: 12, right: 12 }}>
-                    <RechartsPrimitive.CartesianGrid vertical={false} />
-                    <RechartsPrimitive.XAxis dataKey="grade" tickLine={false} axisLine={false} />
-                    <RechartsPrimitive.YAxis allowDecimals={false} tickLine={false} axisLine={false} />
-                    <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                    <RechartsPrimitive.Bar dataKey="count" fill="var(--color-count)" radius={[8, 8, 0, 0]} />
-                  </RechartsPrimitive.BarChart>
-                </ChartContainer>
-              </CardContent>
-            </Card>
-          )}
+                {/* ── ALL SUBJECTS TABLE ── */}
+                {results.allSubjects.length > 0 && (
+                  <Card className="border-border/60">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="flex items-center gap-2 text-lg"><GraduationCap className="w-5 h-5 text-primary" />All Subjects</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="w-full max-h-[360px] overflow-auto rounded-xl border border-border/40">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-muted/30">
+                              <TableHead className="font-bold">Subject</TableHead>
+                              <TableHead>Code</TableHead>
+                              <TableHead>Type</TableHead>
+                              <TableHead className="text-right">Marks</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {results.allSubjects.map((s, i) => {
+                              const pct = s.marks != null ? Math.min(100, Math.round((s.marks / maxPossible) * 100)) : null;
+                              const isWeak = typeof s.marks === 'number' && avgMark != null && s.marks < avgMark;
+                              return (
+                                <TableRow key={`${s.code}-${s.type}-${i}`} className={isWeak ? 'bg-red-500/5' : ''}>
+                                  <TableCell className="font-medium">{s.subject}</TableCell>
+                                  <TableCell className="text-muted-foreground text-xs">{s.code}</TableCell>
+                                  <TableCell>
+                                    <Badge variant="outline" className="text-[10px]">{s.type}</Badge>
+                                  </TableCell>
+                                  <TableCell className="text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                      {pct != null && (
+                                        <div className="hidden sm:block w-16 h-1.5 bg-muted rounded-full overflow-hidden">
+                                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: pct >= 80 ? '#22c55e' : pct >= 60 ? '#f59e0b' : '#ef4444' }} />
+                                        </div>
+                                      )}
+                                      <span className={`font-black text-sm ${isWeak ? 'text-red-500' : 'text-green-600 dark:text-green-400'}`}>
+                                        {s.marks ?? '—'}
+                                      </span>
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            );
+          })()}
+
         </div>
       </div>
 

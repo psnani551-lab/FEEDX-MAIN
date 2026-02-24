@@ -56,11 +56,13 @@ const ImageCarousel = ({ className = '' }: ImageCarouselProps) => {
   }, []);
 
   const nextSlide = useCallback(() => {
+    if (navigator.vibrate) navigator.vibrate(5);
     setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % carouselImages.length);
   }, [carouselImages.length]);
 
   const prevSlide = useCallback(() => {
+    if (navigator.vibrate) navigator.vibrate(5);
     setDirection(-1);
     setCurrentIndex((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
   }, [carouselImages.length]);
@@ -135,15 +137,15 @@ const ImageCarousel = ({ className = '' }: ImageCarouselProps) => {
     <div className={`relative w-full ${className}`}>
       {/* Carousel Container */}
       <div
-        className="relative overflow-hidden rounded-2xl shadow-xl bg-slate-50 backdrop-blur-sm border border-slate-200/50"
+        className="relative overflow-hidden rounded-2xl shadow-xl bg-white/50 backdrop-blur-sm border border-white/20"
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
         onMouseEnter={() => setIsAutoPlaying(false)}
         onMouseLeave={() => setIsAutoPlaying(true)}
       >
-        <div className="relative aspect-[3/2] sm:aspect-[16/9] lg:aspect-[2.2/1] flex items-center justify-center">
-          <AnimatePresence initial={false} custom={direction} mode="wait">
+        <div className="relative aspect-[3/2] sm:aspect-[16/9] lg:aspect-[2.2/1]">
+          <AnimatePresence initial={false} custom={direction} mode="popLayout">
             <motion.img
               key={currentIndex}
               src={getImageUrl(carouselImages[currentIndex])}
@@ -154,12 +156,20 @@ const ImageCarousel = ({ className = '' }: ImageCarouselProps) => {
               animate="center"
               exit="exit"
               transition={{
-                x: { type: 'spring', stiffness: 300, damping: 30 },
-                opacity: { duration: 0.2 },
+                x: { type: 'spring', stiffness: 200, damping: 25 },
+                opacity: { duration: 0.3 },
+                scale: { duration: 0.4 }
               }}
               loading="lazy"
               decoding="async"
-              className="absolute inset-0 w-full h-full object-contain p-2"
+              className="absolute inset-0 w-full h-full object-cover"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              onDragEnd={(e, { offset, velocity }) => {
+                const swipe = offset.x;
+                if (swipe < -minSwipeDistance) nextSlide();
+                else if (swipe > minSwipeDistance) prevSlide();
+              }}
             />
           </AnimatePresence>
 

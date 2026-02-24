@@ -528,15 +528,6 @@ export const galleryAPI = {
     );
     await Promise.all(promises);
   },
-
-  update: async (id: string, updates: Partial<{ url: string; order: number }>) => {
-    const { data, error } = await supabase.from('gallery').update({
-      ...(updates.url && { url: updates.url }),
-      ...(updates.order && { display_order: updates.order })
-    }).eq('id', id).select().single();
-    if (error) throw error;
-    return data;
-  },
 };
 
 // ECET API

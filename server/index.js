@@ -257,221 +257,186 @@ app.get('/api/profile', authenticateToken, (req, res) => {
   res.json({ user: userWithoutPassword });
 });
 
+// ── SBTET Lookup maps (from network inspection)
+// SchemeId: C16=8, C18=9, C24=11
+// SemYearId: 1SEM=1, 2SEM=2, 3SEM=3, 4SEM=4, 5SEM=5, 6SEM=6
+// ExamTypeId: Mid1=1, Mid2=2, Regular=3, Supplementary=4
+const SBTET_SCHEMES = { 'C16': '8', 'C18': '9', 'C24': '11' };
+const SBTET_SEMS = { '1SEM': '1', '2SEM': '2', '3SEM': '3', '4SEM': '4', '5SEM': '5', '6SEM': '6' };
+const SBTET_EXAMS = { 'Mid1': '1', 'Mid2': '2', 'Regular': '3', 'Supplementary': '4' };
+
+// Helper: fetch JSON from SBTET — returns null if SBTET returns an error body
+async function fetchSBTET(url) {
+  const response = await fetch(url, {
+    headers: {
+      'Accept': 'application/json, text/plain, */*',
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
+      'Referer': 'https://www.sbtet.telangana.gov.in/',
+    }
+  });
+  const text = await response.text();
+  if (!text.trim()) return null;
+  const json = JSON.parse(text);
+  // SBTET returns 200 with a Message field when the endpoint doesn't match or fails
+  if (json && typeof json === 'object' && !Array.isArray(json) && json.Message) {
+    console.warn('[fetchSBTET] SBTET returned error body:', json.Message.substring(0, 80));
+    return null;
+  }
+  return json;
+}
+
 // Proxy route for SBTET Telangana attendance API
 app.get('/api/attendance', async (req, res) => {
   try {
     const { pin } = req.query;
+    if (!pin) return res.status(400).json({ success: false, error: 'PIN parameter is required' });
 
-    if (!pin) {
-      return res.status(400).json({ error: 'PIN parameter is required' });
-    }
+    const normalized = pin.trim().toUpperCase();
 
-    // For testing purposes, return mock data if pin is 'test'
-    if (pin === 'test') {
-      return res.json({
-        studentName: "Test Student",
-        pin: pin,
-        totalSubjects: 5,
-        overallAttendance: 85.5,
-        status: "Active",
-        message: "Mock data for testing"
-      });
-    }
+    const apiUrl = `https://www.sbtet.telangana.gov.in/api/api/PreExamination/getAttendanceReport?Pin=${encodeURIComponent(normalized)}`;
+    console.log('[Attendance] Fetching:', apiUrl);
 
-    // Fetch data from SBTET Telangana API
-    const apiUrl = `https://www.sbtet.telangana.gov.in/api/api/PreExamination/getAttendanceReport?Pin=${encodeURIComponent(pin)}`;
-
-    console.log('Fetching from:', apiUrl);
-
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (compatible; FeedX-Proxy/1.0)'
-      }
-    });
-
-    console.log('External API response status:', response.status);
-    console.log('External API response headers:', Object.fromEntries(response.headers.entries()));
-
-    if (!response.ok) {
-      console.error('API Response not ok:', response.status, response.statusText);
-      let errorDetails = `Failed to fetch attendance data: ${response.statusText}`;
-
-      try {
-        const contentType = response.headers.get('content-type');
-        console.log('Error response content-type:', contentType);
-
-        if (contentType && contentType.includes('application/json')) {
-          const errorData = await response.json();
-          console.log('Error response JSON:', errorData);
-          errorDetails = errorData.message || errorData.error || errorDetails;
-        } else {
-          const textResponse = await response.text();
-          console.log('Error response text (first 500 chars):', textResponse.substring(0, 500));
-          if (textResponse) {
-            errorDetails = `API Error (${response.status}): ${textResponse.substring(0, 200)}`;
-          }
-        }
-      } catch (parseError) {
-        console.error('Could not parse error response:', parseError);
-      }
-
-      return res.status(response.status).json({
-        error: errorDetails
-      });
-    }
-
-    // Check if response has content
-    const contentLength = response.headers.get('content-length');
-    console.log('Response content-length:', contentLength);
-
-    if (contentLength === '0') {
-      console.log('Response has no content');
-      return res.status(404).json({
-        error: 'No attendance data found for this PIN'
-      });
-    }
-
-    let data;
     try {
-      const responseText = await response.text();
-      console.log('Raw response (first 500 chars):', responseText.substring(0, 500));
+      const data = await fetchSBTET(apiUrl);
+      if (!data) return res.json({ success: true, attendanceSummary: null });
 
-      if (!responseText.trim()) {
-        return res.status(404).json({
-          error: 'Empty response from attendance API'
-        });
-      }
+      // Normalize to expected shape
+      const summary = {
+        attendancePercentage: data.AttendancePercentage ?? data.overallAttendance ?? null,
+        totalDays: data.TotalDays ?? data.totalDays ?? null,
+        presentDays: data.PresentDays ?? data.presentDays ?? null,
+        absentDays: data.AbsentDays ?? data.absentDays ?? null,
+      };
+      return res.json({ success: true, attendanceSummary: summary });
+    } catch (e) {
+      console.warn('[Attendance] SBTET API error:', e.message);
+      return res.json({ success: true, attendanceSummary: null });
+    }
+  } catch (error) {
+    console.error('[Attendance] Internal error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+});
 
-      data = JSON.parse(responseText);
-      console.log('Parsed JSON successfully');
-    } catch (jsonError) {
-      console.error('JSON parsing error:', jsonError);
-      return res.status(500).json({
-        error: 'Invalid JSON response from attendance API',
-        details: jsonError.message
-      });
+// ── In-memory cache for exam sessions (invalidates every 2 hours) ─────────
+let _examSessionsCache = null;
+let _examSessionsCachedAt = 0;
+const EXAM_SESSIONS_TTL = 2 * 60 * 60 * 1000; // 2 hours
+
+// Route: GET /api/exam-sessions  — live from SBTET, cached 2h
+app.get('/api/exam-sessions', async (req, res) => {
+  try {
+    // Serve from cache if still fresh
+    if (_examSessionsCache && (Date.now() - _examSessionsCachedAt) < EXAM_SESSIONS_TTL) {
+      return res.json({ success: true, sessions: _examSessionsCache, cached: true });
     }
 
-    console.log('API Response received successfully');
-    res.json(data);
+    const url = 'https://www.sbtet.telangana.gov.in/api/api/Results/GetExamMonthYear';
+    console.log('[ExamSessions] Fetching from SBTET:', url);
+    const raw = await fetchSBTET(url);
 
-  } catch (error) {
-    console.error('Error fetching attendance data:', error);
-    res.status(500).json({ error: 'Internal server error while fetching attendance data' });
+    // Unwrap: SBTET returns a JSON string inside a JSON string sometimes
+    let data = raw;
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data); } catch (_) { }
+    }
+
+    const table = data?.Table || data?.table || (Array.isArray(data) ? data : []);
+    if (!table.length) {
+      return res.status(502).json({ success: false, error: 'SBTET returned empty exam session list' });
+    }
+
+    // Map to {label, value}, sort newest first (highest Id = most recent)
+    const sessions = table
+      .sort((a, b) => (b.Id || 0) - (a.Id || 0))
+      .map(row => ({ label: String(row.ExamYearMonth || '').trim(), value: String(row.Id) }))
+      .filter(s => s.label && s.value);
+
+    _examSessionsCache = sessions;
+    _examSessionsCachedAt = Date.now();
+
+    console.log(`[ExamSessions] Fetched ${sessions.length} sessions. Latest: ${sessions[0]?.label}`);
+    return res.json({ success: true, sessions, cached: false });
+
+  } catch (err) {
+    console.error('[ExamSessions] Error:', err.message);
+    // Return stale cache rather than an error if available
+    if (_examSessionsCache) {
+      return res.json({ success: true, sessions: _examSessionsCache, cached: true, stale: true });
+    }
+    res.status(500).json({ success: false, error: 'Failed to fetch exam sessions from SBTET' });
   }
 });
 
 // Proxy route for SBTET Telangana results API
+// Supports: mid-term (GetC18MidStudentWiseReport) and semester (GetStudentWiseReport)
 app.get('/api/results', async (req, res) => {
   try {
-    const { pin } = req.query;
+    const { pin, schemeId, semYearId, examTypeId, examMonthYearId } = req.query;
+    if (!pin) return res.status(400).json({ success: false, error: 'PIN parameter is required' });
 
-    if (!pin) {
-      return res.status(400).json({ error: 'PIN parameter is required' });
-    }
+    const normalized = pin.trim().toUpperCase();
 
-    // For testing purposes, return mock data if pin is 'test'
-    if (pin === 'test') {
-      return res.json({
-        success: true,
-        data: {
-          Table: [
-            {
-              StudentName: "Test Student",
-              Pin: pin,
-              BranchCode: "CPS",
-              Scheme: "C-18",
-              CenterName: "Test Center",
-              CenterCode: "001"
-            }
-          ],
-          Table1: [
-            {
-              TotalMaxCredits: 100,
-              CreditsGained: 85,
-              CGPA: 8.5
-            }
-          ],
-          Table2: [],
-          Table3: []
-        }
-      });
-    }
+    // 'semester' = use GetStudentWiseReport (ExamTypeId=5, real semester results)
+    const isSemesterFinal = examTypeId === 'semester';
 
-    // Fetch data from SBTET Telangana API
-    const apiUrl = `https://www.sbtet.telangana.gov.in/api/api/PreExamination/GetStudentResult?Pin=${encodeURIComponent(pin)}`;
+    const resolvedScheme = schemeId || SBTET_SCHEMES['C24'];
+    const resolvedSem = semYearId || '2';
+    const resolvedExamMonthYearId = examMonthYearId || '91'; // default APR-2025
 
-    console.log('Fetching results from:', apiUrl);
+    let data = null;
+    let source = 'mid';
 
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (compatible; FeedX-Proxy/1.0)'
-      }
-    });
-
-    console.log('Results API response status:', response.status);
-
-    if (!response.ok) {
-      console.error('Results API Response not ok:', response.status, response.statusText);
-      let errorDetails = `Failed to fetch results: ${response.statusText}`;
-
+    if (isSemesterFinal) {
+      // GetStudentWiseReport — the actual semester exam results endpoint
+      const semUrl = `https://www.sbtet.telangana.gov.in/api/api/Results/GetStudentWiseReport?ExamMonthYearId=${resolvedExamMonthYearId}&ExamTypeId=5&Pin=${encodeURIComponent(normalized)}&SchemeId=${resolvedScheme}&SemYearId=${resolvedSem}&StudentTypeId=1`;
+      console.log('[Results] Semester mode – fetching:', semUrl);
       try {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-          const errorData = await response.json();
-          errorDetails = errorData.message || errorData.error || errorDetails;
+        data = await fetchSBTET(semUrl);
+        source = 'semester';
+      } catch (e) {
+        console.warn('[Results] Semester endpoint failed:', e.message);
+      }
+    } else {
+      // Mid-term endpoint
+      const resolvedExam = examTypeId || '1';
+      const midUrl = `https://www.sbtet.telangana.gov.in/api/api/Results/GetC18MidStudentWiseReport?ExamTypeId=${resolvedExam}&Pin=${encodeURIComponent(normalized)}&SchemeId=${resolvedScheme}&SemYearId=${resolvedSem}`;
+      console.log('[Results] Mid mode – fetching:', midUrl);
+      try {
+        data = await fetchSBTET(midUrl);
+        source = 'mid';
+      } catch (e) {
+        console.warn('[Results] Mid endpoint failed:', e.message);
+      }
+      // Fallback to old GetStudentResult for C16/C18 schemes
+      if (!data || (Array.isArray(data) && data.length === 0)) {
+        const finalUrl = `https://www.sbtet.telangana.gov.in/api/api/PreExamination/GetStudentResult?Pin=${encodeURIComponent(normalized)}`;
+        console.log('[Results] Falling back to final results URL:', finalUrl);
+        try {
+          data = await fetchSBTET(finalUrl);
+          source = 'final';
+        } catch (e) {
+          console.warn('[Results] Final endpoint also failed:', e.message);
         }
-      } catch (parseError) {
-        console.error('Could not parse error response:', parseError);
       }
-
-      return res.status(response.status).json({
-        success: false,
-        error: errorDetails
-      });
     }
 
-    let data;
-    try {
-      const responseText = await response.text();
-      console.log('Raw results response (first 500 chars):', responseText.substring(0, 500));
-
-      if (!responseText.trim()) {
-        return res.status(404).json({
-          success: false,
-          error: 'Empty response from results API'
-        });
-      }
-
-      data = JSON.parse(responseText);
-      console.log('Results parsed successfully');
-    } catch (jsonError) {
-      console.error('JSON parsing error:', jsonError);
-      return res.status(500).json({
-        success: false,
-        error: 'Invalid JSON response from results API',
-        details: jsonError.message
-      });
+    if (!data || (Array.isArray(data) && data.length === 0)) {
+      const hint = isSemesterFinal
+        ? 'Semester results not found. Try a different Exam Month/Year (e.g., APR-2025 or NOV-2024).'
+        : 'No results found. Try a different Scheme, Semester, or Exam Type.';
+      return res.status(404).json({ success: false, error: hint });
     }
 
-    // Return with success flag
-    res.json({
-      success: true,
-      data: data
-    });
+    console.log('[Results] Source:', source, '| Data type:', Array.isArray(data) ? 'array' : 'object', '| Length:', Array.isArray(data) ? data.length : 1);
+    return res.json({ success: true, data, source });
 
   } catch (error) {
-    console.error('Error fetching results data:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error while fetching results data'
-    });
+    console.error('[Results] Internal error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error while fetching results data' });
   }
 });
+
 
 // ================== AUTHENTICATION ROUTES ==================
 

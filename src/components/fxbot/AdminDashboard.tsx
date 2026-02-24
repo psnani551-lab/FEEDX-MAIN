@@ -108,119 +108,195 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
                 </div>
             </motion.div>
 
-            {/* Full Audit Table */}
-            <div className="glass-card border-white/40 shadow-2xl rounded-[2.5rem] overflow-hidden">
-                <div className="px-8 py-6 bg-red-50/40 border-b border-red-100/60 flex items-center gap-3">
-                    <Activity className="h-4 w-4 text-red-600" />
-                    <h3 className="font-black text-slate-900 uppercase tracking-[0.2em] text-xs">COMPLETE ISSUE REGISTRY — WITH IDENTITY</h3>
-                </div>
-                <Table>
-                    <TableHeader className="bg-slate-50/30">
-                        <TableRow className="hover:bg-transparent border-slate-200/60">
-                            <TableHead className="w-[130px] font-bold text-slate-500 py-4 pl-8 uppercase tracking-wider text-[10px]">FXID</TableHead>
-                            <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Issuer (Student ID)</TableHead>
-                            <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Dept · Type</TableHead>
-                            <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Status</TableHead>
-                            <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Faculty Solver</TableHead>
-                            <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Submitted</TableHead>
-                            <TableHead className="text-right pr-8 font-bold text-slate-500 uppercase tracking-wider text-[10px]">Audit</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {issues.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={7} className="h-40 text-center text-slate-400 font-medium">
-                                    No issues in the system.
-                                </TableCell>
+            <div className="space-y-6">
+                {/* Desktop View - Table */}
+                <div className="hidden md:block glass-card border-white/40 shadow-2xl rounded-[2.5rem] overflow-hidden">
+                    <div className="px-8 py-6 bg-red-50/40 border-b border-red-100/60 flex items-center gap-3">
+                        <Activity className="h-4 w-4 text-red-600" />
+                        <h3 className="font-black text-slate-900 uppercase tracking-[0.2em] text-xs">COMPLETE ISSUE REGISTRY — WITH IDENTITY</h3>
+                    </div>
+                    <Table>
+                        <TableHeader className="bg-slate-50/30">
+                            <TableRow className="hover:bg-transparent border-slate-200/60">
+                                <TableHead className="w-[130px] font-bold text-slate-500 py-4 pl-8 uppercase tracking-wider text-[10px]">FXID</TableHead>
+                                <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Issuer (Student ID)</TableHead>
+                                <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Dept · Type</TableHead>
+                                <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Status</TableHead>
+                                <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Faculty Solver</TableHead>
+                                <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Submitted</TableHead>
+                                <TableHead className="text-right pr-8 font-bold text-slate-500 uppercase tracking-wider text-[10px]">Audit</TableHead>
                             </TableRow>
-                        ) : (
-                            issues.map((issue, idx) => {
-                                const age = differenceInHours(new Date(), new Date(issue.created_at));
-                                const isCritical = age > 96 && issue.status !== 'Resolved';
-                                return (
-                                    <motion.tr
-                                        key={issue.id}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.04 }}
-                                        className={cn("hover:bg-red-50/20 transition-colors border-slate-200/40 group", isCritical && "bg-red-50/20")}
-                                    >
-                                        <TableCell className="font-mono font-black text-red-600 pl-8 text-xs">{issue.id}</TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col gap-0.5">
-                                                <span className="font-bold text-slate-900 text-sm">{issue.student_id}</span>
-                                                {issue.is_anonymous && (
-                                                    <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Anonymous</span>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col gap-1">
-                                                <Badge variant="outline" className="font-black text-[10px] border-slate-200 bg-white/50 text-slate-500 px-2 py-0.5 rounded-lg w-fit">
-                                                    {issue.department}
+                        </TableHeader>
+                        <TableBody>
+                            {issues.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={7} className="h-40 text-center text-slate-400 font-medium">
+                                        No issues in the system.
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                issues.map((issue, idx) => {
+                                    const age = differenceInHours(new Date(), new Date(issue.created_at));
+                                    const isCritical = age > 96 && issue.status !== 'Resolved';
+                                    return (
+                                        <motion.tr
+                                            key={issue.id}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.04 }}
+                                            className={cn("hover:bg-red-50/20 transition-colors border-slate-200/40 group", isCritical && "bg-red-50/20")}
+                                        >
+                                            <TableCell className="font-mono font-black text-red-600 pl-8 text-xs">{issue.id}</TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className="font-bold text-slate-900 text-sm">{issue.student_id}</span>
+                                                    {issue.is_anonymous && (
+                                                        <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Anonymous</span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col gap-1">
+                                                    <Badge variant="outline" className="font-black text-[10px] border-slate-200 bg-white/50 text-slate-500 px-2 py-0.5 rounded-lg w-fit">
+                                                        {issue.department}
+                                                    </Badge>
+                                                    <span className="text-[10px] text-slate-400 font-semibold">{issue.type} · {issue.category}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge className={cn("gap-1 px-2 py-0.5 rounded-full border font-bold text-[10px]", getStatusVariant(issue.status))}>
+                                                    {issue.status}
                                                 </Badge>
-                                                <span className="text-[10px] text-slate-400 font-semibold">{issue.type} · {issue.category}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={cn("gap-1 px-2 py-0.5 rounded-full border font-bold text-[10px]", getStatusVariant(issue.status))}>
-                                                {issue.status}
+                                            </TableCell>
+                                            <TableCell>
+                                                <span className="text-sm font-semibold text-slate-600">
+                                                    {issue.staff_name || <span className="text-slate-300 italic text-xs">Unassigned</span>}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex flex-col gap-0.5">
+                                                    <span className={cn("text-xs font-black", isCritical ? "text-red-600" : "text-slate-700")}>
+                                                        {age}h ago
+                                                    </span>
+                                                    <span className="text-[9px] text-slate-400">
+                                                        {format(new Date(issue.created_at), "MMM dd, HH:mm")}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right pr-8">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => handleSelectIssue(issue)}
+                                                    className="rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                                                >
+                                                    <ChevronRight className="h-5 w-5" />
+                                                </Button>
+                                            </TableCell>
+                                        </motion.tr>
+                                    );
+                                })
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+
+                {/* Mobile View - Card Stack */}
+                <div className="md:hidden space-y-4">
+                    <div className="flex flex-col gap-2 mb-4 px-2">
+                        <div className="flex items-center gap-2">
+                            <Activity className="h-4 w-4 text-red-600" />
+                            <h3 className="font-black text-slate-900 uppercase tracking-[0.2em] text-[10px]">Administrative Audit Logs</h3>
+                        </div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Confidential System Records</p>
+                    </div>
+                    {issues.length === 0 ? (
+                        <div className="glass-card p-12 text-center rounded-[2rem] border-red-100/40">
+                            <ShieldAlert className="h-10 w-10 opacity-20 mx-auto mb-4" />
+                            <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">No Data Detected</p>
+                        </div>
+                    ) : (
+                        issues.map((issue, idx) => {
+                            const age = differenceInHours(new Date(), new Date(issue.created_at));
+                            const isCritical = age > 96 && issue.status !== 'Resolved';
+
+                            return (
+                                <motion.div
+                                    key={issue.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    onClick={() => handleSelectIssue(issue)}
+                                    className={cn(
+                                        "glass-card p-6 rounded-[2rem] border-white/40 shadow-xl active:scale-[0.98] transition-all relative overflow-hidden group",
+                                        isCritical && "bg-red-50/10 border-red-200/50"
+                                    )}
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="font-mono font-black text-red-600 text-[10px] tracking-tighter">{issue.id}</span>
+                                            {issue.is_anonymous && (
+                                                <span className="text-[7px] font-black uppercase px-2 py-0.5 rounded-md w-fit bg-slate-900 text-white">
+                                                    ANONYMOUS
+                                                </span>
+                                            )}
+                                        </div>
+                                        <Badge className={cn("gap-1.5 px-3 py-1 rounded-full border font-bold text-[9px]", getStatusVariant(issue.status))}>
+                                            {issue.status}
+                                        </Badge>
+                                    </div>
+                                    <div className="space-y-2 mb-6">
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="outline" className="font-black text-[9px] border-slate-200 bg-white/50 text-slate-500 px-2 py-0.5 rounded-lg shadow-sm">
+                                                {issue.department}
                                             </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <span className="text-sm font-semibold text-slate-600">
-                                                {issue.staff_name || <span className="text-slate-300 italic text-xs">Unassigned</span>}
-                                            </span>
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col gap-0.5">
-                                                <span className={cn("text-xs font-black", isCritical ? "text-red-600" : "text-slate-700")}>
-                                                    {age}h ago
-                                                </span>
-                                                <span className="text-[9px] text-slate-400">
-                                                    {format(new Date(issue.created_at), "MMM dd, HH:mm")}
-                                                </span>
+                                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{issue.student_id}</span>
+                                        </div>
+                                        <h3 className="text-xl font-black text-slate-900 tracking-tight leading-none uppercase truncate">{issue.type}</h3>
+                                    </div>
+                                    <div className="flex items-center justify-between pt-4 border-t border-slate-100/50">
+                                        <div className="flex items-center gap-4">
+                                            <div className="flex flex-col">
+                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Age</span>
+                                                <span className={cn("text-xs font-black", isCritical ? "text-red-600" : "text-slate-600")}>{age}h</span>
                                             </div>
-                                        </TableCell>
-                                        <TableCell className="text-right pr-8">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => handleSelectIssue(issue)}
-                                                className="rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
-                                            >
-                                                <ChevronRight className="h-5 w-5" />
-                                            </Button>
-                                        </TableCell>
-                                    </motion.tr>
-                                );
-                            })
-                        )}
-                    </TableBody>
-                </Table>
+                                            <div className="h-6 w-[1px] bg-slate-100" />
+                                            <div className="flex flex-col">
+                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Solver</span>
+                                                <span className="text-xs font-bold text-slate-600 truncate max-w-[80px]">{issue.staff_name || "—"}</span>
+                                            </div>
+                                        </div>
+                                        <div className="w-10 h-10 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg group-hover:translate-x-1 transition-transform">
+                                            <ChevronRight size={18} />
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })
+                    )}
+                </div>
             </div>
 
             {/* Detail Dialog — Full Identity */}
             <Dialog open={!!selectedIssue} onOpenChange={(open) => !open && setSelectedIssue(null)}>
-                <DialogContent className="max-w-2xl rounded-[2.5rem] border-white/40 shadow-2xl glass-card p-0 overflow-hidden">
+                <DialogContent className="max-w-2xl w-[95vw] md:w-full rounded-[2.5rem] border-white/40 shadow-2xl glass-card p-0 overflow-hidden outline-none">
                     {selectedIssue && (
                         <>
-                            {/* Header */}
-                            <div className="bg-slate-900 p-5 text-white relative overflow-hidden">
+                            <div className="bg-slate-900 p-8 md:p-10 text-white relative overflow-hidden">
                                 <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[150%] bg-red-600/20 rounded-full blur-[100px] pointer-events-none" />
                                 <div className="relative z-10">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Badge className="bg-red-600 text-white border-none px-2 py-0.5 text-[10px] font-black tracking-widest">
+                                    <div className="flex flex-wrap items-center gap-2 mb-4">
+                                        <Badge className="bg-red-600 text-white border-none px-2 py-0.5 text-[8px] md:text-[10px] font-black tracking-widest">
                                             ADMIN AUDIT · {selectedIssue.id}
                                         </Badge>
-                                        <Badge className={cn("px-2 py-0.5 text-[10px] font-black border", getStatusVariant(selectedIssue.status))}>
+                                        <Badge className={cn("px-2 py-0.5 text-[8px] md:text-[10px] font-black border", getStatusVariant(selectedIssue.status))}>
                                             {selectedIssue.status}
                                         </Badge>
                                     </div>
-                                    <DialogTitle className="text-xl font-black tracking-tight leading-none mb-1">
-                                        {selectedIssue.type} — {selectedIssue.category}
+                                    <DialogTitle className="text-3xl md:text-4xl font-black tracking-tight leading-tight mb-2">
+                                        {selectedIssue.type}
                                     </DialogTitle>
-                                    <DialogDescription className="text-slate-400 font-bold flex items-center gap-2 text-xs">
+                                    <DialogDescription className="text-slate-400 font-bold flex items-center gap-2 text-[10px] md:text-xs">
                                         <Building2 className="h-3.5 w-3.5 text-red-400" />
                                         {selectedIssue.department} · {format(new Date(selectedIssue.created_at), "MMM dd, yyyy HH:mm")}
                                     </DialogDescription>
@@ -228,7 +304,7 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
                             </div>
 
                             {/* Body — no scroll, compact */}
-                            <div className="p-5 space-y-3">
+                            <div className="p-6 md:p-8 space-y-6 md:space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar">
 
                                 {/* ── Issuer Identity (Admin Only) ── */}
                                 <section className="space-y-2">

@@ -896,511 +896,132 @@ app.delete('/api/admin/institutes/:code', verifyToken, (req, res) => {
 });
 
 // ================== SBTET API PROXY ==================
-// In-memory cache for results
-const resultsCache = new Map();
-const resultsJsonCache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+// ── SBTET Lookup maps (from network inspection)
+const SBTET_SCHEMES = { 'C16': '8', 'C18': '9', 'C24': '11' };
+const SBTET_SEMS = { '1SEM': '1', '2SEM': '2', '3SEM': '3', '4SEM': '4', '5SEM': '5', '6SEM': '6' };
+const SBTET_EXAMS = { 'Mid1': '1', 'Mid2': '2', 'Regular': '3', 'Supplementary': '4' };
 
-const sbtetHeaders = {
-  'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-  'Accept': 'application/json, text/javascript, */*; q=0.01',
-  'Accept-Language': 'en-US,en;q=0.9',
-  'X-Requested-With': 'XMLHttpRequest',
-  'Referer': 'https://www.sbtet.telangana.gov.in/',
-};
-
-// Helper to convert value to number
-const toNumber = (value) => {
-  if (value === null || value === undefined) return null;
-  if (typeof value === 'number') return value;
-  const s = String(value).trim();
-  if (!s) return null;
-  const cleaned = s.replace(/[^0-9.]/g, '');
-  if (!cleaned) return null;
-  const num = parseFloat(cleaned);
-  return isNaN(num) ? null : num;
-};
-
-// Helper to find number by key pattern
-const pickNumberByKey = (obj, patterns) => {
-  if (!obj || typeof obj !== 'object') return null;
-  for (const [key, value] of Object.entries(obj)) {
-    const k = String(key).toLowerCase();
-    if (patterns.some(p => k.match(p))) {
-      const n = toNumber(value);
-      if (n !== null) return n;
-    }
-  }
-  return null;
-};
-
-// Compute attendance summary
-const computeAttendanceSummary = (studentInfo, records) => {
-  const source = (studentInfo && Object.keys(studentInfo).length > 0)
-    ? studentInfo
-    : (records && records.length > 0 ? records[0] : {});
-
-  // Debug log to see actual keys
-  console.log('Attendance source keys:', Object.keys(source));
-  console.log('Attendance source values:', source);
-
-  let totalDays = pickNumberByKey(source, [/total.*day/i, /working.*day/i, /no.*day/i, /totday/i, /twd/i, /twdays/i, /totalworkingdays/i, /noofdays/i]);
-  let presentDays = pickNumberByKey(source, [/present.*day/i, /attend.*day/i, /presentday/i, /pday/i, /noofpresentdays/i, /presentdays/i, /daysattended/i, /attended/i]);
-  let percent = pickNumberByKey(source, [/percent/i, /percentage/i, /attend.*%/i, /att.*per/i, /attendancepercent/i]);
-
-  // Also check for direct field access with common variations
-  if (totalDays === null) {
-    totalDays = toNumber(source.TotalWorkingDays) ?? toNumber(source.TotalDays) ?? toNumber(source.TWDays) ?? toNumber(source.NoOfDays);
-  }
-  if (presentDays === null) {
-    presentDays = toNumber(source.PresentDays) ?? toNumber(source.NoOfPresentDays) ?? toNumber(source.DaysAttended) ?? toNumber(source.Attended);
-  }
-  if (percent === null) {
-    percent = toNumber(source.AttendancePercentage) ?? toNumber(source.Percentage) ?? toNumber(source.AttPercent);
-  }
-
-  if (percent === null && totalDays !== null && totalDays > 0 && presentDays !== null) {
-    percent = (presentDays / totalDays) * 100;
-  }
-
-  const asInt = (n) => {
-    if (n === null) return null;
-    return Math.abs(n - Math.round(n)) < 1e-9 ? Math.round(n) : n;
-  };
-
-  const totalDaysN = asInt(totalDays);
-  const presentDaysN = asInt(presentDays);
-  const absentDaysN = (totalDaysN !== null && presentDaysN !== null)
-    ? asInt(totalDaysN - presentDaysN)
-    : null;
-
-  return {
-    attendancePercentage: percent !== null ? Math.round(percent * 100) / 100 : null,
-    totalDays: totalDaysN,
-    presentDays: presentDaysN,
-    absentDays: absentDaysN,
-  };
-};
-
-// Fetch attendance by proxying the internal HTML endpoint and parsing minimal fields
-const fetchAttendance = async (pin) => {
-  // First try proxy HTML parsing
-  try {
-    const html = await fetchResultsHtml(pin);
-
-    // Try to extract attendance percentage
-    const percentMatch = html.match(/([0-9]{1,3}(?:\.[0-9]+)?)\s?%/);
-    const attendancePercentage = percentMatch ? parseFloat(percentMatch[1]) : null;
-
-    // Try to extract SGPA/CGPA
-    const sgpaMatch = html.match(/(SGPA|CGPA|GPA)[:\s]*([0-9]+(?:\.[0-9]+)?)/i);
-    const sgpa = sgpaMatch ? parseFloat(sgpaMatch[2]) : null;
-
-    // Try to extract student name
-    const nameMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i) || html.match(/Student\s*Name[:\s]*([^<\n\r]+)/i);
-    const studentName = nameMatch ? nameMatch[1].trim() : null;
-
-    // Extract simple subject rows from any tables
-    const rows = [];
-    const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-    let tr;
-    while ((tr = trRegex.exec(html)) !== null) {
-      const cols = [...tr[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map(m => m[1].replace(/<[^>]+>/g, '').trim());
-      if (cols.length >= 2) {
-        rows.push({ subject: cols[0], details: cols.slice(1) });
-      }
-    }
-
-    // If parsing yields useful data, return it
-    if (studentName || rows.length || attendancePercentage !== null) {
-      return {
-        Table: [{ StudentName: studentName || null, Pin: pin }],
-        Table1: rows,
-        rawHtml: html,
-        attendanceMeta: {
-          attendancePercentage,
-          sgpa
-        }
-      };
-    }
-  } catch (err) {
-    // fallthrough to try direct SBTET JSON endpoints
-    console.warn('Proxy HTML fetch failed, falling back to SBTET JSON endpoints:', err.message);
-  }
-
-  const normalizedPin = pin.toUpperCase();
-  const urls = [
-    `https://www.sbtet.telangana.gov.in/api/api/PreExamination/getAttendanceReport?Pin=${normalizedPin}`,
-    `https://www.sbtet.telangana.gov.in/api/PreExamination/getAttendanceReport?Pin=${normalizedPin}`,
-  ];
-
-  let lastError = null;
-  for (const url of urls) {
-    try {
-      console.log(`[DEBUG] Fetching Attendance from: ${url}`);
-      const response = await fetch(url, { headers: sbtetHeaders, timeout: 15000 });
-      console.log(`[DEBUG] Attendance API Status: ${response.status}`);
-
-      if (!response.ok) {
-        lastError = new Error(`HTTP ${response.status}`);
-        continue;
-      }
-      let data = await response.json();
-      if (typeof data === 'string') {
-        try {
-          data = JSON.parse(data);
-        } catch (e) {
-          console.error('[DEBUG] Failed to parse double-encoded JSON for attendance', e);
-        }
-      }
-
-      console.log(`[DEBUG] Attendance Data Received:`, data ? 'Valid' : 'Null');
-      return data;
-    } catch (err) {
-      console.error(`[DEBUG] Error fetching attendance from ${url}:`, err.message);
-      lastError = err;
-    }
-  }
-  throw lastError || new Error('Failed to fetch attendance from SBTET');
-};
-
-// Fetch results JSON from SBTET
-const fetchResultsJson = async (pin) => {
-  const pinKey = pin.toLowerCase();
-  const cached = resultsJsonCache.get(pinKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    return cached.data;
-  }
-
-  try {
-    const html = await fetchResultsHtml(pin);
-
-    // PARSING LOGIC: Extract data from Proxy HTML and map to SBTET Schema
-    // 1. Extract SGPA Data from script tag
-    // Format: const sgpaData = [{"credits": 20.0, "sem_id": 1, "semester": "1SEM", "sgpa": 7.88, "total_grade_points": 157.5}, ...];
-    const sgpaScriptMatch = html.match(/const sgpaData\s*=\s*(\[.*?\]);/s);
-    let table3 = []; // SGPA History
-    if (sgpaScriptMatch && sgpaScriptMatch[1]) {
-      try {
-        const sgpaRaw = JSON.parse(sgpaScriptMatch[1]);
-        table3 = sgpaRaw.map(s => ({
-          Semester: s.semester,
-          Credits: s.credits,
-          TotalGradePoints: s.total_grade_points,
-          SGPA: s.sgpa,
-          SemId: s.sem_id
-        }));
-        console.log(`[DEBUG] Parsed ${table3.length} SGPA records`);
-      } catch (e) {
-        console.error('[DEBUG] Failed to parse SGPA script JSON', e);
-      }
-    }
-
-    // 2. Extract Student Details (Name, Pin, Branch, Center)
-    console.log(`[DEBUG] Proxy HTML Sample: ${html.substring(0, 500).replace(/\n/g, ' ')}`);
-
-    // Improved regex to capture text following the strong tag labels, handling variability in colon placement and newlines.
-    const extractStrong = (label) => {
-      // Use [\s\S]*? to match across newlines and handle boundaries more flexibly
-      const regex = new RegExp(`<strong>\\s*${label}\\s*[:\\s]*<\\/strong>\\s*[:\\s]*([\\s\\S]*?)(?:<br>|</div>|<\\/div>|$)`, 'i');
-      const match = html.match(regex);
-      return match ? match[1].trim() : '';
-    };
-
-    const studentName = extractStrong('Name');
-    const studentPin = extractStrong('PIN') || pin;
-    const branch = extractStrong('Branch');
-    const center = extractStrong('Center');
-
-    console.log(`[DEBUG] Extracted Student Result: Name="${studentName}", PIN="${studentPin}", Branch="${branch}", Center="${center}"`);
-    if (!branch) {
-      console.warn(`[DEBUG] BRANCH EXTRACTION FAILED for PIN ${pin}. Searching for "Branch" in HTML... Found index: ${html.indexOf('Branch')}`);
-    }
-
-    // 3. Extract All Subjects from the "All Subjects" table
-    // Table Headers: Semester, Subject, Code, Type, Marks, Grade, Grade Point, Credits
-    let table2 = []; // Subjects
-    const tableRegex = /<table[^>]*class="data-table"[^>]*>([\s\S]*?)<\/table>/gi;
-    let match;
-    while ((match = tableRegex.exec(html)) !== null) {
-      const tableContent = match[1];
-      // Check if this is the "All Subjects" table by looking for header
-      if (tableContent.includes('<th>Subject</th>') && tableContent.includes('<th>Code</th>')) {
-        const trRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-        let trMatch;
-        // Skip header row usually, but our regex captures all trs.
-        // We filter by checking if it has <td>
-        while ((trMatch = trRegex.exec(tableContent)) !== null) {
-          const rowHtml = trMatch[1];
-          const cols = [...rowHtml.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(m => m[1].replace(/<[^>]+>/g, '').trim());
-
-          // Expecting 8 columns
-          if (cols.length >= 8) {
-            table2.push({
-              Semester: cols[0],
-              SubjectName: cols[1],
-              Subject_Code: cols[2],
-              // Type: cols[3], // Not in standard schema but useful
-              SubjectTotal: cols[4] !== '—' ? cols[4] : null, // Marks
-              HybridGrade: cols[5], // Grade
-              GradePoint: cols[6],
-              MaxCredits: cols[7]
-            });
-          }
-        }
-      }
-    }
-    console.log(`[DEBUG] Parsed ${table2.length} Subject records`);
-
-    // 4. Calculate Summary (Table1)
-    // CGPA, TotalMaxCredits, CreditsGained
-    // Extract directly from HTML if available
-    const cgpaRaw = extractStrong('CGPA');
-    const creditsRaw = extractStrong('Credits'); // e.g., "40.0/40.0"
-
-    let calculatedCgpa = cgpaRaw && !isNaN(parseFloat(cgpaRaw)) ? parseFloat(cgpaRaw) : null;
-    let totalCredits = 0;
-    let gainedCredits = 0;
-
-    if (creditsRaw && creditsRaw.includes('/')) {
-      const [gained, total] = creditsRaw.split('/').map(s => parseFloat(s));
-      if (!isNaN(gained)) gainedCredits = gained;
-      if (!isNaN(total)) totalCredits = total;
-    } else {
-      // Fallback calculation
-      if (table3.length > 0) {
-        table3.forEach(rec => {
-          if (rec.Credits) {
-            const cred = parseFloat(rec.Credits);
-            totalCredits += cred;
-            gainedCredits += cred; // Approx 
-          }
-        });
-      } else {
-        table2.forEach(sub => {
-          const cred = parseFloat(sub.MaxCredits || 0);
-          totalCredits += cred;
-          if (sub.HybridGrade !== 'F' && sub.HybridGrade !== 'AB') {
-            gainedCredits += cred;
-          }
-        });
-      }
-
-      if (calculatedCgpa === null && table3.length > 0) {
-        let sum = 0;
-        let count = 0;
-        table3.forEach(rec => {
-          if (rec.SGPA) {
-            sum += parseFloat(rec.SGPA);
-            count++;
-          }
-        });
-        if (count > 0) calculatedCgpa = (sum / count).toFixed(2);
-      }
-    }
-
-    // 5. Construct Final Payload
-    const data = {
-      Table: [{
-        StudentName: studentName,
-        Pin: studentPin,
-        Branch: branch,
-        BranchName: branch,
-        BranchCode: branch,
-        CenterName: center
-      }],
-      Table1: [{
-        TotalMaxCredits: totalCredits,
-        CreditsGained: gainedCredits,
-        CGPA: calculatedCgpa
-      }],
-      Table2: table2,
-      Table3: table3
-    };
-
-    if (studentName || table2.length > 0 || table3.length > 0) {
-      resultsJsonCache.set(pinKey, { timestamp: Date.now(), data });
-      return data;
-    }
-  } catch (err) {
-    console.warn('[DEBUG] Proxy HTML parsing failed:', err.message);
-    throw err; // Propagate error since we removed fallback
-  }
-
-  // Fallback removed as requested
-  throw new Error('Failed to fetch results from Proxy');
-};
-
-// Fetch results HTML from proxy
-const fetchResultsHtml = async (pin) => {
-  const pinKey = pin.toLowerCase();
-  const cached = resultsCache.get(pinKey);
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
-    console.log('[DEBUG] Returning Cached HTML');
-    return cached.html;
-  }
-
-  const normalizedPin = pin.toUpperCase();
-  const url = `http://18.61.7.125/result/${normalizedPin}`;
-  console.log(`[DEBUG] Fetching Proxy HTML from: ${url}`);
-
+// Helper: fetch JSON from SBTET — returns null if SBTET returns an error body
+async function fetchSBTET(url) {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': sbtetHeaders['User-Agent'],
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      },
-      timeout: 20000,
+        'Accept': 'application/json, text/plain, */*',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
+        'Referer': 'https://www.sbtet.telangana.gov.in/',
+      }
     });
-
-    console.log(`[DEBUG] Proxy HTML Status: ${response.status}`);
-
-    if (response.status === 404) {
-      throw new Error('Student not found');
+    if (!response.ok) return null;
+    const text = await response.text();
+    if (!text.trim()) return null;
+    const json = JSON.parse(text);
+    // SBTET returns 200 with a Message field when the endpoint doesn't match or fails
+    if (json && typeof json === 'object' && !Array.isArray(json) && json.Message) {
+      console.warn('[fetchSBTET] SBTET returned error body:', json.Message.substring(0, 80));
+      return null;
     }
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
-
-    const html = await response.text();
-    console.log(`[DEBUG] Proxy HTML Length: ${html.length}`);
-
-    if (html.length < 200) {
-      throw new Error('Empty HTML response');
-    }
-
-    resultsCache.set(pinKey, { timestamp: Date.now(), html });
-    return html;
+    return json;
   } catch (e) {
-    console.error(`[DEBUG] Proxy Fetch Failed: ${e.message}`);
-    throw e;
+    console.warn('[fetchSBTET] Fetch error:', e.message);
+    return null;
   }
-};
+}
+
+/* Legacy helpers removed */
+
+
+// ================== SBTET API PROXY ==================
+
+
+// ── In-memory cache for exam sessions (invalidates every 2 hours) ─────────
+let _examSessionsCache = null;
+let _examSessionsCachedAt = 0;
+const EXAM_SESSIONS_TTL = 2 * 60 * 60 * 1000; // 2 hours
+
+// GET /api/exam-sessions — Live from SBTET
+app.get('/api/exam-sessions', async (req, res) => {
+  try {
+    if (_examSessionsCache && (Date.now() - _examSessionsCachedAt) < EXAM_SESSIONS_TTL) {
+      return res.json({ success: true, sessions: _examSessionsCache, cached: true });
+    }
+    const url = 'https://www.sbtet.telangana.gov.in/api/api/Results/GetExamMonthYear';
+    const raw = await fetchSBTET(url);
+    let data = raw;
+    if (typeof data === 'string') { try { data = JSON.parse(data); } catch (_) { } }
+    const table = data?.Table || data?.table || (Array.isArray(data) ? data : []);
+    if (!table.length) return res.status(502).json({ success: false, error: 'Empty exam sessions' });
+    const sessions = table
+      .sort((a, b) => (b.Id || 0) - (a.Id || 0))
+      .map(row => ({ label: String(row.ExamYearMonth || '').trim(), value: String(row.Id) }))
+      .filter(s => s.label && s.value);
+    _examSessionsCache = sessions;
+    _examSessionsCachedAt = Date.now();
+    res.json({ success: true, sessions, cached: false });
+  } catch (err) {
+    if (_examSessionsCache) return res.json({ success: true, sessions: _examSessionsCache, cached: true, stale: true });
+    res.status(500).json({ success: false, error: 'Failed to fetch sessions' });
+  }
+});
 
 // GET /api/attendance - Fetch attendance by PIN
 app.get('/api/attendance', async (req, res) => {
-  const { pin } = req.query;
-  if (!pin) {
-    return res.status(400).json({ error: 'Missing pin parameter' });
-  }
-
   try {
-    const data = await fetchAttendance(pin);
-
-    if (!data) {
-      return res.status(404).json({ success: false, error: 'No data returned from SBTET API' });
-    }
-
-    const response = {
-      success: true,
-      studentInfo: {},
-      attendanceRecords: [],
-      attendanceSummary: {
-        attendancePercentage: null,
-        totalDays: null,
-        presentDays: null,
-        absentDays: null,
-      },
+    const { pin } = req.query;
+    if (!pin) return res.status(400).json({ success: false, error: 'PIN is required' });
+    const normalized = pin.trim().toUpperCase();
+    const apiUrl = `https://www.sbtet.telangana.gov.in/api/api/PreExamination/getAttendanceReport?Pin=${encodeURIComponent(normalized)}`;
+    const data = await fetchSBTET(apiUrl);
+    if (!data) return res.json({ success: true, attendanceSummary: null });
+    const summary = {
+      attendancePercentage: data.AttendancePercentage ?? data.overallAttendance ?? null,
+      totalDays: data.TotalDays ?? data.totalDays ?? null,
+      presentDays: data.PresentDays ?? data.presentDays ?? null,
+      absentDays: data.AbsentDays ?? data.absentDays ?? null,
     };
-
-    if (typeof data === 'object') {
-      if (!data || Object.values(data).every(v => !v)) {
-        return res.status(404).json({
-          success: false,
-          error: 'No data found for this PIN. Please verify the PIN is correct.',
-        });
-      }
-
-      if (data.Table && Array.isArray(data.Table) && data.Table.length > 0) {
-        response.studentInfo = data.Table[0];
-      }
-
-      if (data.Table1 && Array.isArray(data.Table1)) {
-        response.attendanceRecords = data.Table1;
-      } else if (data.Table && Array.isArray(data.Table) && !response.studentInfo) {
-        response.attendanceRecords = data.Table;
-      }
-    }
-
-    response.attendanceSummary = computeAttendanceSummary(
-      response.studentInfo,
-      response.attendanceRecords
-    );
-
-    // If attendance is not found, default to 0% as requested
-    if (!response.attendanceSummary.attendancePercentage && response.attendanceSummary.attendancePercentage !== 0) {
-      response.attendanceSummary = {
-        attendancePercentage: 0,
-        totalDays: 0,
-        presentDays: 0,
-        absentDays: 0,
-        isFallback: true
-      };
-    }
-
-    if (!response.studentInfo || Object.keys(response.studentInfo).length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: 'No data found for this PIN. The PIN may be invalid or not in the SBTET system.',
-      });
-    }
-
-    res.json(response);
-  } catch (err) {
-    console.error('Attendance API error:', err.message);
-    if (err.message.includes('404') || err.message.includes('not found')) {
-      return res.status(404).json({ error: 'Student not found. Please check the PIN.' });
-    }
-    if (err.message.includes('timeout')) {
-      return res.status(504).json({ error: 'Request timeout. Please try again.' });
-    }
-    res.status(502).json({ error: `Network error: ${err.message}` });
+    res.json({ success: true, attendanceSummary: summary });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Internal error' });
   }
 });
 
 // GET /api/results - Fetch consolidated results JSON
 app.get('/api/results', async (req, res) => {
-  const { pin } = req.query;
-  if (!pin) {
-    return res.status(400).json({ success: false, error: 'Missing pin parameter' });
-  }
-
   try {
-    const data = await fetchResultsJson(pin);
-    res.json({ success: true, pin, data });
-  } catch (err) {
-    console.error('Results API error:', err.message);
-    if (err.message.includes('404') || err.message.includes('not found')) {
-      return res.status(404).json({ success: false, error: 'Student not found. Please check the PIN.' });
+    const { pin, schemeId, semYearId, examTypeId, examMonthYearId } = req.query;
+    if (!pin) return res.status(400).json({ success: false, error: 'PIN is required' });
+    const normalized = pin.trim().toUpperCase();
+    const isSemesterFinal = examTypeId === 'semester';
+    const resolvedScheme = schemeId || '11';
+    const resolvedSem = semYearId || '2';
+    const resolvedMonthYear = examMonthYearId || '91';
+
+    let data = null;
+    let source = 'mid';
+
+    if (isSemesterFinal) {
+      const url = `https://www.sbtet.telangana.gov.in/api/api/Results/GetStudentWiseReport?ExamMonthYearId=${resolvedMonthYear}&ExamTypeId=5&Pin=${encodeURIComponent(normalized)}&SchemeId=${resolvedScheme}&SemYearId=${resolvedSem}&StudentTypeId=1`;
+      data = await fetchSBTET(url);
+      source = 'semester';
+    } else {
+      const midUrl = `https://www.sbtet.telangana.gov.in/api/api/Results/GetC18MidStudentWiseReport?ExamTypeId=${examTypeId || '1'}&Pin=${encodeURIComponent(normalized)}&SchemeId=${resolvedScheme}&SemYearId=${resolvedSem}`;
+      data = await fetchSBTET(midUrl);
+      source = 'mid';
+      if (!data || (Array.isArray(data) && data.length === 0)) {
+        const fallUrl = `https://www.sbtet.telangana.gov.in/api/api/PreExamination/GetStudentResult?Pin=${encodeURIComponent(normalized)}`;
+        data = await fetchSBTET(fallUrl);
+        source = 'final';
+      }
     }
-    if (err.message.includes('timeout')) {
-      return res.status(504).json({ success: false, error: 'Request timeout. Please try again.' });
+
+    if (!data || (Array.isArray(data) && data.length === 0)) {
+      return res.status(404).json({ success: false, error: 'No results found.' });
     }
-    res.status(500).json({ success: false, error: `Server error: ${err.message}` });
+    res.json({ success: true, data, source });
+  } catch (error) {
+    res.status(500).json({ success: false, error: 'Internal error' });
   }
 });
 
-// GET /api/results/raw - Fetch results HTML
-app.get('/api/results/raw', async (req, res) => {
-  const { pin } = req.query;
-  if (!pin) {
-    return res.status(400).json({ success: false, error: 'Missing pin parameter' });
-  }
-
-  try {
-    const html = await fetchResultsHtml(pin);
-    res.json({ success: true, pin, html });
-  } catch (err) {
-    console.error('Results raw API error:', err.message);
-    if (err.message.includes('not found')) {
-      return res.status(404).json({ success: false, error: 'Student not found. Please check the PIN.' });
-    }
-    if (err.message.includes('timeout')) {
-      return res.status(504).json({ success: false, error: 'Request timeout. Please try again.' });
-    }
-    res.status(500).json({ success: false, error: `Server error: ${err.message}` });
-  }
-});
 
 // ================== GALLERY ==================
 // Get all gallery images (public)

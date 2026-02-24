@@ -193,6 +193,18 @@ All colors MUST be HSL.
     @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
   }
 
+  .text-fluid-hero {
+    font-size: clamp(3.5rem, 12vw + 1rem, 8.5rem);
+    line-height: 0.85;
+    letter-spacing: -0.05em;
+  }
+
+  .text-fluid-h2 {
+    font-size: clamp(2rem, 5vw + 1rem, 4.5rem);
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
   .bg-gradient-brand {
     background: var(--gradient-brand);
   }
@@ -425,6 +437,10 @@ All colors MUST be HSL.
     overflow-y: auto;
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .mobile-touch-area {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
   }
 }
 

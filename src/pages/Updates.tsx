@@ -34,7 +34,7 @@ const Updates = () => {
           title: n.title,
           description: n.description,
           type: 'announcement',
-          priority: 'high',
+          priority: 'high' as 'high' | 'medium' | 'low',
           category: 'General',
           timestamp: n.timestamp,
           images: [],
@@ -216,9 +216,9 @@ const Updates = () => {
                       </div>
                     )}
 
-                    <CardContent className="pt-8 pb-6 relative z-10">
-                      <div className="flex items-start justify-between gap-6 mb-6">
-                        <div className="flex items-start gap-4 flex-1">
+                    <CardContent className="pt-6 pb-6 relative z-10">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+                        <div className="flex items-start gap-4 flex-1 min-w-0">
                           {/* Premium Icon with Gradient */}
                           <div className={`relative p-3 rounded-2xl bg-gradient-to-br ${getTypeColor(update.type || 'announcement')} text-white shadow-lg flex-shrink-0 group-hover:scale-110 transition-transform duration-300`}>
                             <div className="absolute inset-0 bg-white/20 rounded-2xl blur-xl" />
@@ -228,11 +228,11 @@ const Updates = () => {
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <h3 className="text-2xl font-black mb-2 tracking-tight group-hover:text-primary transition-colors">
+                            <h3 className="text-xl sm:text-2xl font-black mb-2 tracking-tight group-hover:text-primary transition-colors break-words">
                               {update.title || 'Untitled'}
                             </h3>
 
-                            <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
+                            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mb-3">
                               <Badge variant="outline" className="border-white/20 bg-white/5 backdrop-blur-sm font-semibold">
                                 {update.category || 'General'}
                               </Badge>
@@ -243,14 +243,14 @@ const Updates = () => {
                               </div>
                             </div>
 
-                            <p className="text-muted-foreground leading-relaxed line-clamp-2">
+                            <p className="text-muted-foreground leading-relaxed line-clamp-3 break-words">
                               {update.description || 'No description available'}
                             </p>
                           </div>
                         </div>
 
-                        <div className="flex flex-col gap-2 flex-shrink-0">
-                          <Badge className={`${getPriorityColor(update.priority || 'medium')} text-white border-0 shadow-lg px-3 py-1 font-black tracking-wider`}>
+                        <div className="flex sm:flex-col gap-2 sm:flex-shrink-0">
+                          <Badge className={`${getPriorityColor(update.priority || 'medium')} text-white border-0 shadow-lg px-3 py-1 font-black tracking-wider self-start`}>
                             {(update.priority || 'medium').toUpperCase()}
                           </Badge>
                         </div>

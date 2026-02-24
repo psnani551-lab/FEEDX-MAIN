@@ -102,32 +102,32 @@ const StudentPortal = () => {
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-8"
+                    className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 lg:mb-12 gap-6 lg:gap-8"
                 >
-                    <div className="flex items-center gap-6">
-                        <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/10 relative overflow-hidden flex-shrink-0 border border-blue-100/50 group">
+                    <div className="flex items-center gap-4 lg:gap-6 w-full md:w-auto">
+                        <div className="w-16 h-16 lg:w-20 lg:h-20 bg-white rounded-2xl lg:rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/10 relative overflow-hidden flex-shrink-0 border border-blue-100/50 group">
                             <img
                                 src={`${import.meta.env.BASE_URL}fxbot-logo.jpg`}
                                 alt="FXBOT Logo"
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             />
-                            <div className="absolute inset-0 border-2 border-blue-600/5 rounded-3xl" />
+                            <div className="absolute inset-0 border-2 border-blue-600/5 rounded-2xl lg:rounded-3xl" />
                         </div>
-                        <div>
+                        <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                                <LayoutDashboard className="h-4 w-4 text-blue-600" />
-                                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em]">{isFaculty ? "Faculty" : "Student"} Environment</span>
+                                <LayoutDashboard className="h-3 w-3 lg:h-4 lg:w-4 text-blue-600" />
+                                <span className="text-[8px] lg:text-[10px] font-black text-blue-600 uppercase tracking-[0.2em]">{isFaculty ? "Faculty" : "Student"} Alpha</span>
                             </div>
-                            <h1 className="text-5xl font-black tracking-tight text-slate-900 leading-tight">
+                            <h1 className="text-3xl lg:text-5xl font-black tracking-tight text-slate-900 leading-tight truncate">
                                 {isFaculty ? "Faculty Portal" : "Student Portal"}
                             </h1>
-                            <div className="flex flex-wrap items-center gap-3 mt-2">
-                                <p className="text-[#64748b] text-base font-medium">
-                                    Welcome back, <span className="text-slate-900 font-bold underline decoration-blue-500/30 underline-offset-4">{student.full_name}</span>
+                            <div className="flex flex-wrap items-center gap-2 lg:gap-3 mt-1.5 lg:mt-2">
+                                <p className="text-slate-500 text-xs lg:text-base font-medium">
+                                    Welcome, <span className="text-slate-900 font-bold underline decoration-blue-500/30 underline-offset-4">{student.full_name}</span>
                                 </p>
                                 {student.department && (
-                                    <Badge variant="secondary" className="bg-white border-slate-200 text-slate-600 font-bold px-3 py-1 rounded-lg shadow-sm">
-                                        <Building2 className="h-3 w-3 mr-1.5" />
+                                    <Badge variant="secondary" className="bg-white border-slate-200 text-slate-600 font-bold px-2 py-0.5 lg:px-3 lg:py-1 rounded-lg shadow-sm text-[10px] lg:text-xs">
+                                        <Building2 className="h-2.5 w-2.5 lg:h-3 lg:w-3 mr-1 lg:mr-1.5" />
                                         {student.department}
                                     </Badge>
                                 )}
@@ -136,23 +136,23 @@ const StudentPortal = () => {
                     </div>
 
                     <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4 w-full md:w-auto">
-                        <div className="flex gap-4">
-                            <Card className="px-5 py-3 flex items-center gap-4 glass-card border-blue-100/50 shadow-xl shadow-blue-500/5 rounded-2xl transition-all hover:shadow-blue-500/10">
-                                <div className="p-2 bg-blue-600 rounded-xl text-white">
-                                    <Clock className="h-5 w-5" />
+                        <div className="grid grid-cols-2 lg:flex gap-3 lg:gap-4">
+                            <Card className="px-4 py-2.5 lg:px-5 lg:py-3 flex items-center gap-3 lg:gap-4 glass-card border-blue-100/50 shadow-xl shadow-blue-500/5 rounded-2xl transition-all hover:shadow-blue-500/10 active:scale-[0.98]">
+                                <div className="p-1.5 lg:p-2 bg-blue-600 rounded-xl text-white shadow-lg shadow-blue-500/20">
+                                    <Clock className="h-4 w-4 lg:h-5 lg:w-5" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{isFaculty ? "FEEDBACKS" : "ACTIVE"}</span>
-                                    <span className="text-xl font-black text-slate-900">{activeIssuesCount}</span>
+                                    <span className="text-[8px] lg:text-[10px] font-black text-slate-400 uppercase tracking-widest">{isFaculty ? "INPUTS" : "ACTIVE"}</span>
+                                    <span className="text-lg lg:text-xl font-black text-slate-900">{activeIssuesCount}</span>
                                 </div>
                             </Card>
-                            <Card className="px-5 py-3 flex items-center gap-4 glass-card border-emerald-100/50 shadow-xl shadow-emerald-500/5 rounded-2xl transition-all hover:shadow-emerald-500/10">
-                                <div className="p-2 bg-emerald-600 rounded-xl text-white">
-                                    <CheckCircle2 className="h-5 w-5" />
+                            <Card className="px-4 py-2.5 lg:px-5 lg:py-3 flex items-center gap-3 lg:gap-4 glass-card border-emerald-100/50 shadow-xl shadow-emerald-500/5 rounded-2xl transition-all hover:shadow-emerald-500/10 active:scale-[0.98]">
+                                <div className="p-1.5 lg:p-2 bg-emerald-600 rounded-xl text-white shadow-lg shadow-emerald-500/20">
+                                    <CheckCircle2 className="h-4 w-4 lg:h-5 lg:w-5" />
                                 </div>
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">RESOLVED</span>
-                                    <span className="text-xl font-black text-slate-900">{resolvedIssuesCount}</span>
+                                    <span className="text-[8px] lg:text-[10px] font-black text-slate-400 uppercase tracking-widest">RESOLVED</span>
+                                    <span className="text-lg lg:text-xl font-black text-slate-900">{resolvedIssuesCount}</span>
                                 </div>
                             </Card>
                         </div>
@@ -160,10 +160,10 @@ const StudentPortal = () => {
                         <Button
                             variant="outline"
                             onClick={handleLogout}
-                            className="h-14 px-8 rounded-2xl font-bold bg-white text-red-600 border-slate-200 hover:bg-red-50 hover:border-red-200 transition-all shadow-xl shadow-red-500/5 group"
+                            className="h-12 lg:h-14 px-6 lg:px-8 rounded-xl lg:rounded-2xl font-black text-[10px] lg:text-xs uppercase tracking-[0.15em] bg-white text-red-600 border-slate-200 hover:bg-red-50 hover:border-red-200 transition-all shadow-xl shadow-red-500/5 group"
                         >
-                            <LogOut className="h-5 w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-                            Log Out
+                            <LogOut className="h-4 w-4 lg:h-5 lg:w-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+                            Sign Out
                         </Button>
                     </div>
                 </motion.div>
@@ -171,11 +171,11 @@ const StudentPortal = () => {
                 {/* Tab Navigation */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                     {!isFaculty && (
-                        <div className="flex justify-center mb-10">
-                            <TabsList className="inline-flex h-16 items-center justify-center rounded-[1.25rem] bg-slate-100/80 backdrop-blur-md p-1.5 shadow-inner border border-white/50 w-full max-w-xl">
-                                <TabsTrigger value="submit" className="flex-1 rounded-xl h-full text-sm font-black uppercase tracking-wider transition-all data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg">Submit New</TabsTrigger>
-                                <TabsTrigger value="track" className="flex-1 rounded-xl h-full text-sm font-black uppercase tracking-wider transition-all data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg">Tracking</TabsTrigger>
-                                <TabsTrigger value="resolved" className="flex-1 rounded-xl h-full text-sm font-black uppercase tracking-wider transition-all data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg">Resolved</TabsTrigger>
+                        <div className="flex justify-center mb-10 overflow-x-auto pb-4 no-scrollbar -mx-4 px-4">
+                            <TabsList className="inline-flex h-14 lg:h-16 items-center justify-center rounded-2xl lg:rounded-[1.25rem] bg-slate-100/80 backdrop-blur-md p-1.5 shadow-inner border border-white/50 w-full md:max-w-xl min-w-[320px]">
+                                <TabsTrigger value="submit" className="flex-1 rounded-xl h-full text-[10px] lg:text-sm font-black uppercase tracking-wider transition-all data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg">Submit</TabsTrigger>
+                                <TabsTrigger value="track" className="flex-1 rounded-xl h-full text-[10px] lg:text-sm font-black uppercase tracking-wider transition-all data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg">Tracking</TabsTrigger>
+                                <TabsTrigger value="resolved" className="flex-1 rounded-xl h-full text-[10px] lg:text-sm font-black uppercase tracking-wider transition-all data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg">Resolved</TabsTrigger>
                             </TabsList>
                         </div>
                     )}

@@ -9,7 +9,7 @@ const HeroSection = () => {
   return (
     <section
       id="home"
-      className="relative min-h-[85vh] flex items-center overflow-hidden pt-32 pb-20"
+      className="relative min-h-[90vh] lg:min-h-[85vh] flex items-center overflow-hidden pt-28 lg:pt-32 pb-12 lg:pb-20"
     >
       <div className="container relative z-10 mx-auto px-6 lg:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-20 items-center">
@@ -23,20 +23,20 @@ const HeroSection = () => {
             >
 
               {/* Minimalist Heading */}
-              <h1 className="text-7xl sm:text-8xl md:text-9xl font-black mb-6 leading-[0.8] tracking-[-0.04em] flex flex-wrap items-baseline gap-x-2">
+              <h1 className="text-fluid-hero font-black mb-4 sm:mb-6 flex flex-wrap items-baseline gap-x-2">
                 <span className="text-foreground">FEED</span>
                 <span className="bg-gradient-to-r from-primary via-blue-400 to-cyan-300 bg-clip-text text-transparent">X.</span>
               </h1>
-              <p className="text-sm sm:text-base font-bold uppercase tracking-[0.5em] text-primary/80 mb-12 ml-1 opacity-90">
+              <p className="text-[10px] sm:text-base font-bold uppercase tracking-[0.4em] sm:tracking-[0.5em] text-primary/80 mb-8 sm:mb-12 ml-1 opacity-90">
                 Listen • Respond • Resolve
               </p>
 
               {/* Executive Subheading */}
-              <div className="space-y-6 mb-14">
-                <p className="text-xl md:text-2xl text-muted-foreground/80 max-w-2xl font-medium leading-relaxed">
-                  A student community that supports <span className="text-foreground">Polytechnic learners</span> with Skills, Opportunities, and Knowledge (SOK) through curated resources, guidance, and structured updates.
+              <div className="space-y-6 mb-10 lg:mb-14">
+                <p className="text-lg md:text-2xl text-muted-foreground/80 max-w-2xl font-medium leading-relaxed">
+                  A student community that supports <span className="text-foreground">Polytechnic learners</span> with Skills, Opportunities, and Knowledge (SOK).
                 </p>
-                <p className="text-sm md:text-base text-muted-foreground/60 max-w-xl font-medium border-l-2 border-primary/30 pl-6 py-1">
+                <p className="hidden sm:block text-sm md:text-base text-muted-foreground/60 max-w-xl font-medium border-l-2 border-primary/30 pl-6 py-1">
                   <span className="text-primary font-black uppercase tracking-[0.2em] text-[10px] block mb-2">Our Mission</span>
                   “Make student support and growth easier to access, faster to coordinate, and transparent to track.”
                 </p>
@@ -44,17 +44,17 @@ const HeroSection = () => {
 
               {/* Action Block - Enhanced Anniversary Widget */}
               <div className="space-y-10">
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                   <Link to="/resources">
-                    <Button size="lg" className="h-[64px] px-8 bg-primary text-white hover:bg-primary/90 transition-all rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-glow group">
+                    <Button size="lg" className="h-[60px] lg:h-[64px] w-full sm:w-auto px-8 bg-primary text-white hover:bg-primary/90 transition-all rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-glow group active:scale-95">
                       Start Learning
                       <ArrowRight className="ml-3 w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </Link>
                   <Link to="/celebrations">
-                    <Button size="lg" className="h-[64px] px-8 bg-gradient-to-r from-orange-500 to-amber-400 text-white hover:opacity-90 transition-all rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-[0_10px_30px_-5px_rgba(249,115,22,0.4)] hover:shadow-[0_15px_40px_-5px_rgba(249,115,22,0.5)] group">
+                    <Button size="lg" className="h-[60px] lg:h-[64px] w-full sm:w-auto px-8 bg-gradient-to-r from-orange-500 to-amber-400 text-white hover:opacity-90 transition-all rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-[0_10px_30px_-5px_rgba(249,115,22,0.4)] hover:shadow-[0_15px_40px_-5px_rgba(249,115,22,0.5)] group active:scale-95">
                       <Sparkles className="mr-2 w-4 h-4 group-hover:scale-110 transition-transform" />
-                      1st Anniversary Special
+                      1st Year Spl
                     </Button>
                   </Link>
                 </div>
@@ -113,7 +113,7 @@ const SocialPill = ({ href, icon, label }: { href: string; icon: React.ReactNode
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/[0.03] border-2 border-primary/30 hover:border-primary transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_-5px_hsl(var(--primary)/0.4)]"
+    className="inline-flex items-center gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white/[0.03] border-2 border-primary/30 hover:border-primary transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_-5px_hsl(var(--primary)/0.4)]"
   >
     <div className="scale-110">{icon}</div>
     <span className="text-xs font-black uppercase tracking-[0.15em] text-muted-foreground group-hover:text-foreground">{label}</span>

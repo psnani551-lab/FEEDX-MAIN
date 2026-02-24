@@ -131,97 +131,165 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
                 })}
             </div>
 
-            {/* Global Audit Log */}
-            <div className="glass-card border-white/40 shadow-2xl rounded-[2.5rem] overflow-hidden">
-                <div className="px-10 py-8 bg-slate-50/50 border-b border-slate-200/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <Activity className="h-4 w-4 text-blue-600" />
-                            <h3 className="font-black text-slate-900 uppercase tracking-[0.2em] text-xs">GLOBAL OVERSIGHT TIMELINE</h3>
+            <div className="space-y-6">
+                {/* Desktop View - Table */}
+                <div className="hidden md:block glass-card border-white/40 shadow-2xl rounded-[2.5rem] overflow-hidden">
+                    <div className="px-10 py-8 bg-slate-50/50 border-b border-slate-200/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <div className="flex items-center gap-2 mb-1">
+                                <Activity className="h-4 w-4 text-blue-600" />
+                                <h3 className="font-black text-slate-900 uppercase tracking-[0.2em] text-xs">GLOBAL OVERSIGHT TIMELINE</h3>
+                            </div>
+                            <p className="text-[11px] font-medium text-slate-400">ARCHITECT VIEW • CONFIDENTIAL SYSTEM LOGS</p>
                         </div>
-                        <p className="text-[11px] font-medium text-slate-400">ARCHITECT VIEW • CONFIDENTIAL SYSTEM LOGS</p>
                     </div>
-                </div>
-                <Table>
-                    <TableHeader className="bg-slate-50/30">
-                        <TableRow className="hover:bg-transparent border-slate-200/60">
-                            <TableHead className="w-[140px] font-bold text-slate-500 py-6 pl-10 uppercase tracking-wider text-[10px]">Access ID</TableHead>
-                            <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Sector</TableHead>
-                            <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Processing State</TableHead>
-                            <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Latency Report</TableHead>
-                            <TableHead className="text-right pr-10 font-bold text-slate-500 uppercase tracking-wider text-[10px]">Audit</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {issues.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="h-48 text-center text-slate-400">
-                                    <div className="flex flex-col items-center gap-3">
-                                        <History className="h-8 w-8 opacity-20" />
-                                        <p className="font-medium">Institutional datasets are currently synchronized.</p>
-                                    </div>
-                                </TableCell>
+                    <Table>
+                        <TableHeader className="bg-slate-50/30">
+                            <TableRow className="hover:bg-transparent border-slate-200/60">
+                                <TableHead className="w-[140px] font-bold text-slate-500 py-6 pl-10 uppercase tracking-wider text-[10px]">Access ID</TableHead>
+                                <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Sector</TableHead>
+                                <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Processing State</TableHead>
+                                <TableHead className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Latency Report</TableHead>
+                                <TableHead className="text-right pr-10 font-bold text-slate-500 uppercase tracking-wider text-[10px]">Audit</TableHead>
                             </TableRow>
-                        ) : (
-                            issues.map((issue, idx) => {
-                                const age = differenceInHours(new Date(), new Date(issue.created_at));
-                                const isResolved = issue.status === 'Resolved';
-                                const isCritical = !isResolved && age > 168; // 1 week+
+                        </TableHeader>
+                        <TableBody>
+                            {issues.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-48 text-center text-slate-400">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <History className="h-8 w-8 opacity-20" />
+                                            <p className="font-medium">Institutional datasets are currently synchronized.</p>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                issues.map((issue, idx) => {
+                                    const age = differenceInHours(new Date(), new Date(issue.created_at));
+                                    const isResolved = issue.status === 'Resolved';
+                                    const isCritical = !isResolved && age > 168; // 1 week+
 
-                                return (
-                                    <motion.tr
-                                        key={issue.id}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
-                                        className={cn("hover:bg-blue-50/40 transition-colors border-slate-200/40 group", isCritical && "bg-red-50/30")}
-                                    >
-                                        <TableCell className="font-mono font-black text-blue-600 pl-10">
-                                            <div className="flex flex-col gap-1.5">
-                                                <span>{issue.id}</span>
-                                                {!isResolved && (
-                                                    <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-lg w-fit bg-slate-900 text-white shadow-lg shadow-black/10">
-                                                        SYSTEM QUEUE
+                                    return (
+                                        <motion.tr
+                                            key={issue.id}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            className={cn("hover:bg-blue-50/40 transition-colors border-slate-200/40 group", isCritical && "bg-red-50/30")}
+                                        >
+                                            <TableCell className="font-mono font-black text-blue-600 pl-10">
+                                                <div className="flex flex-col gap-1.5">
+                                                    <span>{issue.id}</span>
+                                                    {!isResolved && (
+                                                        <span className="text-[8px] font-black uppercase px-2 py-0.5 rounded-lg w-fit bg-slate-900 text-white shadow-lg shadow-black/10">
+                                                            SYSTEM QUEUE
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline" className="font-black text-[10px] border-slate-200 bg-white/50 text-slate-500 px-3 py-1 rounded-xl shadow-sm tracking-wider">
+                                                    {issue.department.toUpperCase()}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge className={cn("gap-1.5 px-3 py-1 rounded-full border shadow-sm font-bold text-[10px]", getStatusBadgeVariant(issue.status))}>
+                                                    <span className="relative flex h-2 w-2">
+                                                        <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", issue.status === 'Resolved' ? 'bg-emerald-400' : 'bg-current')}></span>
+                                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
                                                     </span>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant="outline" className="font-black text-[10px] border-slate-200 bg-white/50 text-slate-500 px-3 py-1 rounded-xl shadow-sm tracking-wider">
-                                                {issue.department.toUpperCase()}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge className={cn("gap-1.5 px-3 py-1 rounded-full border shadow-sm font-bold text-[10px]", getStatusBadgeVariant(issue.status))}>
-                                                <span className="relative flex h-2 w-2">
-                                                    <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", issue.status === 'Resolved' ? 'bg-emerald-400' : 'bg-current')}></span>
-                                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
+                                                    {issue.status}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="text-sm">
+                                                <div className="flex flex-col">
+                                                    <span className={cn("font-black tracking-tight", age > 96 ? "text-red-600" : "text-slate-900")}>{age}h</span>
+                                                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-1">Total Delay</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right pr-10">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => setSelectedIssue(issue)}
+                                                    className="rounded-xl text-slate-400 hover:text-blue-600 hover:bg-white transition-all overflow-hidden group/btn"
+                                                >
+                                                    <ExternalLink className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
+                                                </Button>
+                                            </TableCell>
+                                        </motion.tr>
+                                    );
+                                })
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+
+                {/* Mobile View - Card Stack */}
+                <div className="md:hidden space-y-4">
+                    <div className="flex flex-col gap-2 mb-4 px-2">
+                        <div className="flex items-center gap-2">
+                            <Activity className="h-4 w-4 text-blue-600" />
+                            <h3 className="font-black text-slate-900 uppercase tracking-[0.2em] text-[10px]">Audit Registry</h3>
+                        </div>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Confidential System Logs</p>
+                    </div>
+                    {issues.length === 0 ? (
+                        <div className="glass-card p-12 text-center rounded-[2rem] border-white/40">
+                            <History className="h-10 w-10 opacity-20 mx-auto mb-4" />
+                            <p className="text-slate-400 font-black uppercase tracking-widest text-[10px]">Zero Latency Detected</p>
+                        </div>
+                    ) : (
+                        issues.map((issue, idx) => {
+                            const age = differenceInHours(new Date(), new Date(issue.created_at));
+                            const isResolved = issue.status === 'Resolved';
+                            const isCritical = !isResolved && age > 168;
+
+                            return (
+                                <motion.div
+                                    key={issue.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    onClick={() => setSelectedIssue(issue)}
+                                    className={cn(
+                                        "glass-card p-6 rounded-[2rem] border-white/40 shadow-xl active:scale-[0.98] transition-all relative overflow-hidden group",
+                                        isCritical && "bg-red-50/10 border-red-200/50"
+                                    )}
+                                >
+                                    <div className="flex items-center justify-between mb-4">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="font-mono font-black text-blue-600 text-[10px] tracking-tighter">{issue.id}</span>
+                                            {!isResolved && (
+                                                <span className="text-[7px] font-black uppercase px-2 py-0.5 rounded-md w-fit bg-slate-900 text-white">
+                                                    SYSTEM QUEUE
                                                 </span>
-                                                {issue.status}
-                                            </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-sm">
-                                            <div className="flex flex-col">
-                                                <span className={cn("font-black tracking-tight", age > 96 ? "text-red-600" : "text-slate-900")}>{age}h</span>
-                                                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-1">Total Delay</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="text-right pr-10">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                onClick={() => setSelectedIssue(issue)}
-                                                className="rounded-xl text-slate-400 hover:text-blue-600 hover:bg-white transition-all overflow-hidden group/btn"
-                                            >
-                                                <ExternalLink className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
-                                            </Button>
-                                        </TableCell>
-                                    </motion.tr>
-                                );
-                            })
-                        )}
-                    </TableBody>
-                </Table>
+                                            )}
+                                        </div>
+                                        <Badge className={cn("gap-1.5 px-3 py-1 rounded-full border font-bold text-[9px]", getStatusBadgeVariant(issue.status))}>
+                                            {issue.status}
+                                        </Badge>
+                                    </div>
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <Badge variant="outline" className="font-black text-[9px] border-slate-200 bg-white/50 text-slate-500 px-2 py-0.5 rounded-lg shadow-sm">
+                                            {issue.department.toUpperCase()}
+                                        </Badge>
+                                        <h3 className="text-sm font-black text-slate-900 tracking-tight uppercase line-clamp-1">{issue.type}</h3>
+                                    </div>
+                                    <div className="flex items-center justify-between pt-4 border-t border-slate-100/50">
+                                        <div className="flex flex-col">
+                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Latency</span>
+                                            <span className={cn("text-xs font-black", age > 96 ? "text-red-600" : "text-slate-900")}>{age}h Report</span>
+                                        </div>
+                                        <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 group-active:bg-blue-600 group-active:text-white flex items-center justify-center transition-colors">
+                                            <ExternalLink size={16} />
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            );
+                        })
+                    )}
+                </div>
             </div>
 
             <Dialog open={!!selectedIssue} onOpenChange={(open) => !open && setSelectedIssue(null)}>
