@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Loader2, BarChart3, GraduationCap, Trophy, TrendingUp, TrendingDown, AlertCircle, BookOpen, Star, Award, Calendar, MapPin, Hash } from 'lucide-react';
 import { dataAnalysisIllustration as analyticsIllustration } from '@/lib/illustrations';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Skeleton } from '@/components/ui/skeleton';
 import * as RechartsPrimitive from 'recharts';
 import RecommendedResources from '@/components/RecommendedResources';
 
@@ -441,6 +442,58 @@ const StudentAnalytics = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* ── SKELETON LOADING STATE ── */}
+          {isLoading && (
+            <div className="space-y-6 animate-pulse">
+              {/* Hero Profile Skeleton */}
+              <div className="relative overflow-hidden rounded-3xl border border-primary/10 bg-muted/10 p-6 md:p-8">
+                <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+                  <Skeleton className="w-24 h-24 rounded-full bg-muted/40" />
+                  <div className="flex-1 space-y-3">
+                    <Skeleton className="h-8 w-3/4 sm:w-64 bg-muted/40" />
+                    <div className="flex flex-wrap gap-4">
+                      <Skeleton className="h-4 w-32 bg-muted/40" />
+                      <Skeleton className="h-4 w-32 bg-muted/40" />
+                      <Skeleton className="h-4 w-32 bg-muted/40" />
+                    </div>
+                    <Skeleton className="h-6 w-24 rounded-full mt-2 bg-muted/40" />
+                  </div>
+                  <div className="grid grid-cols-3 md:grid-cols-1 gap-2 md:gap-3 w-full md:w-auto">
+                    <Skeleton className="h-14 w-full md:w-32 rounded-2xl bg-muted/40" />
+                    <Skeleton className="h-14 w-full md:w-32 rounded-2xl bg-muted/40" />
+                    <Skeleton className="h-14 w-full md:w-32 rounded-2xl bg-muted/40" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Subject Performance Skeleton */}
+              <Card className="border-border/40">
+                <CardHeader className="pb-4">
+                  <Skeleton className="h-6 w-48 bg-muted/40" />
+                  <Skeleton className="h-4 w-64 mt-1 bg-muted/40" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="flex items-center gap-3">
+                      <div className="w-[140px] md:w-[220px] space-y-1">
+                        <Skeleton className="h-4 w-full bg-muted/40" />
+                        <Skeleton className="h-3 w-2/3 bg-muted/40" />
+                      </div>
+                      <Skeleton className="h-2.5 flex-1 rounded-full bg-muted/40" />
+                      <Skeleton className="h-4 w-8 bg-muted/40" />
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* Best Performers Row Skeleton */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Skeleton className="h-20 w-full rounded-2xl bg-muted/40" />
+                <Skeleton className="h-20 w-full rounded-2xl bg-muted/40" />
+              </div>
+            </div>
+          )}
 
 
           {/* ── RESULTS DASHBOARD ──────────────────────────────────────── */}
