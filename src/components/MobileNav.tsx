@@ -16,7 +16,7 @@ const MobileNav = () => {
             path: localStorage.getItem("student_session") ? "/student/menu" : "/student/auth"
         },
         { icon: Bell, label: 'Alerts', path: '/notifications' },
-        { icon: BarChart2, label: 'Results', path: '/analytics' },
+        { icon: BarChart2, label: 'RESULTS', path: '/student-analytics' },
     ];
 
     return (
