@@ -1,0 +1,37 @@
+# 🚀 Deploy to VPS (Updated with Secrets)
+name: 🚀 Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🚀 Deploy to VPS via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          passphrase: ${{ secrets.VPS_PASSPHRASE }} # Optional
+          script: |
+            cd /var/www/feedx
+            echo "📥 Pulling latest changes from main branch..."
+            git pull origin main
+            
+            echo "📦 Installing dependencies..."
+            npm install
+            
+            echo "🔨 Building static frontend..."
+            npm run build
+            
+            echo "🚀 Restarting application with PM2..."
+            pm2 restart ecosystem.config.cjs --env production
+            
+            echo "✅ Deployment complete!"
