@@ -839,6 +839,11 @@ app.get('/api/ecet/papers', (req, res) => {
 });
 
 // INSTITUTES - Custom routes for institute management
+app.get('/api/institutes', (req, res) => {
+  const institutes = readJsonFile('institutes.json');
+  res.json(institutes);
+});
+
 app.get('/api/admin/institutes', verifyToken, (req, res) => {
   const institutes = readJsonFile('institutes.json');
   res.json(institutes);

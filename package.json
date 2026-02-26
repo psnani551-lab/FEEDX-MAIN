@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "start": "node server/index-json.js",
     "server": "node server/index-json.js",
-    "dev:full": "concurrently \"npm run dev\" \"npm run server\"",
+    "dev:python": "python3 server/attendance_api.py",
+    "dev:all": "concurrently \"npm run dev\" \"npm run server\" \"npm run dev:python\"",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },

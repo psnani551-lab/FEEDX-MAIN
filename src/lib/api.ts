@@ -191,7 +191,7 @@ export const notificationsAPI = {
 
       if (error) throw error;
       return data.map(n => ({ ...n, timestamp: n.created_at }));
-    }, '/api/admin/notifications');
+    }, '/api/notifications');
   },
 
   create: async (data: Omit<Notification, 'id' | 'timestamp'>): Promise<Notification> => {
@@ -241,7 +241,7 @@ export const updatesAPI = {
 
       if (error) throw error;
       return data.map(u => ({ ...u, timestamp: u.created_at }));
-    }, '/api/admin/updates');
+    }, '/api/updates');
   },
 
   create: async (data: Omit<Update, 'id' | 'timestamp'>): Promise<Update> => {
@@ -289,7 +289,7 @@ export const resourcesAPI = {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data.map(r => ({ ...r, timestamp: r.created_at }));
-    }, '/api/admin/resources');
+    }, '/api/resources');
   },
 
   getById: async (id: string): Promise<Resource> => {
@@ -444,7 +444,7 @@ export const spotlightAPI = {
       const { data, error } = await supabase.from('spotlight').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       return data.map(s => ({ ...s, timestamp: s.created_at }));
-    }, '/api/admin/spotlight');
+    }, '/api/spotlight');
   },
 
   create: async (data: any): Promise<Spotlight> => {
@@ -476,7 +476,7 @@ export const testimonialsAPI = {
       const { data, error } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       return data.map(t => ({ ...t, timestamp: t.created_at }));
-    }, '/api/admin/testimonials');
+    }, '/api/testimonials');
   },
 
   create: async (data: any): Promise<Testimonial> => {
@@ -508,7 +508,7 @@ export const galleryAPI = {
       const { data, error } = await supabase.from('gallery').select('*').order('display_order', { ascending: true });
       if (error) throw error;
       return data ? data.map(img => ({ id: img.id, url: img.url, order: img.display_order })) : [];
-    }, '/api/admin/gallery');
+    }, '/api/gallery');
   },
 
   create: async (image: { url: string; order: number }) => {

@@ -7,6 +7,10 @@ const MobileNav = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
+    if (location.pathname.startsWith('/admin') || location.pathname === '/admin-login') {
+        return null;
+    }
+
     const navItems = [
         { icon: Home, label: 'Home', path: '/' },
         { icon: Search, label: 'Search', path: '/resources' },

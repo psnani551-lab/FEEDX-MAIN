@@ -19,6 +19,33 @@ import FacultyDashboard from "@/components/fxbot/FacultyDashboard";
 import HODDashboard from "@/components/fxbot/HODDashboard";
 import PrincipalDashboard from "@/components/fxbot/PrincipalDashboard";
 import AdminDashboard from "@/components/fxbot/AdminDashboard";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const StudentPortalSkeleton = () => (
+    <div className="min-h-screen bg-background text-slate-900 relative">
+        <Navbar />
+        <div className="container mx-auto px-4 pt-32 pb-20 relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+                <div className="flex items-center gap-4 lg:gap-6 w-full md:w-auto">
+                    <Skeleton className="w-16 h-16 lg:w-20 lg:h-20 rounded-2xl lg:rounded-3xl" />
+                    <div className="flex-1 space-y-3">
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-8 w-48 lg:h-12 lg:w-64" />
+                        <Skeleton className="h-4 w-32" />
+                    </div>
+                </div>
+                <div className="flex gap-3 w-full md:w-auto">
+                    <Skeleton className="h-16 w-full md:w-32 rounded-2xl" />
+                    <Skeleton className="h-16 w-full md:w-32 rounded-2xl" />
+                </div>
+            </div>
+            <div className="flex justify-center mb-10">
+                <Skeleton className="h-14 w-full max-w-xl rounded-2xl" />
+            </div>
+            <Skeleton className="h-[400px] w-full rounded-[2rem]" />
+        </div>
+    </div>
+);
 
 const StudentPortal = () => {
     const [student, setStudent] = useState<Student | null>(null);
@@ -63,6 +90,41 @@ const StudentPortal = () => {
         }
     };
 
+    // Real-time synchronization subscription
+    useEffect(() => {
+        if (!student) return;
+
+        const channel = fxbotSupabase
+            .channel('public:issues')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'issues',
+                    filter: student.role === 'faculty'
+                        ? `department=eq.${student.department}`
+                        : `student_id=eq.${student.id}`
+                },
+                (payload) => {
+                    console.log('Real-time update received:', payload);
+                    fetchIssues(student);
+
+                    if (payload.eventType === 'UPDATE' && payload.new.status !== payload.old.status) {
+                        toast({
+                            title: "Status Synchronized",
+                            description: `Issue ${payload.new.id} transitioned to ${payload.new.status}.`
+                        });
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            fxbotSupabase.removeChannel(channel);
+        };
+    }, [student]);
+
     const handleLogout = async () => {
         try {
             await fxbotAPI.logout();
@@ -74,15 +136,7 @@ const StudentPortal = () => {
     };
 
     if (isLoading || !student) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-background">
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full"
-                />
-            </div>
-        );
+        return <StudentPortalSkeleton />;
     }
 
     const isFaculty = student.role === 'faculty';

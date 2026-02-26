@@ -13,6 +13,7 @@ import MobileNav from "./components/MobileNav";
 import { useEffect, lazy, Suspense } from "react";
 import { useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 // Instant Load (Critical Path)
 import Index from "./pages/Index";
@@ -68,15 +69,43 @@ const queryClient = new QueryClient();
 /**
  * Fallback Component during lazy load transitions
  */
+/**
+ * Fallback Component during lazy load transitions
+ */
 const PageLoader = () => (
-  <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
-    <div className="relative">
-      <div className="h-16 w-16 rounded-full border-4 border-primary/20" />
-      <Loader2 className="absolute inset-0 h-16 w-16 animate-spin text-primary" />
+  <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-950/90 backdrop-blur-2xl">
+    <div className="relative group">
+      {/* Outer Pulse Rings */}
+      <div className="absolute inset-0 -m-4 rounded-full bg-primary/20 blur-2xl animate-pulse group-hover:bg-primary/30 transition-colors" />
+      <div className="absolute inset-0 -m-8 rounded-full bg-primary/5 blur-3xl animate-pulse-glow" />
+
+      {/* Branded Icon Container */}
+      <div className="relative w-24 h-24 lg:w-32 lg:h-32 rounded-[2.5rem] bg-white p-1 overflow-hidden shadow-2xl shadow-primary/20 ring-1 ring-white/20 active:scale-95 transition-all duration-500">
+        <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-primary/5" />
+        <img
+          src={`${import.meta.env.BASE_URL}fxbot-logo.jpg`}
+          alt="FXBOT"
+          className="w-full h-full object-cover rounded-[2.2rem]"
+        />
+
+        {/* Loading Spinner Overlays */}
+        <div className="absolute inset-0 border-t-4 border-primary rounded-full animate-spin" style={{ animationDuration: '0.8s' }} />
+      </div>
     </div>
-    <p className="mt-4 text-xs font-black uppercase tracking-[0.2em] text-muted-foreground animate-pulse">
-      Loading Experience...
-    </p>
+
+    <div className="mt-10 flex flex-col items-center gap-2">
+      <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/90 animate-pulse">
+        Initializing Registry
+      </p>
+      <div className="h-1 w-32 bg-white/5 rounded-full overflow-hidden border border-white/5">
+        <motion.div
+          className="h-full bg-gradient-to-r from-primary to-blue-400"
+          initial={{ width: "0%" }}
+          animate={{ width: "100%" }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+    </div>
   </div>
 );
 
