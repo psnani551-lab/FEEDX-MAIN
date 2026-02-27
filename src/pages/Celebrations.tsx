@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, BookOpen, ArrowLeft, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import Footer from '@/components/Footer';
 
 // PDF pages - these would be images converted from PDF
 // For now, we'll use a document viewer approach
@@ -160,7 +159,7 @@ const Celebrations = () => {
                 </div>
             </main>
 
-            <Footer />
+            
         </div>
     );
 };

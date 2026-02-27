@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Bell, Info, BookOpen, Award, Share2, Download, Clock, X, FileText, Sparkles, TrendingUp, Loader2 } from 'lucide-react';
-import Footer from '@/components/Footer';
 import { noDataIllustration, updatesIllustration } from '@/lib/illustrations';
 import { updatesAPI, notificationsAPI, Update } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
@@ -431,7 +430,7 @@ const Updates = () => {
         )}
       </AnimatePresence>
 
-      <Footer />
+      
     </div>
   );
 }

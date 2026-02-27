@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import Footer from '@/components/Footer';
 import { joinIllustration } from '@/lib/illustrations';
 import { SOCIAL_LINKS } from '@/lib/socialLinks';
 import { MessageCircle, Instagram, Youtube } from 'lucide-react';
@@ -124,7 +123,7 @@ const Join = () => {
         </div>
       </div>
 
-      <Footer />
+      
     </div>
   );
 };

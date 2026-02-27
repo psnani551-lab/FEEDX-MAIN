@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Footer from "@/components/Footer";
 import AboutSection from "@/components/AboutSection";
 import { Button } from "@/components/ui/button";
 
@@ -64,7 +63,7 @@ const About = () => {
         <AboutSection />
       </div>
 
-      <Footer />
+      
     </div>
   );
 };

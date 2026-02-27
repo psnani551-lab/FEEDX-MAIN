@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Footer from "@/components/Footer";
 import { ecetAPI, EcetQuestion } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -80,7 +79,7 @@ export default function Tests() {
                 <main className="flex-1 container mx-auto px-4 pt-24 pb-12 flex items-center justify-center">
                     <p className="text-muted-foreground animate-pulse">Loading amazing tests...</p>
                 </main>
-                <Footer />
+                
             </div>
         );
     }
@@ -211,7 +210,7 @@ export default function Tests() {
                     )}
                 </div>
             </main>
-            <Footer />
+            
         </div>
     );
 }

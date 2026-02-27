@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Heart, Instagram, MessageCircle } from 'lucide-react';
-import Footer from '@/components/Footer';
 import { noDataIllustration, spotlightIllustration } from '@/lib/illustrations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -128,7 +127,7 @@ const Spotlight = () => {
           )}
         </div>
       </div>
-      <Footer />
+      
 
       <Dialog open={!!selectedSpotlight} onOpenChange={(open) => !open && setSelectedSpotlight(null)}>
         <DialogContent className="max-w-3xl bg-background/95 backdrop-blur-xl border-white/10 p-0 overflow-hidden rounded-[32px] shadow-2xl focus:outline-none">

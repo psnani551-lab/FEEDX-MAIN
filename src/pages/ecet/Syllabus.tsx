@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Footer from "@/components/Footer";
 import { ecetAPI, EcetSubject } from "@/lib/api";
 import {
     Accordion,
@@ -91,7 +90,7 @@ export default function Syllabus() {
                     )}
                 </div>
             </main>
-            <Footer />
+            
         </div>
     );
 }

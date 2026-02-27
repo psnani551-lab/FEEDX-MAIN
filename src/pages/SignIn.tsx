@@ -8,7 +8,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import Footer from '@/components/Footer';
 
 // Records every login attempt (success or failure) to the login_logs table
 const recordLoginAttempt = async (email: string, success: boolean) => {
@@ -142,7 +141,7 @@ const SignIn = () => {
           </CardContent>
         </Card>
       </div>
-      <Footer />
+      
     </div>
   );
 };

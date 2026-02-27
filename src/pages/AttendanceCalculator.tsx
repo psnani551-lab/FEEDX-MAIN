@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { Calculator, Calendar, AlertTriangle, CheckCircle, Info, Target, Search, Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import Footer from '@/components/Footer';
 import { attendanceIllustration as attendenceIllustration } from '@/lib/illustrations';
 import { toast } from 'sonner';
 
@@ -427,7 +426,7 @@ const AttendanceCalculator = () => {
           </div>
         </div>
       </div>
-      <Footer />
+      
     </div>
   );
 };

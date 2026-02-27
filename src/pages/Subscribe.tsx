@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
 import Logo from '@/components/Logo';
-import Footer from '@/components/Footer';
 import { subscriptionsAPI } from '@/lib/api';
 
 // Email validation schema
@@ -210,7 +209,7 @@ const Subscribe = () => {
           {/* Removed placeholder metrics */}
         </div>
       </div>
-      <Footer />
+      
     </div>
   );
 };

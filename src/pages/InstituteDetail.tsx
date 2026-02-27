@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -330,7 +329,7 @@ export default function InstituteDetail() {
             <p className="text-muted-foreground">Loading institute details...</p>
           </div>
         </main>
-        <Footer />
+        
       </div>
     );
   }
@@ -350,7 +349,7 @@ export default function InstituteDetail() {
             </Button>
           </div>
         </main>
-        <Footer />
+        
       </div>
     );
   }
@@ -977,7 +976,7 @@ export default function InstituteDetail() {
         </div>
       </main>
 
-      <Footer />
+      
     </div>
   );
 }

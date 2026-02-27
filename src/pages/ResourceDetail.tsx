@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +44,7 @@ export default function ResourceDetail() {
         <main className="flex-1 container mx-auto px-4 py-12 flex items-center justify-center">
           <p className="text-muted-foreground">Loading resource details...</p>
         </main>
-        <Footer />
+        
       </div>
     );
   }
@@ -59,7 +58,7 @@ export default function ResourceDetail() {
             <Button onClick={() => navigate("/resources")}>Back to Resources</Button>
           </div>
         </main>
-        <Footer />
+        
       </div>
     );
   }
@@ -310,7 +309,7 @@ export default function ResourceDetail() {
         </div>
       </main>
 
-      <Footer />
+      
     </div>
   );
 }

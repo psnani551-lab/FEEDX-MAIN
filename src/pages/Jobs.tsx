@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Bell, MapPin, Clock, DollarSign, Building, Search, Filter, BookmarkPlus, ExternalLink } from 'lucide-react';
 import GlassmorphismBackground from '@/components/GlassmorphismBackground';
-import Footer from '@/components/Footer';
 
 const Jobs = () => {
   const jobs = [
@@ -255,7 +254,7 @@ const Jobs = () => {
           </Card>
         </div>
       </div>
-      <Footer />
+      
     </GlassmorphismBackground>
   );
 };

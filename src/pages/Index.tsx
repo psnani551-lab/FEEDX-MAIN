@@ -79,7 +79,7 @@ const Index = () => {
             </div>
 
             <div className="border-t border-white/[0.05] relative z-50">
-              <Footer />
+              
             </div>
             <BackToTop />
           </Suspense>

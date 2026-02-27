@@ -6,7 +6,6 @@ import {
     ExternalLink, Mail, Phone, Globe
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -332,7 +331,7 @@ const IOESPage = () => {
                 </Tabs>
             </main>
 
-            <Footer />
+            
         </div>
     );
 };

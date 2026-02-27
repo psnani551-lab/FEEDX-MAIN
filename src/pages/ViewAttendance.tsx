@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Download, Printer, Calendar, User } from 'lucide-react';
-import Footer from '@/components/Footer';
 import { attendanceIllustration as attendenceIllustration } from '@/lib/illustrations';
 
 const ViewAttendance = () => {
@@ -444,7 +443,7 @@ const ViewAttendance = () => {
           </div>
         </div>
       </div>
-      <Footer />
+      
     </div>
   );
 };

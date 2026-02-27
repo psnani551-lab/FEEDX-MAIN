@@ -8,7 +8,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import Footer from '@/components/Footer';
 
 const GetStarted = () => {
   const [formData, setFormData] = useState({
@@ -186,7 +185,7 @@ const GetStarted = () => {
           </CardContent>
         </Card>
       </div>
-      <Footer />
+      
     </div>
   );
 };

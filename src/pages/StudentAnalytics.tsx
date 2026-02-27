@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/hooks/use-toast";
-import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -811,7 +810,7 @@ const StudentAnalytics = () => {
         </div>
       </div>
 
-      <Footer />
+      
     </div>
   );
 };

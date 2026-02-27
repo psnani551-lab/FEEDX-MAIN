@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ExternalLink, Search, BookOpen, Award, Users, Briefcase, FileText, GraduationCap, ClipboardList, ChevronRight, Loader2 } from 'lucide-react';
-import Footer from '@/components/Footer';
 import { noDataIllustration, resourcesIllustration } from '@/lib/illustrations';
 import { resourcesAPI, Resource as AdminResource } from '@/lib/api';
 
@@ -263,7 +262,7 @@ const Resources = () => {
           </div>
         )}
       </div>
-      <Footer />
+      
     </div>
   );
 };

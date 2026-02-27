@@ -8,7 +8,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Download, Printer, Trophy, Target, Award } from 'lucide-react';
-import Footer from '@/components/Footer';
 
 const ViewResults = () => {
   const [formData, setFormData] = useState({
@@ -336,7 +335,7 @@ const ViewResults = () => {
           </div>
         </div>
       </div>
-      <Footer />
+      
     </div>
   );
 };

@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, ChevronDown, Bot, ExternalLink } from 'lucide-react';
-import Footer from '@/components/Footer';
 import { projectsIllustration } from '@/lib/illustrations';
 import { projectsAPI, Project } from '@/lib/api';
 
@@ -184,7 +183,7 @@ const Projects = () => {
 
         {/* Call to Action (kept minimal for official demo readiness) */}
       </div>
-      <Footer />
+      
     </div>
   );
 };

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Footer from "@/components/Footer";
 import { ecetAPI, EcetPaper } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -95,7 +94,7 @@ export default function Papers() {
                     )}
                 </div>
             </main>
-            <Footer />
+            
         </div>
     );
 }
