@@ -14,7 +14,7 @@ const Footer = () => {
             <Logo size="xl" className="hover:scale-110 transition-transform duration-500" />
             <div>
               <h2 className="text-4xl sm:text-5xl font-black tracking-tighter text-foreground group-hover:text-primary transition-colors mb-2">FEEDX</h2>
-              <p className="text-xs font-bold text-primary uppercase tracking-[0.4em] leading-none italic">Empowering Public Voice</p>
+              <p className="text-xs font-bold text-primary uppercase tracking-[0.4em] leading-none italic">Empowering Students Voice</p>
             </div>
           </Link>
 
