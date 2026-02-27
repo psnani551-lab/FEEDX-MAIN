@@ -442,11 +442,6 @@ All colors MUST be HSL.
   .mobile-touch-area {
     @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
   }
-
-  /* Automatically hide the navbar when Shadcn Dialog locks the page scroll */
-  body[data-scroll-locked] .global-navbar {
-    transform: translateY(-100%);
-  }
 }
 
 @keyframes float {
