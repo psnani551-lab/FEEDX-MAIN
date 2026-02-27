@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Bell, Info, BookOpen, Award, Share2, Download, Clock, X, FileText, Sparkles, TrendingUp } from 'lucide-react';
+import { Bell, Info, BookOpen, Award, Share2, Download, Clock, X, FileText, Sparkles, TrendingUp, Loader2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { noDataIllustration, updatesIllustration } from '@/lib/illustrations';
@@ -177,7 +177,14 @@ const Updates = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Updates List */}
         <div className="max-w-5xl mx-auto space-y-6">
-          {updates.length === 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+              <Loader2 className="w-12 h-12 animate-spin text-primary opacity-50" />
+              <p className="text-sm font-medium text-muted-foreground animate-pulse uppercase tracking-widest">
+                Fetching Latest Updates...
+              </p>
+            </div>
+          ) : updates.length === 0 ? (
             <motion.div
               className="flex flex-col items-center text-center text-muted-foreground space-y-6 py-20"
               initial={{ opacity: 0, y: 20 }}

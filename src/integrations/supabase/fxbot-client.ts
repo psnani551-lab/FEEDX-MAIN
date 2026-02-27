@@ -7,4 +7,15 @@ if (!fxbotSupabaseUrl || !fxbotSupabaseAnonKey) {
     console.warn('FXBOT Supabase URL or Anon Key is missing. FXBOT features will not work until VITE_FXBOT_SUPABASE_URL and VITE_FXBOT_SUPABASE_ANON_KEY are configured in .env');
 }
 
-export const fxbotSupabase = createClient(fxbotSupabaseUrl, fxbotSupabaseAnonKey);
+export const fxbotSupabase = createClient(fxbotSupabaseUrl, fxbotSupabaseAnonKey, {
+    global: {
+        fetch: (url, options) => {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s global timeout
+            return fetch(url, {
+                ...options,
+                signal: controller.signal
+            }).finally(() => clearTimeout(timeoutId));
+        }
+    }
+});

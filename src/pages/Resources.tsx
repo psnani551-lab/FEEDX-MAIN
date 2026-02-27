@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { ExternalLink, Search, BookOpen, Award, Users, Briefcase, FileText, GraduationCap, ClipboardList, ChevronRight } from 'lucide-react';
+import { ExternalLink, Search, BookOpen, Award, Users, Briefcase, FileText, GraduationCap, ClipboardList, ChevronRight, Loader2 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { noDataIllustration, resourcesIllustration } from '@/lib/illustrations';
@@ -15,6 +15,7 @@ const Resources = () => {
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [adminResources, setAdminResources] = useState<AdminResource[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const q = searchParams.get('q');
@@ -28,6 +29,8 @@ const Resources = () => {
         setAdminResources(data);
       } catch (error) {
         console.error('Failed to fetch admin resources:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchAdminResources();
@@ -142,84 +145,95 @@ const Resources = () => {
 
         {/* Resources Grid */}
         <div className="space-y-16">
-          {/* Internal / Interactive Resources */}
-          {filteredInternalResources.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-8">ECET Interactive Portal</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredInternalResources.map((resource, index) => (
-                  <Card
-                    key={resource.id}
-                    className="border border-border transition-all duration-300 animate-fade-in hover:shadow-md cursor-pointer group"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                    onClick={() => {
-                      if ('isInternal' in resource && resource.isInternal) {
-                        navigate(resource.href);
-                      } else {
-                        window.open(resource.href, '_blank');
-                      }
-                    }}
-                  >
-                    <CardHeader>
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge className="bg-gradient-brand text-white text-xs px-3">
-                          {'type' in resource ? resource.type : 'Resource'}
-                        </Badge>
-                        <div className="text-primary opacity-50 group-hover:opacity-100 transition-opacity">
-                          {'icon' in resource ? resource.icon : <FileText className="w-5 h-5" />}
-                        </div>
-                      </div>
-                      <CardTitle className="text-lg">{resource.title}</CardTitle>
-                      <CardDescription className="line-clamp-2">{resource.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button className="w-full bg-gradient-brand hover:opacity-90 transition-smooth">
-                        {'isInternal' in resource && resource.isInternal ? "Open Interactive" : "Visit Link"}
-                        {'isInternal' in resource && resource.isInternal ? <ChevronRight className="w-4 h-4 ml-2" /> : <ExternalLink className="w-4 h-4 ml-2" />}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+              <Loader2 className="w-12 h-12 animate-spin text-primary opacity-50" />
+              <p className="text-sm font-medium text-muted-foreground animate-pulse uppercase tracking-widest">
+                Accessing Resource Registry...
+              </p>
             </div>
-          )}
+          ) : (
+            <>
+              {/* Internal / Interactive Resources */}
+              {filteredInternalResources.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-8">ECET Interactive Portal</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredInternalResources.map((resource, index) => (
+                      <Card
+                        key={resource.id}
+                        className="border border-border transition-all duration-300 animate-fade-in hover:shadow-md cursor-pointer group"
+                        style={{ animationDelay: `${index * 0.1}s` }}
+                        onClick={() => {
+                          if ('isInternal' in resource && resource.isInternal) {
+                            navigate(resource.href);
+                          } else {
+                            window.open(resource.href, '_blank');
+                          }
+                        }}
+                      >
+                        <CardHeader>
+                          <div className="flex items-center justify-between mb-2">
+                            <Badge className="bg-gradient-brand text-white text-xs px-3">
+                              {'type' in resource ? resource.type : 'Resource'}
+                            </Badge>
+                            <div className="text-primary opacity-50 group-hover:opacity-100 transition-opacity">
+                              {'icon' in resource ? resource.icon : <FileText className="w-5 h-5" />}
+                            </div>
+                          </div>
+                          <CardTitle className="text-lg">{resource.title}</CardTitle>
+                          <CardDescription className="line-clamp-2">{resource.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <Button className="w-full bg-gradient-brand hover:opacity-90 transition-smooth">
+                            {'isInternal' in resource && resource.isInternal ? "Open Interactive" : "Visit Link"}
+                            {'isInternal' in resource && resource.isInternal ? <ChevronRight className="w-4 h-4 ml-2" /> : <ExternalLink className="w-4 h-4 ml-2" />}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Admin Resources */}
-          {filteredAdminResources.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold mb-8">Subject-wise Materials</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {(query.trim() ? filteredAdminResources : filteredAdminResources.slice(0, 9)).map((resource, index) => (
-                  <Card key={resource.id} className="border border-border transition-all duration-300 animate-fade-in hover:shadow-md cursor-pointer group" style={{ animationDelay: `${index * 0.1}s` }} onClick={() => navigate(`/resources/${resource.id}`)}>
-                    <CardHeader>
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="secondary" className="text-xs px-3">
-                          {resource.tags[0] || 'Resource'}
-                        </Badge>
-                        <div className="text-primary opacity-50 group-hover:opacity-100 transition-opacity">
-                          <BookOpen className="w-5 h-5" />
-                        </div>
-                      </div>
-                      <CardTitle className="text-lg">{resource.title}</CardTitle>
-                      <CardDescription className="line-clamp-2">{resource.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button variant="outline" className="w-full hover:bg-primary hover:text-primary-foreground transition-smooth">
-                        View Details
-                        <ChevronRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
+              {/* Admin Resources */}
+              {filteredAdminResources.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold mb-8">Subject-wise Materials</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {(query.trim() ? filteredAdminResources : filteredAdminResources.slice(0, 9)).map((resource, index) => (
+                      <Card key={resource.id} className="border border-border transition-all duration-300 animate-fade-in hover:shadow-md cursor-pointer group" style={{ animationDelay: `${index * 0.1}s` }} onClick={() => navigate(`/resources/${resource.id}`)}>
+                        <CardHeader>
+                          <div className="flex items-center justify-between mb-2">
+                            <Badge variant="secondary" className="text-xs px-3">
+                              {resource.tags[0] || 'Resource'}
+                            </Badge>
+                            <div className="text-primary opacity-50 group-hover:opacity-100 transition-opacity">
+                              <BookOpen className="w-5 h-5" />
+                            </div>
+                          </div>
+                          <CardTitle className="text-lg">{resource.title}</CardTitle>
+                          <CardDescription className="line-clamp-2">{resource.description}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <Button variant="outline" className="w-full hover:bg-primary hover:text-primary-foreground transition-smooth">
+                            View Details
+                            <ChevronRight className="w-4 h-4 ml-2" />
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {filteredAdminResources.length === 0 && filteredInternalResources.length === 0 && (
-            <div className="col-span-full flex flex-col items-center text-center text-muted-foreground space-y-4 py-12">
-              <img src={noDataIllustration} alt="No results" className="w-full max-w-md" />
-              <p>No resources found matching "{query}"</p>
-            </div>
+              {filteredAdminResources.length === 0 && filteredInternalResources.length === 0 && (
+                <div className="col-span-full flex flex-col items-center text-center text-muted-foreground space-y-4 py-12">
+                  <img src={noDataIllustration} alt="No results" className="w-full max-w-md" />
+                  <p>No resources found matching "{query}"</p>
+                </div>
+              )}
+            </>
           )}
         </div>
 

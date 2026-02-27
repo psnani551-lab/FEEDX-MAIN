@@ -2,32 +2,7 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { fxbotSupabase } from "@/integrations/supabase/fxbot-client";
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-/**
- * Fallback helper to attempt a Supabase operation and fallback to local Express API if it fails.
- */
-async function withFallback<T>(supabaseOp: () => Promise<T>, localEndpoint: string): Promise<T> {
-  try {
-    const result = await supabaseOp();
-    if (result === null || (Array.isArray(result) && result.length === 0)) {
-      // If Supabase returned empty, maybe try local anyway to be safe? 
-      // For now, let's treat a successful empty response as truth.
-      return result;
-    }
-    return result;
-  } catch (error) {
-    console.warn(`Supabase failed for ${localEndpoint}, falling back to local Express:`, error);
-    try {
-      const response = await fetch(`${API_BASE}${localEndpoint}`);
-      if (!response.ok) throw new Error(`Local API failed: ${response.statusText}`);
-      return await response.json();
-    } catch (localError) {
-      console.error(`Both Supabase and Local API failed for ${localEndpoint}:`, localError);
-      throw error; // Throw the original Supabase error if local also fails
-    }
-  }
-}
 
 // Types
 export interface Notification {
@@ -110,67 +85,32 @@ export interface Project {
 
 export const projectsAPI = {
   getAll: async (): Promise<Project[]> => {
-    return withFallback(async () => {
-      const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      return data.map(p => ({ ...p, timestamp: p.created_at }));
-    }, '/api/projects');
+    const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.error('Supabase fetch error for projects:', error);
+      throw error;
+    }
+    return data.map(p => ({ ...p, timestamp: p.created_at }));
   },
   create: async (data: Omit<Project, 'id' | 'timestamp'>): Promise<Project> => {
-    try {
-      const payload = { ...data, project_url: data.projectUrl };
-      delete payload.projectUrl;
-      const { data: record, error } = await supabase.from('projects').insert([payload]).select().single();
-      if (error) throw error;
-      return { ...record, timestamp: record.created_at, projectUrl: record.project_url };
-    } catch (e) {
-      console.warn("Supabase insert failed, trying local fallback", e);
-      const res = await fetch(`${API_BASE}/api/admin/projects`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify(data)
-      });
-      if (!res.ok) throw new Error("Local API fallback failed");
-      return res.json();
-    }
+    const payload = { ...data, project_url: data.projectUrl };
+    delete (payload as any).projectUrl;
+    const { data: record, error } = await supabase.from('projects').insert([payload]).select().single();
+    if (error) throw error;
+    return { ...record, timestamp: record.created_at, projectUrl: record.project_url };
   },
   delete: async (id: string): Promise<void> => {
-    try {
-      const { error } = await supabase.from('projects').delete().eq('id', id);
-      if (error) throw error;
-    } catch (e) {
-      console.warn("Supabase delete failed, trying local fallback", e);
-      const res = await fetch(`${API_BASE}/api/admin/projects/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
-      });
-      if (!res.ok) throw new Error("Local API fallback failed");
-    }
+    const { error } = await supabase.from('projects').delete().eq('id', id);
+    if (error) throw error;
   },
   update: async (id: string, data: Partial<Project>): Promise<void> => {
-    try {
-      const payload: any = { ...data };
-      if (payload.projectUrl !== undefined) {
-        payload.project_url = payload.projectUrl;
-        delete payload.projectUrl;
-      }
-      const { error } = await supabase.from('projects').update(payload).eq('id', id);
-      if (error) throw error;
-    } catch (e) {
-      console.warn("Supabase update failed, trying local fallback", e);
-      const res = await fetch(`${API_BASE}/api/admin/projects/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify(data)
-      });
-      if (!res.ok) throw new Error("Local API fallback failed");
+    const payload: any = { ...data };
+    if (payload.projectUrl !== undefined) {
+      payload.project_url = payload.projectUrl;
+      delete payload.projectUrl;
     }
+    const { error } = await supabase.from('projects').update(payload).eq('id', id);
+    if (error) throw error;
   },
 };
 
@@ -183,15 +123,16 @@ export interface GalleryImage {
 // Notifications API
 export const notificationsAPI = {
   getAll: async (): Promise<Notification[]> => {
-    return withFallback(async () => {
-      const { data, error } = await supabase
-        .from('notifications')
-        .select('*')
-        .order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data.map(n => ({ ...n, timestamp: n.created_at }));
-    }, '/api/notifications');
+    if (error) {
+      console.error('Supabase fetch error for notifications:', error);
+      throw error;
+    }
+    return data.map(n => ({ ...n, timestamp: n.created_at }));
   },
 
   create: async (data: Omit<Notification, 'id' | 'timestamp'>): Promise<Notification> => {
@@ -233,15 +174,16 @@ export const notificationsAPI = {
 // Updates API
 export const updatesAPI = {
   getAll: async (): Promise<Update[]> => {
-    return withFallback(async () => {
-      const { data, error } = await supabase
-        .from('updates')
-        .select('*')
-        .order('created_at', { ascending: false });
+    const { data, error } = await supabase
+      .from('updates')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data.map(u => ({ ...u, timestamp: u.created_at }));
-    }, '/api/updates');
+    if (error) {
+      console.error('Supabase fetch error for updates:', error);
+      throw error;
+    }
+    return data.map(u => ({ ...u, timestamp: u.created_at }));
   },
 
   create: async (data: Omit<Update, 'id' | 'timestamp'>): Promise<Update> => {
@@ -282,14 +224,15 @@ export const updatesAPI = {
 // Resources API
 export const resourcesAPI = {
   getAll: async (): Promise<Resource[]> => {
-    return withFallback(async () => {
-      const { data, error } = await supabase
-        .from('resources')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data.map(r => ({ ...r, timestamp: r.created_at }));
-    }, '/api/resources');
+    const { data, error } = await supabase
+      .from('resources')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Supabase fetch error for resources:', error);
+      throw error;
+    }
+    return data.map(r => ({ ...r, timestamp: r.created_at }));
   },
 
   getById: async (id: string): Promise<Resource> => {
@@ -351,22 +294,23 @@ export const resourcesAPI = {
 // Events API
 export const eventsAPI = {
   getAll: async (): Promise<Event[]> => {
-    return withFallback(async () => {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data.map(e => ({
-        ...e,
-        timestamp: e.created_at,
-        date: e.event_date || e.date,
-        time: e.event_time || e.time,
-        registerLink: e.register_link || e.registerLink,
-        isComingSoon: e.is_coming_soon || e.isComingSoon,
-        adminStatus: e.admin_status || e.adminStatus
-      }));
-    }, '/api/events');
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Supabase fetch error for events:', error);
+      throw error;
+    }
+    return data.map(e => ({
+      ...e,
+      timestamp: e.created_at,
+      date: e.event_date || e.date,
+      time: e.event_time || e.time,
+      registerLink: e.register_link || e.registerLink,
+      isComingSoon: e.is_coming_soon || e.isComingSoon,
+      adminStatus: e.admin_status || e.adminStatus
+    }));
   },
 
   create: async (data: any): Promise<Event> => {
@@ -440,11 +384,12 @@ export const eventsAPI = {
 // Spotlight API
 export const spotlightAPI = {
   getAll: async (): Promise<Spotlight[]> => {
-    return withFallback(async () => {
-      const { data, error } = await supabase.from('spotlight').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      return data.map(s => ({ ...s, timestamp: s.created_at }));
-    }, '/api/spotlight');
+    const { data, error } = await supabase.from('spotlight').select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.error('Supabase fetch error for spotlight:', error);
+      throw error;
+    }
+    return data.map(s => ({ ...s, timestamp: s.created_at }));
   },
 
   create: async (data: any): Promise<Spotlight> => {
@@ -472,11 +417,12 @@ export const spotlightAPI = {
 // Testimonials API
 export const testimonialsAPI = {
   getAll: async (): Promise<Testimonial[]> => {
-    return withFallback(async () => {
-      const { data, error } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      return data.map(t => ({ ...t, timestamp: t.created_at }));
-    }, '/api/testimonials');
+    const { data, error } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.error('Supabase fetch error for testimonials:', error);
+      throw error;
+    }
+    return data.map(t => ({ ...t, timestamp: t.created_at }));
   },
 
   create: async (data: any): Promise<Testimonial> => {
@@ -504,11 +450,12 @@ export const testimonialsAPI = {
 // Gallery API
 export const galleryAPI = {
   getAll: async (): Promise<GalleryImage[]> => {
-    return withFallback(async () => {
-      const { data, error } = await supabase.from('gallery').select('*').order('display_order', { ascending: true });
-      if (error) throw error;
-      return data ? data.map(img => ({ id: img.id, url: img.url, order: img.display_order })) : [];
-    }, '/api/gallery');
+    const { data, error } = await supabase.from('gallery').select('*').order('display_order', { ascending: true });
+    if (error) {
+      console.error('Supabase fetch error for gallery:', error);
+      throw error;
+    }
+    return data ? data.map(img => ({ id: img.id, url: img.url, order: img.display_order })) : [];
   },
 
   create: async (image: { url: string; order: number }) => {
@@ -606,11 +553,12 @@ export interface Institute {
 
 export const institutesAPI = {
   getAll: async (): Promise<Institute[]> => {
-    return withFallback(async () => {
-      const { data, error } = await supabase.from('institutes').select('*');
-      if (error) throw error;
-      return data || [];
-    }, '/api/institutes');
+    const { data, error } = await supabase.from('institutes').select('*');
+    if (error) {
+      console.error('Supabase fetch error for institutes:', error);
+      throw error;
+    }
+    return data || [];
   },
   getByCode: async (code: string): Promise<Institute | null> => {
     const { data, error } = await supabase.from('institutes').select('*').eq('code', code).single();
