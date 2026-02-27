@@ -8,7 +8,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Download, Printer, Trophy, Target, Award } from 'lucide-react';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const ViewResults = () => {
@@ -118,7 +117,6 @@ const ViewResults = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       <div className="py-8 pt-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto">

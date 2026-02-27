@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { ExternalLink, Search, BookOpen, Award, Users, Briefcase, FileText, GraduationCap, ClipboardList, ChevronRight, Loader2 } from 'lucide-react';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { noDataIllustration, resourcesIllustration } from '@/lib/illustrations';
 import { resourcesAPI, Resource as AdminResource } from '@/lib/api';
@@ -105,7 +104,6 @@ const Resources = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       {/* Header */}
       <div className="relative border-b border-border bg-background pt-24 pb-10 overflow-hidden">
         <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 opacity-80 blur-2xl" />

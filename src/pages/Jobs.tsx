@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Bell, MapPin, Clock, DollarSign, Building, Search, Filter, BookmarkPlus, ExternalLink } from 'lucide-react';
 import GlassmorphismBackground from '@/components/GlassmorphismBackground';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const Jobs = () => {
@@ -108,7 +107,6 @@ const Jobs = () => {
 
   return (
     <GlassmorphismBackground intensity="medium" className="bg-gradient-mesh">
-      <Navbar />
       {/* Header */}
       <div className="bg-gradient-to-r from-primary/10 via-background to-secondary/10 py-16 pt-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">

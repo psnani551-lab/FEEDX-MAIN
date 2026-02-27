@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Bell, Info, BookOpen, Award, Share2, Download, Clock, X, FileText, Sparkles, TrendingUp, Loader2 } from 'lucide-react';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { noDataIllustration, updatesIllustration } from '@/lib/illustrations';
 import { updatesAPI, notificationsAPI, Update } from '@/lib/api';
@@ -117,7 +116,6 @@ const Updates = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
 
       {/* Premium Header with Gradient */}
       <div className="relative border-b border-white/5 bg-gradient-to-br from-background via-background to-primary/5 pt-24 pb-16 overflow-hidden">

@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, BookOpen, ArrowLeft, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 // PDF pages - these would be images converted from PDF
@@ -82,7 +81,6 @@ const Celebrations = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-            <Navbar />
 
             <main className="pt-20 pb-16">
                 <div className="container mx-auto px-4 sm:px-6 lg:px-8">

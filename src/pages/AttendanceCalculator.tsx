@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { Calculator, Calendar, AlertTriangle, CheckCircle, Info, Target, Search, Loader2 } from 'lucide-react';
 import { useState } from 'react';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { attendanceIllustration as attendenceIllustration } from '@/lib/illustrations';
 import { toast } from 'sonner';
@@ -165,7 +164,6 @@ const AttendanceCalculator = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       {/* Header */}
       <div className="relative border-b border-border bg-background pt-24 pb-10 overflow-hidden">
         <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 opacity-80 blur-2xl" />

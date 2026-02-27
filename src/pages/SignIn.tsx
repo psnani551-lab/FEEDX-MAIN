@@ -8,7 +8,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 // Records every login attempt (success or failure) to the login_logs table
@@ -71,7 +70,6 @@ const SignIn = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       <div className="flex items-center justify-center px-4 py-8 pt-20">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">

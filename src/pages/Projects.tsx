@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, ChevronDown, Bot, ExternalLink } from 'lucide-react';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { projectsIllustration } from '@/lib/illustrations';
 import { projectsAPI, Project } from '@/lib/api';
@@ -55,7 +54,6 @@ const Projects = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       {/* Header */}
       <div className="border-b border-border bg-background pt-24 pb-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center gap-6">

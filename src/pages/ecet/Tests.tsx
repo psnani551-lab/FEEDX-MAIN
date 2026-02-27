@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ecetAPI, EcetQuestion } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -78,7 +77,6 @@ export default function Tests() {
     if (isLoading) {
         return (
             <div className="min-h-screen flex flex-col bg-background">
-                <Navbar />
                 <main className="flex-1 container mx-auto px-4 pt-24 pb-12 flex items-center justify-center">
                     <p className="text-muted-foreground animate-pulse">Loading amazing tests...</p>
                 </main>
@@ -89,7 +87,6 @@ export default function Tests() {
 
     return (
         <div className="min-h-screen flex flex-col bg-background">
-            <Navbar />
             <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
                 <div className="max-w-3xl mx-auto">
                     {quizState === "selection" && (

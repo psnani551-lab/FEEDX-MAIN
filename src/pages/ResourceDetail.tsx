@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -43,7 +42,6 @@ export default function ResourceDetail() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
-        <Navbar />
         <main className="flex-1 container mx-auto px-4 py-12 flex items-center justify-center">
           <p className="text-muted-foreground">Loading resource details...</p>
         </main>
@@ -55,7 +53,6 @@ export default function ResourceDetail() {
   if (!resource) {
     return (
       <div className="min-h-screen flex flex-col bg-background">
-        <Navbar />
         <main className="flex-1 container mx-auto px-4 py-12">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-4">Resource Not Found</h1>
@@ -170,7 +167,6 @@ export default function ResourceDetail() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navbar />
 
       <main className="flex-1 container mx-auto px-4 py-12">
         <Button

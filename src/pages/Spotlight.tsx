@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Heart, Instagram, MessageCircle } from 'lucide-react';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { noDataIllustration, spotlightIllustration } from '@/lib/illustrations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,7 +37,6 @@ const Spotlight = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
 
       {/* Header */}
       <div className="relative border-b border-border bg-background pt-16 pb-8 sm:pt-24 sm:pb-10 overflow-hidden">

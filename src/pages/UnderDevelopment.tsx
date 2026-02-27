@@ -1,12 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Construction, Rocket, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Navbar from '@/components/Navbar';
 
 const UnderDevelopment = () => {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <Navbar />
       {/* Animated Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10" />
       <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-float" />

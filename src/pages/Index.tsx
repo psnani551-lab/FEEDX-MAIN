@@ -1,5 +1,4 @@
 import { lazy, Suspense } from 'react';
-import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
 import SectionDivider from '@/components/SectionDivider';
 import ErrorBoundary from '@/components/ErrorBoundary';
@@ -30,7 +29,6 @@ const SectionLoader = () => (
 const Index = () => {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/30 selection:text-white">
-      <Navbar />
       <main className="space-y-0">
         <HeroSection />
 

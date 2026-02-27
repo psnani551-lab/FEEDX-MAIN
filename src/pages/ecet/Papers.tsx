@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { ecetAPI, EcetPaper } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -31,7 +30,6 @@ export default function Papers() {
 
     return (
         <div className="min-h-screen flex flex-col bg-background">
-            <Navbar />
             <main className="flex-1 container mx-auto px-4 pt-24 pb-12">
                 <div className="max-w-6xl mx-auto">
                     <header className="mb-12 text-center">

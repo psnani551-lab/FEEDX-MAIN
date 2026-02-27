@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Download, Printer, Calendar, User } from 'lucide-react';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { attendanceIllustration as attendenceIllustration } from '@/lib/illustrations';
 
@@ -363,7 +362,6 @@ const ViewAttendance = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
       <div className="relative border-b border-border bg-background pt-24 pb-10 overflow-hidden">
         <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 opacity-80 blur-2xl" />
         <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center gap-8">

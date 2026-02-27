@@ -6,7 +6,6 @@ import {
     ExternalLink, Mail, Phone, Globe
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -37,7 +36,6 @@ const IOESPage = () => {
 
     return (
         <div className="min-h-screen bg-background">
-            <Navbar />
 
             {/* Banner Section */}
             <div className="relative">

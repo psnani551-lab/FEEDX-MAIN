@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -109,7 +108,6 @@ const Notifications = () => {
         keywords="feedx notifications, campus alerts, student notifications, academic announcements"
         url="/notifications"
       />
-      <Navbar />
 
       {/* Shiksha-inspired hero section */}
       <div className="relative overflow-hidden pt-24 pb-16">

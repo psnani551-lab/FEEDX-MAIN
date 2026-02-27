@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { joinIllustration } from '@/lib/illustrations';
 import { SOCIAL_LINKS } from '@/lib/socialLinks';
@@ -33,7 +32,6 @@ const Join = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <Navbar />
 
       {/* Background effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-secondary/10" />

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -161,7 +160,6 @@ const InstituteProfile = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
 
       <header className="relative border-b border-border bg-background pt-16 pb-10 sm:pt-24 sm:pb-12 overflow-hidden">
         <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/10 opacity-80 blur-2xl" />

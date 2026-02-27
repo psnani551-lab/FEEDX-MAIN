@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +22,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const StudentPortalSkeleton = () => (
     <div className="min-h-screen bg-background text-slate-900 relative">
-        <Navbar />
         <div className="container mx-auto px-4 pt-32 pb-20 relative z-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
                 <div className="flex items-center gap-4 lg:gap-6 w-full md:w-auto">
@@ -149,7 +147,6 @@ const StudentPortal = () => {
             <div className="absolute top-[10%] right-[-5%] w-[30%] h-[30%] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute bottom-[10%] left-[-5%] w-[30%] h-[30%] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
 
-            <Navbar />
 
             <div className="container mx-auto px-4 pt-32 pb-20 relative z-10">
                 {/* Header Section */}

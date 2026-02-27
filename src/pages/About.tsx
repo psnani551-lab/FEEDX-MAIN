@@ -1,7 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AboutSection from "@/components/AboutSection";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,6 @@ const About = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
 
       {/* Premium Hero Section */}
       <div className="relative pt-32 pb-20 overflow-hidden border-b border-white/[0.05]">
