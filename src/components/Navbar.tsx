@@ -9,30 +9,6 @@ import Logo from '@/components/Logo';
 const Navbar = () => {
   const { isAuthenticated, user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Monitor for global modals/popups (Shadcn Dialog uses data-scroll-locked / pointer-events: none)
-  useEffect(() => {
-    const checkModalState = () => {
-      const isLocked = document.body.hasAttribute('data-scroll-locked') || document.body.style.pointerEvents === 'none';
-      setIsModalOpen(isLocked);
-    };
-
-    // Initial check
-    checkModalState();
-
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === 'attributes' && (mutation.attributeName === 'data-scroll-locked' || mutation.attributeName === 'style')) {
-          checkModalState();
-        }
-      });
-    });
-
-    observer.observe(document.body, { attributes: true, attributeFilter: ['data-scroll-locked', 'style'] });
-
-    return () => observer.disconnect();
-  }, []);
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -49,7 +25,7 @@ const Navbar = () => {
   return (
     <>
       {/* ── NAVBAR BAR ─────────────────────────────────────────────────────── */}
-      <nav className={`fixed top-0 left-0 right-0 z-[90] border-b border-white/[0.08] bg-background/80 backdrop-blur-3xl shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isModalOpen ? '-translate-y-full' : 'translate-y-0'}`}>
+      <nav className="global-navbar fixed top-0 left-0 right-0 z-[90] border-b border-white/[0.08] bg-background/80 backdrop-blur-3xl shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]">
         <div className="mx-auto w-[95%] max-w-[1440px]">
           <div className="flex items-center justify-between h-16 sm:h-20">
 
