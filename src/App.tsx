@@ -73,9 +73,9 @@ const PageLoader = () => <></>;
 
 const PageTransition = ({ children }: { children: React.ReactNode }) => (
   <motion.div
-    initial={{ opacity: 0, y: 15 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -15 }}
+    initial={{ opacity: 0, x: 25 }}
+    animate={{ opacity: 1, x: 0 }}
+    exit={{ opacity: 0, x: -25 }}
     transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
     className="w-full h-full"
   >
