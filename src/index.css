@@ -442,6 +442,11 @@ All colors MUST be HSL.
   .mobile-touch-area {
     @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
   }
+
+  /* Hidden when Shadcn Dialog is explicitly mounted */
+  body.modal-open .global-navbar {
+    transform: translateY(-100%) !important;
+  }
 }
 
 @keyframes float {
