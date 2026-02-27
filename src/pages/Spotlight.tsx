@@ -133,42 +133,46 @@ const Spotlight = () => {
       <Footer />
 
       <Dialog open={!!selectedSpotlight} onOpenChange={(open) => !open && setSelectedSpotlight(null)}>
-        <DialogContent className="max-w-3xl w-[95vw] h-fit max-h-[90vh] flex flex-col p-0 border-none overflow-hidden bg-background/95 backdrop-blur-xl">
+        <DialogContent className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 border-none overflow-hidden bg-background/95 backdrop-blur-xl">
           {selectedSpotlight && (
-            <div className="flex flex-col h-full max-h-[90vh] overflow-y-auto custom-scrollbar">
-              <div className="p-6 sm:p-8">
-                <DialogHeader className="mb-6">
-                  <DialogTitle className="text-2xl sm:text-3xl font-bold text-gradient leading-tight">
+            <div className="flex flex-col h-full w-full">
+              <div className="p-5 sm:p-6 flex flex-col h-full min-h-0">
+                <DialogHeader className="mb-4 flex-none">
+                  <DialogTitle className="text-xl sm:text-2xl font-bold text-gradient leading-tight">
                     {selectedSpotlight.title}
                   </DialogTitle>
-                  <DialogDescription className="text-muted-foreground flex items-center gap-2 mt-2">
+                  <DialogDescription className="text-muted-foreground flex items-center gap-2 mt-1 text-xs">
                     <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
                     Spotlight Moment
                   </DialogDescription>
                 </DialogHeader>
 
-                <div className="space-y-8">
-                  {/* Image Gallery */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-5">
+                  {/* Left: Image Gallery */}
+                  <div className="w-full md:w-5/12 flex-none flex flex-col gap-3 h-full">
                     {selectedSpotlight.images.map((img, idx) => (
-                      <div key={idx} className="relative aspect-video rounded-2xl overflow-hidden border border-border/50 group cursor-zoom-in bg-muted/20">
+                      <div key={idx} className="relative w-full flex-1 rounded-xl overflow-hidden border border-border/50 group cursor-zoom-in bg-muted/20">
                         <img
-                          src={img}
+                          src={getImageUrl(img)}
                           alt={`${selectedSpotlight.title} ${idx + 1}`}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                          onClick={() => window.open(img, '_blank')}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          onClick={() => window.open(getImageUrl(img), '_blank')}
                         />
                         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <p className="text-white text-xs font-medium bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">Click to Expand</p>
+                          <p className="text-white text-[10px] font-bold tracking-widest uppercase bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm">Click to Expand</p>
                         </div>
                       </div>
                     ))}
                   </div>
 
-                  {/* Description Section */}
-                  <div className="relative">
-                    <div className="absolute -left-4 top-0 bottom-0 w-1 bg-gradient-to-b from-primary/50 to-transparent rounded-full" />
-                    <div className="prose prose-invert max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                  {/* Right: Description Section */}
+                  <div className="w-full md:w-7/12 flex flex-col min-h-0 relative">
+                    <div className="absolute -left-2 sm:-left-4 top-0 bottom-0 w-[2px] bg-gradient-to-b from-primary/30 to-transparent rounded-full hidden md:block" />
+                    <div className="prose prose-sm prose-invert max-w-none text-muted-foreground leading-relaxed whitespace-pre-wrap overflow-hidden h-full flex flex-col text-xs sm:text-sm pl-0 md:pl-2">
+                      <style>{`
+                         .prose p { margin-top: 0; margin-bottom: 0.75em; }
+                         .prose h1, .prose h2, .prose h3 { margin-top: 0.5em; margin-bottom: 0.5em; font-size: 1.1em; }
+                       `}</style>
                       <MarkdownRenderer content={selectedSpotlight.description || '*No description available.*'} />
                     </div>
                   </div>
