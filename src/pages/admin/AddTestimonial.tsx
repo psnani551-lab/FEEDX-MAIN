@@ -321,6 +321,16 @@ export default function AddTestimonial() {
                   onStatusToggle={handleStatusToggle}
                   onBulkStatusToggle={handleBulkStatusToggle}
                   searchPlaceholder="Search testimonies..."
+                  filters={[
+                    {
+                      key: 'status',
+                      label: 'Visibility',
+                      options: [
+                        { label: 'Published', value: 'published' },
+                        { label: 'Draft', value: 'draft' }
+                      ]
+                    }
+                  ]}
                 />
               </CardContent>
             </Card>

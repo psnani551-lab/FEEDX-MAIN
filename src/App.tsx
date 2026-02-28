@@ -8,61 +8,64 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SmoothScroll } from "./components/SmoothScroll";
 import AnniversaryPopup from "./components/AnniversaryPopup";
 import MobileNav from "./components/MobileNav";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 // Core Layout & Hooks
-import { useEffect, lazy, Suspense } from "react";
+import { useEffect, Suspense, lazy } from "react";
 import { useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { lazyPreload } from "./lib/lazyPreload";
 
 // Instant Load (Critical Path)
 import Index from "./pages/Index";
 
-// Lazy Loaded Pages
-const About = lazy(() => import("./pages/About"));
-const Updates = lazy(() => import("./pages/Updates"));
-const Projects = lazy(() => import("./pages/Projects"));
-const Resources = lazy(() => import("./pages/Resources"));
-const Notifications = lazy(() => import("./pages/Notifications"));
-const ResourceDetail = lazy(() => import("./pages/ResourceDetail"));
-const InstituteProfile = lazy(() => import("./pages/InstituteProfile"));
-const InstituteDetail = lazy(() => import("./pages/InstituteDetail"));
-const AttendanceCalculator = lazy(() => import("./pages/AttendanceCalculator"));
-const StudentAnalytics = lazy(() => import("./pages/StudentAnalytics"));
-const Spotlight = lazy(() => import("./pages/Spotlight"));
-const Celebrations = lazy(() => import("./pages/Celebrations"));
-const IOESPage = lazy(() => import("./pages/IOESPage"));
-const ECETSyllabus = lazy(() => import("./pages/ecet/Syllabus"));
-const ECETTests = lazy(() => import("./pages/ecet/Tests"));
-const ECETPapers = lazy(() => import("./pages/ecet/Papers"));
-const Join = lazy(() => import("./pages/Join"));
-const Subscribe = lazy(() => import("./pages/Subscribe"));
-const SignIn = lazy(() => import("./pages/SignIn"));
-const GetStarted = lazy(() => import("./pages/GetStarted"));
-const ViewAttendance = lazy(() => import("./pages/ViewAttendance"));
-const ViewResults = lazy(() => import("./pages/ViewResults"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const UnderDevelopment = lazy(() => import("./pages/UnderDevelopment"));
+// Lazy Loaded Pages with Preload Support
+export const About = lazyPreload(() => import("./pages/About"));
+export const Updates = lazyPreload(() => import("./pages/Updates"));
+export const Projects = lazyPreload(() => import("./pages/Projects"));
+export const Resources = lazyPreload(() => import("./pages/Resources"));
+export const Notifications = lazyPreload(() => import("./pages/Notifications"));
+export const ResourceDetail = lazyPreload(() => import("./pages/ResourceDetail"));
+export const InstituteProfile = lazyPreload(() => import("./pages/InstituteProfile"));
+export const InstituteDetail = lazyPreload(() => import("./pages/InstituteDetail"));
+export const AttendanceCalculator = lazyPreload(() => import("./pages/AttendanceCalculator"));
+export const StudentAnalytics = lazyPreload(() => import("./pages/StudentAnalytics"));
+export const Spotlight = lazyPreload(() => import("./pages/Spotlight"));
+export const Celebrations = lazyPreload(() => import("./pages/Celebrations"));
+export const IOESPage = lazyPreload(() => import("./pages/IOESPage"));
+export const ECETSyllabus = lazyPreload(() => import("./pages/ecet/Syllabus"));
+export const ECETTests = lazyPreload(() => import("./pages/ecet/Tests"));
+export const ECETPapers = lazyPreload(() => import("./pages/ecet/Papers"));
+export const Join = lazyPreload(() => import("./pages/Join"));
+export const Subscribe = lazyPreload(() => import("./pages/Subscribe"));
+export const SignIn = lazyPreload(() => import("./pages/SignIn"));
+export const GetStarted = lazyPreload(() => import("./pages/GetStarted"));
+export const ViewAttendance = lazyPreload(() => import("./pages/ViewAttendance"));
+export const ViewResults = lazyPreload(() => import("./pages/ViewResults"));
+export const NotFound = lazyPreload(() => import("./pages/NotFound"));
+export const UnderDevelopment = lazyPreload(() => import("./pages/UnderDevelopment"));
 
-// Admin - Lazy
-const AdminPanel = lazy(() => import("./pages/AdminPanel"));
-const AdminLogin = lazy(() => import("./pages/AdminLogin"));
-const AddNotification = lazy(() => import("./pages/admin/AddNotification"));
-const AddUpdate = lazy(() => import("./pages/admin/AddUpdate"));
-const AddResource = lazy(() => import("./pages/admin/AddResource"));
-const AddEvent = lazy(() => import("./pages/admin/AddEvent"));
-const AddSpotlight = lazy(() => import("./pages/admin/AddSpotlight"));
-const AddTestimonial = lazy(() => import("./pages/admin/AddTestimonial"));
-const AddGallery = lazy(() => import("./pages/admin/AddGallery"));
-const AddInstitute = lazy(() => import("./pages/admin/AddInstitute"));
-const AddProject = lazy(() => import("./pages/admin/AddProject"));
-const InstituteAdmin = lazy(() => import("./pages/admin/InstituteAdmin"));
-const UserManagement = lazy(() => import("./pages/UserManagement"));
-const LoginLogs = lazy(() => import("./pages/LoginLogs"));
+// Admin - Lazy with Preload
+export const AdminPanel = lazyPreload(() => import("./pages/AdminPanel"));
+export const AdminLogin = lazyPreload(() => import("./pages/AdminLogin"));
+export const AddNotification = lazyPreload(() => import("./pages/admin/AddNotification"));
+export const AddUpdate = lazyPreload(() => import("./pages/admin/AddUpdate"));
+export const AddResource = lazyPreload(() => import("./pages/admin/AddResource"));
+export const AddEvent = lazyPreload(() => import("./pages/admin/AddEvent"));
+export const AddSpotlight = lazyPreload(() => import("./pages/admin/AddSpotlight"));
+export const AddTestimonial = lazyPreload(() => import("./pages/admin/AddTestimonial"));
+export const AddGallery = lazyPreload(() => import("./pages/admin/AddGallery"));
+export const AddInstitute = lazyPreload(() => import("./pages/admin/AddInstitute"));
+export const AddProject = lazyPreload(() => import("./pages/admin/AddProject"));
+export const InstituteAdmin = lazyPreload(() => import("./pages/admin/InstituteAdmin"));
+export const UserManagement = lazyPreload(() => import("./pages/UserManagement"));
+export const LoginLogs = lazyPreload(() => import("./pages/LoginLogs"));
 
-// FXBOT Student - Lazy
-const StudentAuth = lazy(() => import("./pages/student/StudentAuth"));
-const StudentPortal = lazy(() => import("./pages/student/StudentPortal"));
+// FXBOT Student - Lazy with Preload
+export const StudentAuth = lazyPreload(() => import("./pages/student/StudentAuth"));
+export const StudentPortal = lazyPreload(() => import("./pages/student/StudentPortal"));
 
 const queryClient = new QueryClient();
 
@@ -71,13 +74,24 @@ import MainLayout from "./components/MainLayout";
 /**
  * Empty Fallback Component during lazy load transitions (no blocking loader)
  */
-const EmptyLoader = () => <div className="min-h-screen bg-background" />;
+const EmptyLoader = () => (
+  <div className="min-h-screen bg-transparent relative overflow-hidden">
+    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/30 to-transparent animate-shimmer" />
+  </div>
+);
 
 const ScrollToTop = () => {
-  const location = useLocation();
+  const { pathname } = useLocation();
+
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-  }, [location.pathname]);
+    // Coordinate with Lenis if available, otherwise fallback to native
+    if ((window as any).lenisScrollTo) {
+      (window as any).lenisScrollTo(0, { immediate: true });
+    } else {
+      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    }
+  }, [pathname]);
+
   return null;
 };
 
@@ -108,9 +122,10 @@ const App = () => (
                 <div className="absolute bottom-[-140px] left-1/3 h-[420px] w-[420px] rounded-full bg-primary/5 blur-3xl opacity-50" />
               </div>
 
+              <Navbar />
               <Suspense fallback={<EmptyLoader />}>
                 <Routes>
-                  {/* Routes with Navbar & Footer & Transitions */}
+                  {/* Routes with Transitions */}
                   <Route element={<MainLayout />}>
                     <Route path="/" element={<Index />} />
                     <Route path="/about" element={<About />} />
@@ -137,11 +152,11 @@ const App = () => (
                     <Route path="/get-started" element={<GetStarted />} />
                     <Route path="/view-attendance" element={<ViewAttendance />} />
                     <Route path="/view-results" element={<ViewResults />} />
-                  </Route>
 
-                  {/* FXBOT Student Routes */}
-                  <Route path="/student/auth" element={<StudentAuth />} />
-                  <Route path="/student/menu" element={<StudentPortal />} />
+                    {/* FXBOT Student Routes */}
+                    <Route path="/student/auth" element={<StudentAuth />} />
+                    <Route path="/student/menu" element={<StudentPortal />} />
+                  </Route>
 
                   {/* Admin Routes */}
                   <Route path="/admin-login" element={<AdminLogin />} />
@@ -163,6 +178,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+              <Footer />
 
               <MobileNav />
             </BrowserRouter>

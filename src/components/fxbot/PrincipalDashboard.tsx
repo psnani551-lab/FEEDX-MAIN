@@ -44,8 +44,8 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
     return (
         <div className="space-y-10">
             <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8"
             >
                 <div className="flex items-center gap-6">
@@ -172,8 +172,8 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
                                     return (
                                         <motion.tr
                                             key={issue.id}
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
                                             transition={{ delay: idx * 0.05 }}
                                             className={cn("hover:bg-blue-50/40 transition-colors border-slate-200/40 group", isCritical && "bg-red-50/30")}
                                         >
@@ -248,8 +248,8 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
                             return (
                                 <motion.div
                                     key={issue.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
                                     transition={{ delay: idx * 0.1 }}
                                     onClick={() => setSelectedIssue(issue)}
                                     className={cn(
@@ -313,7 +313,7 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
                                 </div>
                             </div>
 
-                            <div className="p-8 space-y-8 overflow-y-auto flex-1">
+                            <div className="p-8 space-y-8 overflow-y-auto flex-1" data-lenis-prevent>
                                 <section className="space-y-4">
                                     <div className="flex items-center gap-3 text-slate-900">
                                         <div className="p-2 bg-slate-100 rounded-xl">

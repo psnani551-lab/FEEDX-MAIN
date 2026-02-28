@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, Search, BarChart2, Bell, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import { Resources, StudentPortal, StudentAuth, Notifications, StudentAnalytics } from '@/App';
 
 const MobileNav = () => {
     const navigate = useNavigate();
@@ -13,18 +14,19 @@ const MobileNav = () => {
 
     const navItems = [
         { icon: Home, label: 'Home', path: '/' },
-        { icon: Search, label: 'Search', path: '/resources' },
+        { icon: Search, label: 'Search', path: '/resources', preload: Resources.preload },
         {
             isFXBot: true,
             label: 'FXBot',
-            path: localStorage.getItem("student_session") ? "/student/menu" : "/student/auth"
+            path: localStorage.getItem("student_session") ? "/student/menu" : "/student/auth",
+            preload: localStorage.getItem("student_session") ? StudentPortal.preload : StudentAuth.preload
         },
-        { icon: Bell, label: 'Alerts', path: '/notifications' },
-        { icon: BarChart2, label: 'RESULTS', path: '/student-analytics' },
+        { icon: Bell, label: 'Alerts', path: '/notifications', preload: Notifications.preload },
+        { icon: BarChart2, label: 'RESULTS', path: '/student-analytics', preload: StudentAnalytics.preload },
     ];
 
     return (
-        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md bg-background/60 backdrop-blur-2xl border border-white/10 px-4 py-3 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-[2.5rem]">
+        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md bg-background/60 backdrop-blur-2xl border border-white/10 px-4 py-3 flex items-center justify-between shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-[2.5rem] global-navbar">
             {navItems.map((item) => {
                 const isActive = location.pathname === item.path;
 
@@ -35,6 +37,8 @@ const MobileNav = () => {
                             if (navigator.vibrate) navigator.vibrate(10); // Haptic feel
                             navigate(item.path);
                         }}
+                        onMouseEnter={() => item.preload?.()}
+                        onTouchStart={() => item.preload?.()}
                         className={cn(
                             "relative flex flex-col items-center justify-center gap-1 transition-all duration-500 min-w-[64px] h-12",
                             isActive ? "text-primary" : "text-muted-foreground"

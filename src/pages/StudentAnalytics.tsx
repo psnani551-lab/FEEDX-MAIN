@@ -810,7 +810,7 @@ const StudentAnalytics = () => {
         </div>
       </div>
 
-      
+
     </div>
   );
 };

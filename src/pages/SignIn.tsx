@@ -12,9 +12,20 @@ import { supabase } from '@/integrations/supabase/client';
 // Records every login attempt (success or failure) to the login_logs table
 const recordLoginAttempt = async (email: string, success: boolean) => {
   try {
+    let currentIp = '0.0.0.0';
+    try {
+      const res = await fetch('https://api.ipify.org?format=json');
+      if (res.ok) {
+        const data = await res.json();
+        currentIp = data.ip || '0.0.0.0';
+      }
+    } catch {
+      console.warn("Could not resolve IP address for audit log.");
+    }
+
     await supabase.from('login_logs').insert({
       email,
-      ip_address: '0.0.0.0', // Browser cannot access real IP; server-side trigger handles this
+      ip_address: currentIp,
       user_agent: navigator.userAgent,
       success,
     });
@@ -141,7 +152,7 @@ const SignIn = () => {
           </CardContent>
         </Card>
       </div>
-      
+
     </div>
   );
 };

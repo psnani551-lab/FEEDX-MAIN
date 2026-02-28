@@ -113,6 +113,16 @@ const Updates = () => {
     }
   };
 
+  // Handle scroll lock for modal visibility (hides navbar)
+  useEffect(() => {
+    if (selectedUpdate) {
+      document.body.setAttribute('data-scroll-locked', 'true');
+    } else {
+      document.body.removeAttribute('data-scroll-locked');
+    }
+    return () => document.body.removeAttribute('data-scroll-locked');
+  }, [selectedUpdate]);
+
   return (
     <div className="min-h-screen bg-background">
 
@@ -125,26 +135,10 @@ const Updates = () => {
         </div>
 
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <Button
-              variant="outline"
-              onClick={() => navigate(-1)}
-              className="mb-8 backdrop-blur-sm bg-white/5 border-white/10 hover:bg-white/10 transition-all"
-            >
-              ← Back
-            </Button>
-          </motion.div>
 
           <div className="flex flex-col lg:flex-row items-center gap-12">
             <motion.div
               className="flex-1 text-center lg:text-left"
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
                 <TrendingUp className="w-4 h-4 text-primary" />
@@ -163,9 +157,6 @@ const Updates = () => {
               src={updatesIllustration}
               alt="Updates"
               className="w-full max-w-md drop-shadow-2xl"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, delay: 0.4 }}
             />
           </div>
         </div>
@@ -184,8 +175,6 @@ const Updates = () => {
           ) : updates.length === 0 ? (
             <motion.div
               className="flex flex-col items-center text-center text-muted-foreground space-y-6 py-20"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
             >
               <img src={noDataIllustration} alt="No updates" className="w-full max-w-md opacity-60" />
               <div>
@@ -198,10 +187,6 @@ const Updates = () => {
               {updates.map((update, index) => (
                 <motion.div
                   key={update.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.4, delay: index * 0.1 }}
                 >
                   <Card className={`group relative overflow-hidden border transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 ${index === 0
                     ? 'border-primary/30 bg-gradient-to-br from-primary/5 via-background to-background'
@@ -430,7 +415,7 @@ const Updates = () => {
         )}
       </AnimatePresence>
 
-      
+
     </div>
   );
 }

@@ -304,7 +304,7 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
                             </div>
 
                             {/* Body — no scroll, compact */}
-                            <div className="p-6 md:p-8 space-y-6 md:space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar">
+                            <div className="p-6 md:p-8 space-y-6 md:space-y-8 max-h-[70vh] overflow-y-auto no-scrollbar" data-lenis-prevent>
 
                                 {/* ── Issuer Identity (Admin Only) ── */}
                                 <section className="space-y-2">

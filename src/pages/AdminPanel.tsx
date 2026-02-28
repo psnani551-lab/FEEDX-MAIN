@@ -1,15 +1,19 @@
 import { useState, useEffect } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { notificationsAPI, updatesAPI, resourcesAPI, eventsAPI } from "@/lib/api";
+import { notificationsAPI, updatesAPI, resourcesAPI, eventsAPI, settingsAPI } from "@/lib/api";
 import {
   Users, Bell, Newspaper, BookOpen, Calendar,
-  TrendingUp, Activity, ArrowUpRight, ArrowDownRight, ShieldAlert, Database
+  TrendingUp, Activity, ArrowUpRight, ArrowDownRight, ShieldAlert, Database,
+  Edit2, Check, Loader2, ShieldCheck
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { AdminDashboardSkeleton } from "@/components/AdminSkeletons";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import { useToast } from "@/hooks/use-toast";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend
@@ -23,17 +27,24 @@ export default function AdminPanel() {
     events: 0,
     users: 0,
   });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [activities, setActivities] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const [isEditingUsers, setIsEditingUsers] = useState(false);
+  const [editUserValue, setEditUserValue] = useState("");
+  const [isSavingUsers, setIsSavingUsers] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [notifs, updates, resources, events, { data: auditLogs }] = await Promise.all([
+        const [notifs, updates, resources, events, communityMembers, { data: auditLogs }] = await Promise.all([
           notificationsAPI.getAll().catch(() => []),
           updatesAPI.getAll().catch(() => []),
           resourcesAPI.getAll().catch(() => []),
           eventsAPI.getAll().catch(() => []),
+          settingsAPI.getCommunityMembers(),
           (async () => {
             try {
               return await supabase.from('login_logs').select('*').order('created_at', { ascending: false }).limit(5);
@@ -43,40 +54,103 @@ export default function AdminPanel() {
           })()
         ]);
 
-        const safeActivities = Array.isArray(auditLogs) && auditLogs.length > 0 ? auditLogs.map(log => ({
-          ...log,
-          type: 'login',
-          username: log.email || 'Admin',
-          action: 'LOGIN',
-          timestamp: log.created_at,
-          success: true
-        })) : [
-          // Fallback mock activities if no real logs exist to maintain professional appearance
-          { type: 'system', username: 'System', action: 'BOOT', timestamp: new Date().toISOString(), success: true, resource: 'Core API' },
-          { type: 'sync', username: 'Database', action: 'SYNCED', timestamp: new Date(Date.now() - 3600000).toISOString(), success: true, resource: 'Local Storage' }
-        ];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let combinedActivities: any[] = [];
 
-        // Dynamic scaled user calculation based on active content volume
-        const contentVolume = notifs.length + updates.length + resources.length + events.length;
-        const baseUsers = 5042;
-        const dynamicUsers = baseUsers + (contentVolume * 14);
+        if (Array.isArray(auditLogs) && auditLogs.length > 0) {
+          auditLogs.forEach(log => {
+            combinedActivities.push({
+              type: 'login',
+              username: (log.email || 'Admin').split('@')[0],
+              action: log.success ? 'VALIDATED' : 'FAILED',
+              resource: 'System',
+              timestamp: log.created_at,
+              success: log.success,
+              details: { title: log.ip_address }
+            });
+          });
+        }
+
+        notifs.forEach(n => combinedActivities.push({
+          type: 'notification', username: 'Admin', action: 'PUSHED', resource: 'Notification', timestamp: n.timestamp, success: true, details: { title: n.title }
+        }));
+
+        updates.forEach(u => combinedActivities.push({
+          type: 'update', username: 'Admin', action: 'PUBLISHED', resource: 'Update', timestamp: u.timestamp, success: true, details: { title: u.title }
+        }));
+
+        resources.forEach(r => combinedActivities.push({
+          type: 'resource', username: 'Admin', action: 'ADDED', resource: 'Resource', timestamp: r.timestamp, success: true, details: { title: r.title }
+        }));
+
+        events.forEach(e => combinedActivities.push({
+          type: 'event', username: 'Admin', action: 'SCHEDULED', resource: 'Event', timestamp: e.timestamp, success: true, details: { title: e.title }
+        }));
+
+        combinedActivities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+        if (combinedActivities.length === 0) {
+          combinedActivities = [
+            { type: 'system', username: 'System', action: 'BOOTED', timestamp: new Date().toISOString(), success: true, resource: 'Core API' },
+            { type: 'sync', username: 'Database', action: 'SYNCED', timestamp: new Date(Date.now() - 3600000).toISOString(), success: true, resource: 'Local Storage' }
+          ];
+        }
 
         setStats({
           notifications: notifs.length,
           updates: updates.length,
           resources: resources.length,
           events: events.length,
-          users: dynamicUsers,
+          users: communityMembers,
         });
-        setActivities(safeActivities);
+        setActivities(combinedActivities);
       } catch (error) {
         console.error("Failed to fetch dashboard data", error);
       } finally {
         setIsLoading(false);
       }
     };
+
+    // Initial fetch
     fetchDashboardData();
+
+    // Setup Supabase Realtime to listen for any changes across the public schema
+    const realtimeChannel = supabase.channel('admin-live-feed')
+      .on('postgres_changes', { event: '*', schema: 'public' }, () => {
+        // Debounce or just raw fetch to get the latest accurate aggregated data
+        fetchDashboardData();
+      })
+      .subscribe();
+
+    // Fallback: Setup a reliable 15-second polling interval to catch missed events 
+    // or simulate liveliness if Supabase Realtime replication is not enabled on all tables
+    const intervalId = setInterval(() => {
+      fetchDashboardData();
+    }, 15000);
+
+    return () => {
+      clearInterval(intervalId);
+      supabase.removeChannel(realtimeChannel);
+    };
   }, []);
+
+  const handleSaveUsers = async () => {
+    setIsSavingUsers(true);
+    try {
+      const numInfo = parseInt(editUserValue, 10);
+      if (!isNaN(numInfo)) {
+        await settingsAPI.updateCommunityMembers(numInfo);
+        setStats(prev => ({ ...prev, users: numInfo }));
+        toast({ title: "Success", description: "Community member count updated.", className: "bg-emerald-500/10 text-emerald-500 border-0" });
+      }
+    } catch (error) {
+      console.error("Failed to save user count");
+      toast({ title: "Update Failed", description: "Please run the SQL migration script in Supabase first.", variant: "destructive" });
+    } finally {
+      setIsSavingUsers(false);
+      setIsEditingUsers(false);
+    }
+  };
 
   // Generates organic looking growth curve leading up to current user count
   const generateChartData = (currentUsers: number) => {
@@ -140,8 +214,51 @@ export default function AdminPanel() {
                           {card.trend}
                         </div>
                       </div>
-                      <CardTitle className="text-2xl font-black">{card.value}</CardTitle>
-                      <CardDescription className="text-[10px] uppercase tracking-widest font-black opacity-60 mt-1">{card.label}</CardDescription>
+                      <CardTitle className="text-2xl font-black">
+                        {card.label === "Community Members" ? (
+                          isEditingUsers ? (
+                            <div className="flex items-center gap-2 mt-2 -mb-2">
+                              <Input
+                                type="number"
+                                value={editUserValue}
+                                onChange={(e) => setEditUserValue(e.target.value)}
+                                className="h-8 text-sm focus-visible:ring-1 focus-visible:ring-offset-0 bg-background/50 border-white/20 p-1 pl-2 w-24 font-bold"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSaveUsers();
+                                  if (e.key === 'Escape') setIsEditingUsers(false);
+                                }}
+                              />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-8 w-8 p-0 hover:bg-emerald-500/20 text-emerald-500 rounded-full"
+                                onClick={handleSaveUsers}
+                                disabled={isSavingUsers}
+                              >
+                                {isSavingUsers ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-between group/edit -mb-2 py-1">
+                              <span>{card.value}</span>
+                              <button
+                                onClick={() => {
+                                  setEditUserValue(stats.users.toString());
+                                  setIsEditingUsers(true);
+                                }}
+                                className="opacity-0 group-hover/edit:opacity-100 transition-opacity p-2 hover:bg-white/10 rounded-full text-muted-foreground hover:text-white shrink-0 -mr-2"
+                                title="Set Real Count"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )
+                        ) : (
+                          card.value
+                        )}
+                      </CardTitle>
+                      <CardDescription className="text-[10px] uppercase tracking-widest font-black opacity-60 mt-3">{card.label}</CardDescription>
                     </CardHeader>
                     <div className="h-1.5 w-full bg-white/5 overflow-hidden">
                       <motion.div
@@ -236,20 +353,46 @@ export default function AdminPanel() {
                 <CardContent>
                   <div className="space-y-6">
                     {activities.length > 0 ? (
-                      activities.slice(0, 5).map((act, i) => (
-                        <div key={i} className="flex gap-4 items-start pb-6 border-b border-white/5 last:border-0 last:pb-0">
-                          <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${act.type === 'login' ? (act.success ? 'bg-emerald-500/10' : 'bg-rose-500/10') : 'bg-primary/10'}`}>
-                            {act.type === 'login' ? (act.success ? <ShieldAlert className="w-4 h-4 text-emerald-500" /> : <ShieldAlert className="w-4 h-4 text-rose-500" />) : <TrendingUp className="w-4 h-4 text-primary" />}
+                      activities.slice(0, 10).map((act, i) => {
+                        let Icon = TrendingUp;
+                        let iconColor = "text-primary";
+                        let bgColor = "bg-primary/10";
+
+                        if (act.type === 'login') {
+                          Icon = act.success ? ShieldCheck : ShieldAlert;
+                          iconColor = act.success ? "text-emerald-500" : "text-rose-500";
+                          bgColor = act.success ? "bg-emerald-500/10" : "bg-rose-500/10";
+                        } else if (act.type === 'notification') {
+                          Icon = Bell; iconColor = "text-amber-500"; bgColor = "bg-amber-500/10";
+                        } else if (act.type === 'update') {
+                          Icon = Newspaper; iconColor = "text-emerald-400"; bgColor = "bg-emerald-500/10";
+                        } else if (act.type === 'resource') {
+                          Icon = BookOpen; iconColor = "text-indigo-400"; bgColor = "bg-indigo-500/10";
+                        } else if (act.type === 'event') {
+                          Icon = Calendar; iconColor = "text-rose-400"; bgColor = "bg-rose-500/10";
+                        }
+
+                        return (
+                          <div key={i} className="flex gap-4 items-start pb-6 border-b border-white/5 last:border-0 last:pb-0">
+                            <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${bgColor}`}>
+                              <Icon className={`w-4 h-4 ${iconColor}`} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-muted-foreground">
+                                <span className="text-foreground font-bold capitalize">{act.username}</span>
+                                {' '}
+                                {act.type === 'login'
+                                  ? (act.success ? 'accessed the system from' : 'failed authorization from')
+                                  : <><span className="lowercase">{act.action}</span> a new {act.resource}</>}
+                                {act.details?.title && <> — <span className="text-foreground font-bold">{act.details.title}</span></>}
+                              </p>
+                              <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest opacity-60">
+                                {new Date(act.timestamp).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                              </span>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-medium">
-                              <span className="text-primary font-bold">{act.username}</span> {act.type === 'login' ? (act.success ? 'validated entry' : 'attempted breach') : `${act.action.toLowerCase()}d ${act.resource}`}
-                              {act.details?.title && <> "<span className="text-foreground font-bold">{act.details.title}</span>"</>}
-                            </p>
-                            <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">{new Date(act.timestamp).toLocaleString()}</span>
-                          </div>
-                        </div>
-                      ))
+                        );
+                      })
                     ) : (
                       <p className="text-center text-xs text-muted-foreground italic py-10">Waiting for live data transmission...</p>
                     )}

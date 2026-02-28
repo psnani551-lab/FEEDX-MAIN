@@ -200,7 +200,7 @@ const StudentAuth = () => {
     };
 
     return (
-        <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+        <div className="flex flex-col relative overflow-hidden">
             {/* Animated Mesh Background Elements */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/5 rounded-full blur-[120px] animate-pulse-glow" />
@@ -212,7 +212,7 @@ const StudentAuth = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="flex-1 flex flex-col items-center justify-center px-4 py-20 mt-10 z-10"
+                className="flex-1 flex flex-col items-center justify-center px-4 py-8 z-10"
             >
                 {/* Logo Section */}
                 <div className="flex flex-col items-center mb-10 text-center">
@@ -555,7 +555,7 @@ const StudentAuth = () => {
                 </motion.div>
             </motion.div>
 
-            
+
         </div>
     );
 };

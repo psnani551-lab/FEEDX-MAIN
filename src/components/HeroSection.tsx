@@ -9,7 +9,7 @@ const HeroSection = () => {
   return (
     <section
       id="home"
-      className="relative min-h-[90vh] lg:min-h-[85vh] flex items-center overflow-hidden pt-28 lg:pt-32 pb-12 lg:pb-20"
+      className="relative min-h-[75vh] lg:min-h-[80vh] flex items-center overflow-hidden pt-4 lg:pt-6 pb-8 lg:pb-12"
     >
       <div className="container relative z-10 mx-auto px-6 lg:px-12">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-20 items-center">
@@ -25,14 +25,14 @@ const HeroSection = () => {
               {/* Minimalist Heading */}
               <h1 className="text-fluid-hero font-black mb-4 sm:mb-6 flex flex-wrap items-baseline gap-x-2">
                 <span className="text-foreground">FEED</span>
-                <span className="bg-gradient-to-r from-primary via-blue-400 to-cyan-300 bg-clip-text text-transparent">X.</span>
+                <span className="bg-gradient-to-r from-primary via-blue-400 to-cyan-300 bg-clip-text text-transparent pr-2">X.</span>
               </h1>
-              <p className="text-[10px] sm:text-base font-bold uppercase tracking-[0.4em] sm:tracking-[0.5em] text-primary/80 mb-8 sm:mb-12 ml-1 opacity-90">
+              <p className="text-[10px] sm:text-base font-bold uppercase tracking-[0.4em] sm:tracking-[0.5em] text-primary/80 mb-6 sm:mb-8 ml-1 opacity-90">
                 Listen • Respond • Resolve
               </p>
 
               {/* Executive Subheading */}
-              <div className="space-y-6 mb-10 lg:mb-14">
+              <div className="space-y-4 mb-8 lg:mb-10">
                 <p className="text-lg md:text-2xl text-muted-foreground/80 max-w-2xl font-medium leading-relaxed">
                   A student community that supports <span className="text-foreground">Polytechnic learners</span> with Skills, Opportunities, and Knowledge (SOK).
                 </p>

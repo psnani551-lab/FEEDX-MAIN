@@ -132,7 +132,7 @@ const Subscribe = () => {
               <>
                 <div className="text-center mb-8">
                   <h2 className="text-3xl font-bold mb-3">
-                    Get <span className="text-gradient">Early Access</span>
+                    Get <span className="text-gradient pr-2">Early Access</span>
                   </h2>
                   <p className="text-muted-foreground">
                     Be the first to know about our latest features. We'll send you an exclusive invitation.

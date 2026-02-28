@@ -302,7 +302,7 @@ const FacultyDashboard = ({ issues, onRefresh, facultyProfile }: FacultyDashboar
                                 </div>
                             </div>
 
-                            <div className="p-8 space-y-8 overflow-y-auto flex-1">
+                            <div className="p-8 space-y-8 overflow-y-auto flex-1" data-lenis-prevent>
                                 <section className="space-y-4">
                                     <div className="flex items-center gap-3 text-slate-900">
                                         <div className="p-2 bg-slate-100 rounded-xl">

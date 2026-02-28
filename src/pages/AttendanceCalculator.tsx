@@ -426,7 +426,7 @@ const AttendanceCalculator = () => {
           </div>
         </div>
       </div>
-      
+
     </div>
   );
 };

@@ -20,39 +20,21 @@ const About = () => {
         </div>
 
         <div className="container relative z-10 mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Breadcrumb */}
-          <div className="flex items-center gap-2 text-sm mb-8">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="gap-2 text-foreground/70 hover:text-foreground hover:bg-foreground/10 rounded-xl"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back
-            </Button>
-            <span className="text-foreground/30">/</span>
-            <span className="text-foreground/70">About</span>
-          </div>
-
           {/* Hero Content */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
             className="text-center max-w-4xl mx-auto"
           >
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8">
               <Sparkles className="w-4 h-4 text-primary animate-pulse" />
-              <span className="text-sm font-bold text-primary uppercase tracking-widest">Our Story</span>
+              <span className="text-sm font-bold text-primary uppercase tracking-widest">Our Vision</span>
             </div>
 
             <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-foreground tracking-tighter uppercase leading-[0.9] mb-8">
-              ABOUT <span className="text-primary">FEEDX.</span>
+              BEYOND THE <span className="text-primary">CLASSROOM.</span>
             </h1>
 
             <p className="text-xl sm:text-2xl text-muted-foreground font-medium max-w-3xl mx-auto leading-relaxed">
-              Empowering Polytechnic students with the skills, opportunities, and knowledge to transform their careers and shape the future of industry.
+              FeedX is more than a platform—it's a launchpad for Polytechnic excellence. We empower the next generation of industrial leaders with real-world skills and career-defining opportunities.
             </p>
           </motion.div>
         </div>
@@ -63,7 +45,7 @@ const About = () => {
         <AboutSection />
       </div>
 
-      
+
     </div>
   );
 };

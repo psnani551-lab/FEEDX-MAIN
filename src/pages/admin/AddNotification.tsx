@@ -81,14 +81,25 @@ export default function AddNotification() {
     }
   };
 
-  const handleBulkDelete = async (ids: string[]) => {
-    if (!confirm(`Delete ${ids.length} entries?`)) return;
+  const handleBulkDelete = async (ids: string[]): Promise<boolean> => {
+    if (!confirm(`Delete ${ids.length} entries?`)) return false;
+    setIsLoading(true);
     try {
-      await Promise.all(ids.map(id => notificationsAPI.delete(id)));
-      toast({ title: "Bulk Delete Success", description: `${ids.length} entries removed.` });
+      const results = await Promise.allSettled(ids.map(id => notificationsAPI.delete(id)));
+      const failed = results.filter(r => r.status === 'rejected');
+
+      if (failed.length > 0) {
+        toast({ title: "Partial Success", description: `${ids.length - failed.length} removed, ${failed.length} failed.`, variant: "destructive" });
+      } else {
+        toast({ title: "Bulk Delete Success", description: `${ids.length} entries removed.` });
+      }
       fetchNotifications();
+      return true;
     } catch (error) {
       toast({ title: "Operation Failed", variant: "destructive" });
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -116,16 +127,18 @@ export default function AddNotification() {
     }
   };
 
-  const handleBulkStatusToggle = async (ids: string[], status: 'published' | 'draft') => {
+  const handleBulkStatusToggle = async (ids: string[], status: 'published' | 'draft'): Promise<boolean> => {
+    setIsLoading(true);
     try {
       await Promise.all(ids.map(id => notificationsAPI.updateStatus(id, status)));
-      toast({
-        title: "Bulk Update Complete",
-        description: `${ids.length} notifications ${status === 'published' ? 'published' : 'moved to draft'}.`
-      });
+      toast({ title: "Bulk Update Success", description: `${ids.length} entries ${status}.` });
       fetchNotifications();
+      return true;
     } catch (error) {
-      toast({ title: "Bulk Operation Failed", variant: "destructive" });
+      toast({ title: "Update Failed", variant: "destructive" });
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -268,6 +281,16 @@ export default function AddNotification() {
                   onStatusToggle={handleStatusToggle}
                   onBulkStatusToggle={handleBulkStatusToggle}
                   searchPlaceholder="Search notifications..."
+                  filters={[
+                    {
+                      key: 'status',
+                      label: 'Visibility',
+                      options: [
+                        { label: 'Published', value: 'published' },
+                        { label: 'Draft', value: 'draft' }
+                      ]
+                    }
+                  ]}
                 />
               </CardContent>
             </Card>

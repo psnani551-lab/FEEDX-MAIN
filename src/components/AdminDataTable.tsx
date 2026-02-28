@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import {
     Search, Filter, ChevronDown, MoreHorizontal,
     Trash2, Edit3, Eye, FileCheck, FileX, ChevronLeft, ChevronRight,
-    ArrowUpDown, ListFilter, CheckCircle2, Clock
+    ArrowUpDown, ListFilter, CheckCircle2, Clock, X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,12 +27,19 @@ interface AdminDataTableProps {
         sortable?: boolean;
     }[];
     onEdit?: (item: any) => void;
-    onDelete?: (item: any) => void;
-    onBulkDelete?: (ids: string[]) => void;
-    onStatusToggle?: (item: any) => void;
-    onBulkStatusToggle?: (ids: string[], status: 'published' | 'draft') => void;
+    onDelete?: (item: any) => Promise<void> | void;
+    onBulkDelete?: (ids: string[]) => Promise<boolean | void> | boolean | void;
+    onStatusToggle?: (item: any) => Promise<void> | void;
+    onBulkStatusToggle?: (ids: string[], status: 'published' | 'draft') => Promise<boolean | void> | boolean | void;
+    primaryKey?: string;
     searchPlaceholder?: string;
     categoryField?: string;
+    filters?: {
+        key: string;
+        label: string;
+        options: { label: string; value: string }[];
+        targetKey?: string;
+    }[];
 }
 
 export default function AdminDataTable({
@@ -43,10 +50,13 @@ export default function AdminDataTable({
     onBulkDelete,
     onStatusToggle,
     onBulkStatusToggle,
+    primaryKey = "id",
     searchPlaceholder = "Search items...",
-    categoryField
+    categoryField,
+    filters = []
 }: AdminDataTableProps) {
     const [searchTerm, setSearchTerm] = useState("");
+    const [activeFilters, setActiveFilters] = useState<Record<string, string>>({});
     const [selectedIds, setSelectedIds] = useState<string[]>([]);
     const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
@@ -54,21 +64,52 @@ export default function AdminDataTable({
 
     // Sync selection with data (remove IDs that no longer exist)
     useEffect(() => {
-        const currentIds = new Set(data.map(item => item.id || item.code));
+        const currentIds = new Set(data.map(item => item[primaryKey]));
         setSelectedIds(prev => prev.filter(id => currentIds.has(id)));
-    }, [data]);
+    }, [data, primaryKey]);
 
     // Filtering
     const filteredData = data.filter(item => {
-        const searchStr = Object.values(item).join(" ").toLowerCase();
-        return searchStr.includes(searchTerm.toLowerCase());
+        if (!item) return false;
+
+        // Search through all values in the item
+        const searchStr = Object.values(item)
+            .map(v => {
+                if (typeof v === 'string' || typeof v === 'number') return String(v);
+                if (Array.isArray(v)) return v.map(inner => typeof inner === 'string' ? inner : JSON.stringify(inner)).join(" ");
+                return "";
+            })
+            .join(" ")
+            .toLowerCase();
+
+        const matchesSearch = searchStr.includes(searchTerm.toLowerCase());
+
+        // Filter by active filters
+        const matchesFilters = Object.entries(activeFilters).every(([filterKey, value]) => {
+            if (!value) return true;
+
+            // Find the filter configuration to get the targetKey
+            const filterConfig = filters.find(f => f.key === filterKey);
+            const targetKey = filterConfig?.targetKey || filterKey;
+
+            // Handle arrays (e.g. tags) or plain values
+            const itemValue = item[targetKey];
+            if (Array.isArray(itemValue)) {
+                // Case-insensitive array matching
+                return itemValue.some(v => String(v).toLowerCase() === String(value).toLowerCase());
+            }
+            // Case-insensitive string matching
+            return String(itemValue || "").toLowerCase() === String(value).toLowerCase();
+        });
+
+        return matchesSearch && matchesFilters;
     });
 
     // Sorting
     const sortedData = [...filteredData].sort((a, b) => {
         if (!sortConfig) return 0;
-        const aVal = a[sortConfig.key];
-        const bVal = b[sortConfig.key];
+        const aVal = a[sortConfig.key] || '';
+        const bVal = b[sortConfig.key] || '';
         if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
         if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
@@ -78,11 +119,17 @@ export default function AdminDataTable({
     const totalPages = Math.ceil(sortedData.length / itemsPerPage);
     const paginatedData = sortedData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+    const isAllSelectedOnPage = paginatedData.length > 0 && paginatedData.every(item => selectedIds.includes(item[primaryKey]));
+
     const toggleSelectAll = () => {
-        if (selectedIds.length === paginatedData.length && paginatedData.length > 0) {
-            setSelectedIds([]);
+        if (isAllSelectedOnPage) {
+            // Unselect everything on this page
+            const pageIds = new Set(paginatedData.map(d => d[primaryKey]));
+            setSelectedIds(prev => prev.filter(id => !pageIds.has(id)));
         } else {
-            setSelectedIds(paginatedData.map(d => d.id || d.code)); // Consistent with individual selection
+            // Select everything on this page (keeping existing selections from other pages)
+            const newIds = paginatedData.map(d => d[primaryKey]);
+            setSelectedIds(prev => Array.from(new Set([...prev, ...newIds])));
         }
     };
 
@@ -122,7 +169,14 @@ export default function AdminDataTable({
                                         variant="outline"
                                         size="sm"
                                         className="h-11 rounded-xl gap-2 font-bold px-4 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10"
-                                        onClick={() => onBulkStatusToggle(selectedIds, 'published')}
+                                        onClick={async () => {
+                                            if (onBulkStatusToggle) {
+                                                const success = await onBulkStatusToggle(selectedIds, 'published');
+                                                if (success !== false) {
+                                                    setSelectedIds([]);
+                                                }
+                                            }
+                                        }}
                                     >
                                         <FileCheck className="w-4 h-4" />
                                         Publish
@@ -131,7 +185,14 @@ export default function AdminDataTable({
                                         variant="outline"
                                         size="sm"
                                         className="h-11 rounded-xl gap-2 font-bold px-4 border-slate-500/20 text-slate-400 hover:bg-slate-500/10"
-                                        onClick={() => onBulkStatusToggle(selectedIds, 'draft')}
+                                        onClick={async () => {
+                                            if (onBulkStatusToggle) {
+                                                const success = await onBulkStatusToggle(selectedIds, 'draft');
+                                                if (success !== false) {
+                                                    setSelectedIds([]);
+                                                }
+                                            }
+                                        }}
                                     >
                                         <FileX className="w-4 h-4" />
                                         Draft
@@ -142,7 +203,15 @@ export default function AdminDataTable({
                                 variant="destructive"
                                 size="sm"
                                 className="h-11 rounded-xl gap-2 font-bold px-4"
-                                onClick={() => onBulkDelete?.(selectedIds)}
+                                onClick={async () => {
+                                    if (onBulkDelete) {
+                                        console.log(`[AdminDataTable] Triggering bulk delete for ${selectedIds.length} items:`, selectedIds);
+                                        const success = await onBulkDelete(selectedIds);
+                                        if (success !== false) {
+                                            setSelectedIds([]);
+                                        }
+                                    }
+                                }}
                                 aria-label={`Delete ${selectedIds.length} selected items`}
                             >
                                 <Trash2 className="w-4 h-4" aria-hidden="true" />
@@ -150,12 +219,94 @@ export default function AdminDataTable({
                             </Button>
                         </motion.div>
                     )}
-                    <Button variant="outline" className="h-11 border-white/5 bg-white/5 rounded-xl gap-2 text-xs uppercase tracking-widest font-black">
-                        <ListFilter className="w-4 h-4" />
-                        Filters
-                    </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" className={`h-11 border-white/5 bg-white/5 rounded-xl gap-2 text-xs uppercase tracking-widest font-black ${Object.keys(activeFilters).length > 0 ? 'text-primary border-primary/20' : ''}`}>
+                                <ListFilter className="w-4 h-4" />
+                                Filters {Object.keys(activeFilters).length > 0 && `(${Object.keys(activeFilters).length})`}
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56 bg-card/95 backdrop-blur-xl border-white/10 rounded-xl p-2 max-h-[350px] overflow-y-auto" data-lenis-prevent>
+                            <DropdownMenuLabel className="text-[10px] uppercase tracking-widest font-black opacity-50 px-2 py-1.5 flex items-center justify-between">
+                                Filter By
+                                {Object.keys(activeFilters).length > 0 && (
+                                    <button
+                                        onClick={() => setActiveFilters({})}
+                                        className="text-primary hover:underline lowercase font-normal"
+                                    >
+                                        clear all
+                                    </button>
+                                )}
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-white/5 my-1" />
+                            {filters.map((group) => (
+                                <div key={group.key} className="py-2">
+                                    <h4 className="px-2 mb-1 text-[9px] uppercase font-bold text-muted-foreground">{group.label}</h4>
+                                    {group.options.map((option) => (
+                                        <DropdownMenuItem
+                                            key={option.value}
+                                            onClick={() => {
+                                                setActiveFilters(prev => {
+                                                    const next = { ...prev };
+                                                    if (next[group.key] === option.value) {
+                                                        delete next[group.key];
+                                                    } else {
+                                                        next[group.key] = option.value;
+                                                    }
+                                                    return next;
+                                                });
+                                            }}
+                                            className="gap-2 rounded-lg py-1.5 cursor-pointer focus:bg-white/10"
+                                        >
+                                            <div className={`w-3 h-3 rounded-full border border-primary/20 flex items-center justify-center ${activeFilters[group.key] === option.value ? 'bg-primary' : ''}`}>
+                                                {activeFilters[group.key] === option.value && <div className="w-1 h-1 bg-white rounded-full" />}
+                                            </div>
+                                            <span className={`font-semibold text-xs ${activeFilters[group.key] === option.value ? 'text-primary' : ''}`}>{option.label}</span>
+                                        </DropdownMenuItem>
+                                    ))}
+                                    <DropdownMenuSeparator className="bg-white/5 my-2 last:hidden" />
+                                </div>
+                            ))}
+                            {filters.length === 0 && (
+                                <div className="px-2 py-4 text-center">
+                                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">No filters available</p>
+                                </div>
+                            )}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
+
+            {/* Active Filter Badges */}
+            {Object.keys(activeFilters).length > 0 && (
+                <div className="flex flex-wrap gap-2 pb-2">
+                    {Object.entries(activeFilters).map(([key, value]) => {
+                        const filterGroup = filters.find(f => f.key === key);
+                        const label = filterGroup?.options.find(o => o.value === value)?.label || value;
+                        return (
+                            <Badge
+                                key={key}
+                                variant="secondary"
+                                className="h-7 pl-3 pr-1 gap-1 border-primary/20 bg-primary/5 text-primary text-[10px] font-bold rounded-full group hover:bg-primary/10 transition-colors"
+                            >
+                                <span className="opacity-60">{filterGroup?.label}:</span> {label}
+                                <button
+                                    onClick={() => {
+                                        setActiveFilters(prev => {
+                                            const next = { ...prev };
+                                            delete next[key];
+                                            return next;
+                                        });
+                                    }}
+                                    className="p-1 rounded-full hover:bg-primary/20 transition-colors"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </Badge>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* Table Area */}
             <div className="rounded-2xl border border-white/5 bg-card/40 backdrop-blur-md overflow-hidden">
@@ -165,7 +316,7 @@ export default function AdminDataTable({
                             <tr>
                                 <th className="p-4 w-12 text-center">
                                     <Checkbox
-                                        checked={selectedIds.length === paginatedData.length && paginatedData.length > 0}
+                                        checked={isAllSelectedOnPage}
                                         onCheckedChange={toggleSelectAll}
                                     />
                                 </th>
@@ -192,17 +343,17 @@ export default function AdminDataTable({
                             <AnimatePresence mode="popLayout">
                                 {paginatedData.map((item, idx) => (
                                     <motion.tr
-                                        key={item.id || item.code}
+                                        key={item[primaryKey]}
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         exit={{ opacity: 0, x: -20 }}
                                         transition={{ delay: idx * 0.05 }}
-                                        className={`group hover:bg-white/2 transition-colors ${(selectedIds.includes(item.id) || selectedIds.includes(item.code)) ? 'bg-primary/5' : ''}`}
+                                        className={`group hover:bg-white/2 transition-colors ${selectedIds.includes(item[primaryKey]) ? 'bg-primary/5' : ''}`}
                                     >
                                         <td className="p-4 w-12 text-center">
                                             <Checkbox
-                                                checked={selectedIds.includes(item.id) || selectedIds.includes(item.code)}
-                                                onCheckedChange={() => toggleSelect(item.id || item.code)}
+                                                checked={selectedIds.includes(item[primaryKey])}
+                                                onCheckedChange={() => toggleSelect(item[primaryKey])}
                                             />
                                         </td>
                                         {columns.map(col => (
@@ -230,7 +381,15 @@ export default function AdminDataTable({
                                                         <span className="font-semibold text-xs">{item.status === 'published' ? 'Move to Draft' : 'Publish Live'}</span>
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator className="bg-white/5 my-1" />
-                                                    <DropdownMenuItem onClick={() => onDelete?.(item)} className="gap-2 rounded-lg py-2 cursor-pointer focus:bg-red-500/10 text-red-500">
+                                                    <DropdownMenuItem
+                                                        onClick={async () => {
+                                                            if (onDelete) {
+                                                                await onDelete(item);
+                                                                setSelectedIds(prev => prev.filter(id => id !== item[primaryKey]));
+                                                            }
+                                                        }}
+                                                        className="gap-2 rounded-lg py-2 cursor-pointer focus:bg-red-500/10 text-red-500"
+                                                    >
                                                         <Trash2 className="w-4 h-4" />
                                                         <span className="font-semibold text-xs">Delete Item</span>
                                                     </DropdownMenuItem>

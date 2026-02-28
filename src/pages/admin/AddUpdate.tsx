@@ -127,14 +127,25 @@ export default function AddUpdate() {
     }
   };
 
-  const handleBulkDelete = async (ids: string[]) => {
-    if (!confirm(`Retract ${ids.length} journals?`)) return;
+  const handleBulkDelete = async (ids: string[]): Promise<boolean> => {
+    if (!confirm(`Permanently remove ${ids.length} entries?`)) return false;
+    setIsLoading(true);
     try {
-      await Promise.all(ids.map(id => updatesAPI.delete(id)));
-      toast({ title: "Feed Harmonized", description: `${ids.length} entries redacted.` });
+      const results = await Promise.allSettled(ids.map(id => updatesAPI.delete(id)));
+      const failed = results.filter(r => r.status === 'rejected');
+
+      if (failed.length > 0) {
+        toast({ title: "Partial Success", description: `${ids.length - failed.length} removed, ${failed.length} failed.`, variant: "destructive" });
+      } else {
+        toast({ title: "Bulk Delete Success", description: `${ids.length} entries removed.` });
+      }
       fetchUpdates();
+      return true;
     } catch (error) {
-      toast({ title: "Broadcast Error", variant: "destructive" });
+      toast({ title: "Operation Failed", variant: "destructive" });
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -168,16 +179,18 @@ export default function AddUpdate() {
     }
   };
 
-  const handleBulkStatusToggle = async (ids: string[], status: 'published' | 'draft') => {
+  const handleBulkStatusToggle = async (ids: string[], status: 'published' | 'draft'): Promise<boolean> => {
+    setIsLoading(true);
     try {
       await Promise.all(ids.map(id => updatesAPI.updateStatus(id, status)));
-      toast({
-        title: "Bulk Update Complete",
-        description: `${ids.length} updates ${status === 'published' ? 'published' : 'moved to draft'}.`
-      });
+      toast({ title: "Bulk Update Success", description: `${ids.length} entries ${status}.` });
       fetchUpdates();
+      return true;
     } catch (error) {
-      toast({ title: "Bulk Operation Failed", variant: "destructive" });
+      toast({ title: "Update Failed", variant: "destructive" });
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -346,6 +359,35 @@ export default function AddUpdate() {
                   onStatusToggle={handleStatusToggle}
                   onBulkStatusToggle={handleBulkStatusToggle}
                   searchPlaceholder="Search journal entries..."
+                  filters={[
+                    {
+                      key: 'status',
+                      label: 'Visibility',
+                      options: [
+                        { label: 'Published', value: 'published' },
+                        { label: 'Draft', value: 'draft' }
+                      ]
+                    },
+                    {
+                      key: 'type',
+                      label: 'Update Type',
+                      options: [
+                        { label: 'Announcement', value: 'announcement' },
+                        { label: 'Exam', value: 'exam' },
+                        { label: 'Result', value: 'result' },
+                        { label: 'Circular', value: 'circular' }
+                      ]
+                    },
+                    {
+                      key: 'priority',
+                      label: 'Priority',
+                      options: [
+                        { label: 'High', value: 'high' },
+                        { label: 'Medium', value: 'medium' },
+                        { label: 'Low', value: 'low' }
+                      ]
+                    }
+                  ]}
                 />
               </CardContent>
             </Card>

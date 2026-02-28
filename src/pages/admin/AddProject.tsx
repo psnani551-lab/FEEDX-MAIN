@@ -1,18 +1,10 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '@/components/AdminLayout';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
 import {
     Dialog,
     DialogContent,
@@ -21,9 +13,13 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Pencil, Trash2, Bot, PlusSquare, X } from 'lucide-react';
+import {
+    Plus, Pencil, Trash2, Bot, PlusSquare, X
+} from 'lucide-react';
 import { projectsAPI, Project } from '@/lib/api';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import AdminDataTable from '@/components/AdminDataTable';
+import { Badge } from '@/components/ui/badge';
 
 export default function AddProject() {
     const { toast } = useToast();
@@ -153,7 +149,7 @@ export default function AddProject() {
                             if (!open) resetForm();
                         }}>
                             <DialogTrigger asChild>
-                                <Button className="gap-2 font-bold uppercase tracking-widest text-xs hidden sm:flex">
+                                <Button className="gap-2 font-bold uppercase tracking-widest text-xs hidden sm:flex bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
                                     <Plus className="h-4 w-4" /> New Project
                                 </Button>
                             </DialogTrigger>
@@ -254,57 +250,92 @@ export default function AddProject() {
 
                     <Card className="border-white/5 bg-card/40 backdrop-blur-xl">
                         <CardHeader>
-                            <CardTitle className="text-xl font-bold flex items-center gap-2">
+                            <CardTitle className="text-xl font-black flex items-center gap-2 uppercase tracking-tighter">
                                 <Bot className="w-5 h-5 text-primary" /> Active Portfolios
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            {isLoading ? (
-                                <div className="text-center py-8 text-muted-foreground">Loading projects...</div>
-                            ) : projects.length === 0 ? (
-                                <div className="text-center py-8 text-muted-foreground border-2 border-dashed border-white/5 rounded-xl">
-                                    No projects found. Create one to get started.
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <Table>
-                                        <TableHeader className="bg-white/5">
-                                            <TableRow className="border-white/5 hover:bg-transparent">
-                                                <TableHead className="font-bold uppercase tracking-widest text-[10px]">Title</TableHead>
-                                                <TableHead className="font-bold uppercase tracking-widest text-[10px]">Category</TableHead>
-                                                <TableHead className="font-bold uppercase tracking-widest text-[10px]">Status</TableHead>
-                                                <TableHead className="text-right font-bold uppercase tracking-widest text-[10px]">Actions</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {projects.map((project) => (
-                                                <TableRow key={project.id} className="border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors">
-                                                    <TableCell className="font-bold">
-                                                        <div>{project.title}</div>
-                                                        <div className="text-xs text-muted-foreground font-normal truncate max-w-[200px]">{project.subtitle}</div>
-                                                    </TableCell>
-                                                    <TableCell className="text-xs font-medium">
-                                                        <span className="bg-primary/20 text-primary px-2 py-1 rounded-md">{project.category}</span>
-                                                    </TableCell>
-                                                    <TableCell className="text-xs font-bold">
-                                                        {project.status}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                        <div className="flex justify-end gap-2">
-                                                            <Button variant="ghost" size="icon" onClick={() => handleEdit(project)} className="hover:text-primary hover:bg-primary/10 transition-colors">
-                                                                <Pencil className="h-4 w-4" />
-                                                            </Button>
-                                                            <Button variant="ghost" size="icon" onClick={() => handleDelete(project.id)} className="text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors">
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            )}
+                        <CardContent className="pt-0">
+                            <AdminDataTable
+                                data={projects}
+                                columns={[
+                                    {
+                                        key: 'title',
+                                        label: 'Project Name',
+                                        sortable: true,
+                                        render: (p: Project) => (
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-foreground truncate max-w-[250px]">{p.title}</span>
+                                                <span className="text-[10px] text-muted-foreground font-medium truncate max-w-[200px]">{p.subtitle}</span>
+                                            </div>
+                                        )
+                                    },
+                                    {
+                                        key: 'category',
+                                        label: 'Category',
+                                        sortable: true,
+                                        render: (p: Project) => (
+                                            <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[9px] uppercase tracking-widest font-black rounded-sm px-1.5 py-0">
+                                                {p.category}
+                                            </Badge>
+                                        )
+                                    },
+                                    {
+                                        key: 'status',
+                                        label: 'Status',
+                                        sortable: true,
+                                        render: (p: Project) => {
+                                            const statusStyles: Record<string, string> = {
+                                                'Active': 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+                                                'Pilot': 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+                                                'Coming Soon': 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+                                                'Planning': 'bg-slate-500/10 text-slate-400 border-white/10'
+                                            };
+                                            return (
+                                                <Badge className={`uppercase text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full ${statusStyles[p.status] || ''}`}>
+                                                    {p.status}
+                                                </Badge>
+                                            );
+                                        }
+                                    }
+                                ]}
+                                onEdit={handleEdit}
+                                onDelete={(p) => handleDelete(p.id)}
+                                onBulkDelete={async (ids) => {
+                                    if (!confirm(`Purge ${ids.length} project portfolios?`)) return false;
+                                    try {
+                                        await Promise.all(ids.map(id => projectsAPI.delete(id)));
+                                        toast({ title: 'Bulk Purge Complete' });
+                                        fetchProjects();
+                                        return true;
+                                    } catch (error) {
+                                        toast({ title: 'Operation Failed', variant: 'destructive' });
+                                        return false;
+                                    }
+                                }}
+                                searchPlaceholder="Filter portfolios..."
+                                filters={[
+                                    {
+                                        key: 'status',
+                                        label: 'Project Status',
+                                        options: [
+                                            { label: 'Active', value: 'Active' },
+                                            { label: 'Pilot', value: 'Pilot' },
+                                            { label: 'Coming Soon', value: 'Coming Soon' },
+                                            { label: 'Planning', value: 'Planning' }
+                                        ]
+                                    },
+                                    {
+                                        key: 'category',
+                                        label: 'Category Area',
+                                        options: [
+                                            { label: 'Technology', value: 'Technology' },
+                                            { label: 'Innovation', value: 'Innovation' },
+                                            { label: 'Education', value: 'Education' },
+                                            { label: 'Student Support', value: 'Student Support' }
+                                        ]
+                                    }
+                                ]}
+                            />
                         </CardContent>
                     </Card>
                 </div>

@@ -127,7 +127,7 @@ const Spotlight = () => {
           )}
         </div>
       </div>
-      
+
 
       <Dialog open={!!selectedSpotlight} onOpenChange={(open) => !open && setSelectedSpotlight(null)}>
         <DialogContent className="max-w-3xl bg-background/95 backdrop-blur-xl border-white/10 p-0 overflow-hidden rounded-[32px] shadow-2xl focus:outline-none">

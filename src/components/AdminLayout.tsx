@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
     Bell, Newspaper, BookOpen, Calendar, Sparkles, MessageSquare,
     Building2, Users, Activity, LogOut, ChevronRight, Menu, X,
@@ -13,25 +14,31 @@ import { notificationsAPI, authAPI } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import ErrorBoundary from "./ErrorBoundary";
 import Logo from "./Logo";
+import { PreloadLink } from "./PreloadLink";
+import {
+    AdminPanel, AddNotification, AddUpdate, AddResource, AddEvent,
+    AddGallery, AddProject, AddSpotlight, AddTestimonial, AddInstitute,
+    UserManagement, LoginLogs
+} from "@/App";
 
 interface AdminLayoutProps {
     children: React.ReactNode;
 }
 
 const navItems = [
-    { id: "dashboard", title: "Dashboard", icon: LayoutDashboard, route: "/admin" },
-    { id: "notifications", title: "Notifications", icon: Bell, route: "/admin/notifications" },
-    { id: "updates", title: "Updates", icon: Newspaper, route: "/admin/updates" },
-    { id: "resources", title: "Resources", icon: BookOpen, route: "/admin/resources" },
-    { id: "events", title: "Events", icon: Calendar, route: "/admin/events" },
-    { id: "gallery", title: "Gallery", icon: Image, route: "/admin/gallery" },
-    { id: "projects", title: "Projects", icon: Sparkles, route: "/admin/projects" },
-    { id: "spotlight", title: "Spotlight", icon: Sparkles, route: "/admin/spotlight" },
-    { id: "testimonials", title: "Testimonials", icon: MessageSquare, route: "/admin/testimonials" },
-    { id: "institutes", title: "Institutes", icon: Building2, route: "/admin/institutes" },
+    { id: "dashboard", title: "Dashboard", icon: LayoutDashboard, route: "/admin", preload: AdminPanel.preload },
+    { id: "notifications", title: "Notifications", icon: Bell, route: "/admin/notifications", preload: AddNotification.preload },
+    { id: "updates", title: "Updates", icon: Newspaper, route: "/admin/updates", preload: AddUpdate.preload },
+    { id: "resources", title: "Resources", icon: BookOpen, route: "/admin/resources", preload: AddResource.preload },
+    { id: "events", title: "Events", icon: Calendar, route: "/admin/events", preload: AddEvent.preload },
+    { id: "gallery", title: "Gallery", icon: Image, route: "/admin/gallery", preload: AddGallery.preload },
+    { id: "projects", title: "Projects", icon: Sparkles, route: "/admin/projects", preload: AddProject.preload },
+    { id: "spotlight", title: "Spotlight", icon: Sparkles, route: "/admin/spotlight", preload: AddSpotlight.preload },
+    { id: "testimonials", title: "Testimonials", icon: MessageSquare, route: "/admin/testimonials", preload: AddTestimonial.preload },
+    { id: "institutes", title: "Institutes", icon: Building2, route: "/admin/institutes", preload: AddInstitute.preload },
 
-    { id: "users", title: "Admin Users", icon: Users, route: "/admin/users" },
-    { id: "logs", title: "System Logs", icon: ShieldAlert, route: "/admin/logs" },
+    { id: "users", title: "Admin Users", icon: Users, route: "/admin/users", preload: UserManagement.preload },
+    { id: "logs", title: "System Logs", icon: ShieldAlert, route: "/admin/logs", preload: LoginLogs.preload },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
@@ -92,14 +99,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             </div>
 
             {/* Optimized spacing - no empty space */}
-            <div className="flex-1 min-h-0 overflow-y-auto">
+            <div className="flex-1 min-h-0 overflow-y-auto" data-lenis-prevent>
                 <div className="px-3 pt-3 pb-1">
                     <div className="space-y-0.5">
                         {navItems.map((item) => {
                             const Icon = item.icon;
                             const isActive = location.pathname === item.route;
                             return (
-                                <Link key={item.id} to={item.route}>
+                                <PreloadLink key={item.id} to={item.route} preload={item.preload}>
                                     <Button
                                         variant={isActive ? "secondary" : "ghost"}
                                         className={`w-full justify-start gap-2.5 rounded-lg h-10 transition-all focus-glow hover:scale-[1.01] ${isActive ? 'bg-primary/10 text-primary hover:bg-primary/20 shadow-[0_0_15px_rgba(59,130,246,0.15)]' : 'text-muted-foreground hover:bg-white/5'}`}
@@ -107,7 +114,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                                         <Icon className="w-3.5 h-3.5" />
                                         <span className="font-semibold text-xs">{item.title}</span>
                                     </Button>
-                                </Link>
+                                </PreloadLink>
                             );
                         })}
                     </div>
@@ -205,10 +212,21 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 </header>
 
                 {/* Content */}
-                <main className="flex-1 p-6 lg:p-10 max-w-7xl">
-                    <ErrorBoundary>
-                        {children}
-                    </ErrorBoundary>
+                <main className="flex-1 p-6 lg:p-10 max-w-7xl relative overflow-x-hidden scroll-optimize">
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={location.pathname}
+                            initial={{ opacity: 0, y: 5 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -5 }}
+                            transition={{ duration: 0.2, ease: "easeOut" }}
+                            className="min-h-full"
+                        >
+                            <ErrorBoundary>
+                                {children}
+                            </ErrorBoundary>
+                        </motion.div>
+                    </AnimatePresence>
                 </main>
             </div>
         </div>

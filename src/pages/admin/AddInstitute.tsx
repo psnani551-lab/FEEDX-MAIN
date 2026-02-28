@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, X, Plus, Save, Building2, Loader2, MapPin, Phone, Globe, Mail, User as UserIcon, BookOpen, Warehouse, Sparkles, Binary } from "lucide-react";
 import { uploadFile, institutesAPI, Institute } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
 
 export default function AddInstitute() {
   const { toast } = useToast();
@@ -42,6 +42,9 @@ export default function AddInstitute() {
   const [facilityInput, setFacilityInput] = useState("");
   const [isBulkOpen, setIsBulkOpen] = useState(false);
   const [bulkData, setBulkData] = useState("");
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingItem, setEditingItem] = useState<Institute | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -121,19 +124,56 @@ export default function AddInstitute() {
 
     setIsLoading(true);
     try {
+      // API uses upsert, so 'create' works for both inserting and updating based on the 'code'
       await institutesAPI.create(formData);
-      toast({ title: "Registry Updated", description: `Institute ${formData.code} synchronized successfully.` });
-      setFormData({
-        code: "", name: "", place: "", dist: "", region: "OU", type: "PVT", minority: "NA", mode: "COED",
-        description: "", images: [], address: "", phone: "", email: "", website: "", principal: "",
-        courses: [], facilities: [], status: "published"
+      toast({
+        title: isEditMode ? "Registry Updated" : "Institute Registered",
+        description: `Institute ${formData.code} synchronized successfully.`
       });
+      handleCancelEdit();
       fetchInstitutes();
     } catch (error) {
       toast({ title: "Protocol Error", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleEdit = (item: Institute) => {
+    setEditingItem(item);
+    setIsEditMode(true);
+    setFormData({
+      code: item.code,
+      name: item.name,
+      place: item.place,
+      dist: item.dist,
+      region: item.region || "OU",
+      type: item.type || "PVT",
+      minority: item.minority || "NA",
+      mode: item.mode || "COED",
+      description: item.description || "",
+      images: item.images || [],
+      address: item.address || "",
+      phone: item.phone || "",
+      email: item.email || "",
+      website: item.website || "",
+      principal: item.principal || "",
+      courses: item.courses || [],
+      facilities: item.facilities || [],
+      status: item.status || "published"
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditMode(false);
+    setEditingItem(null);
+    setFormData({
+      code: "", name: "", place: "", dist: "", region: "OU", type: "PVT", minority: "NA", mode: "COED",
+      description: "", images: [], address: "", phone: "", email: "", website: "", principal: "",
+      courses: [], facilities: [], status: "published"
+    });
+    setIsDialogOpen(false);
   };
 
   const handleDelete = async (item: Institute) => {
@@ -147,14 +187,40 @@ export default function AddInstitute() {
     }
   };
 
-  const handleBulkDelete = async (ids: string[]) => {
-    if (!confirm(`Decommission ${ids.length} institutions?`)) return;
+  const handleBulkStatusToggle = async (ids: string[], status: 'published' | 'draft'): Promise<boolean> => {
+    setIsLoading(true);
     try {
-      await Promise.all(ids.map(id => institutesAPI.delete(id)));
-      toast({ title: "Registry Harmonized", description: `${ids.length} nodes removed from global network.` });
+      await Promise.all(ids.map(id => institutesAPI.updateStatus(id, status)));
+      toast({ title: "Bulk Update Success", description: `${ids.length} entries ${status}.` });
       fetchInstitutes();
+      return true;
+    } catch (error) {
+      toast({ title: "Update Failed", variant: "destructive" });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBulkDelete = async (ids: string[]): Promise<boolean> => {
+    if (!confirm(`Decommission ${ids.length} institutions?`)) return false;
+    setIsLoading(true);
+    try {
+      const results = await Promise.allSettled(ids.map(id => institutesAPI.delete(id)));
+      const failed = results.filter(r => r.status === 'rejected');
+
+      if (failed.length > 0) {
+        toast({ title: "Partial Decommission", description: `${ids.length - failed.length} nodes removed, ${failed.length} errors.`, variant: "destructive" });
+      } else {
+        toast({ title: "Registry Harmonized", description: `${ids.length} nodes removed from global network.` });
+      }
+      fetchInstitutes();
+      return true;
     } catch (error) {
       toast({ title: "Sync Protocol Error", variant: "destructive" });
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -227,32 +293,31 @@ export default function AddInstitute() {
       <div className="space-y-10">
         <div>
           <div className="flex items-center gap-4">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-700 shadow-xl shadow-blue-500/20 text-white">
-              <Building2 className="w-6 h-6" />
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-700 shadow-xl shadow-indigo-500/20">
+              <Building2 className="w-6 h-6 text-white" />
             </div>
             <div>
               <h1 className="text-4xl font-black tracking-tighter uppercase">Institute <span className="text-primary">Registry.</span></h1>
-              <p className="text-muted-foreground font-medium underline underline-offset-4 decoration-primary/20">Manage global institutional profiles and academic infrastructure.</p>
+              <p className="text-muted-foreground font-medium underline underline-offset-4 decoration-primary/20">Manage global institutional nodes and parameters.</p>
             </div>
           </div>
-          <Button variant="outline" className="rounded-xl border-blue-500/20 bg-blue-500/5 hover:bg-blue-500/10 text-blue-500 font-bold gap-2 focus-glow" onClick={() => setIsBulkOpen(true)}>
-            <Binary className="w-4 h-4" />
-            Bulk Ingress
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-10">
-          <div className="xl:col-span-8 space-y-8">
-            <Card className="border-white/5 bg-card/40 backdrop-blur-md overflow-hidden relative">
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-primary" />
-              <CardHeader className="pb-4">
-                <CardTitle className="text-xs uppercase tracking-[0.2em] font-black flex items-center gap-2">
-                  <Binary className="w-4 h-4 text-blue-500" />
-                  Institute Protocol Architect
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-4">
-                <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="flex gap-2">
+            <Dialog open={isDialogOpen} onOpenChange={(open) => {
+              setIsDialogOpen(open);
+              if (!open) handleCancelEdit();
+            }}>
+              <DialogTrigger asChild>
+                <Button className="gap-2 font-bold uppercase tracking-widest text-xs hidden sm:flex bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20">
+                  <Plus className="h-4 w-4" /> Register Node
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl overflow-y-auto max-h-[90vh]" data-lenis-prevent>
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-black uppercase tracking-tighter">
+                    {isEditMode ? 'Modify Institution Node' : 'Initialize Institution Node'}
+                  </DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-8 pt-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="space-y-2 lg:col-span-1">
                       <Label className="text-[10px] font-black uppercase opacity-60">Reference Code</Label>
@@ -390,17 +455,27 @@ export default function AddInstitute() {
                     </div>
                   </div>
 
-                  <Button className="w-full bg-blue-600 text-white font-black uppercase text-xs tracking-widest h-14 rounded-2xl shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-all">
-                    Register Institution Profile
+                  <Button type="submit" disabled={isLoading} className="w-full h-14 rounded-2xl bg-indigo-600 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-indigo-500/20">
+                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (
+                      <div className="flex items-center gap-2">
+                        <Save className="w-4 h-4" />
+                        {isEditMode ? 'Commit Modifications' : 'Commit Configuration'}
+                      </div>
+                    )}
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
+              </DialogContent>
+            </Dialog>
+            <Button variant="outline" className="gap-2 font-bold uppercase tracking-widest text-xs border-indigo-500/20 text-indigo-500 hover:bg-indigo-500/10" onClick={() => setIsBulkOpen(true)}>
+              <Binary className="h-4 w-4" /> Bulk Sync
+            </Button>
           </div>
+        </div>
 
-          <div className="xl:col-span-4 space-y-8">
-            <Card className="border-white/5 bg-card/10 backdrop-blur-xl">
-              <CardHeader className="border-b border-white/5">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-3 space-y-8">
+            <Card className="glass-card border-white/10 backdrop-blur-xl">
+              <CardHeader className="border-b border-white/5 pb-4">
                 <CardTitle className="flex items-center gap-2 uppercase tracking-tighter font-black">
                   <Sparkles className="w-5 h-5 text-blue-500" />
                   Registry Matrix
@@ -410,9 +485,40 @@ export default function AddInstitute() {
                 <AdminDataTable
                   data={institutes}
                   columns={columns}
+                  primaryKey="code"
+                  onEdit={handleEdit}
                   onDelete={handleDelete}
                   onBulkDelete={handleBulkDelete}
+                  onBulkStatusToggle={handleBulkStatusToggle}
                   searchPlaceholder="Search global codes..."
+                  filters={[
+                    {
+                      key: 'status',
+                      label: 'Visibility',
+                      options: [
+                        { label: 'Published', value: 'published' },
+                        { label: 'Draft', value: 'draft' }
+                      ]
+                    },
+                    {
+                      key: 'type',
+                      label: 'Admin Type',
+                      options: [
+                        { label: 'Government', value: 'GOV' },
+                        { label: 'Private', value: 'PVT' },
+                        { label: 'Aided', value: 'AID' }
+                      ]
+                    },
+                    {
+                      key: 'region',
+                      label: 'Region',
+                      options: [
+                        { label: 'Osmania University', value: 'OU' },
+                        { label: 'Andhra University', value: 'AU' },
+                        { label: 'Sri Venkateswara', value: 'SVU' }
+                      ]
+                    }
+                  ]}
                 />
               </CardContent>
             </Card>

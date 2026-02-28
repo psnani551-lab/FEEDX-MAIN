@@ -205,7 +205,7 @@ const TrackIssues = ({ issues, onRefresh }: TrackIssuesProps) => {
                                     </DialogDescription>
                                 </div>
 
-                                <div className="px-8 py-8 space-y-8 overflow-y-auto flex-1">
+                                <div className="px-8 py-8 space-y-8 overflow-y-auto flex-1" data-lenis-prevent>
                                     {/* Timeline Visualization */}
                                     <div className="relative space-y-6 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-blue-600/30 before:via-blue-600/30 before:to-transparent">
                                         <div className="relative flex items-center justify-between gap-4">

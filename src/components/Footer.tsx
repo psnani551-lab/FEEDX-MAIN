@@ -1,9 +1,14 @@
 import { SOCIAL_LINKS } from '@/lib/socialLinks';
 import { MessageCircle, Instagram, Youtube } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Logo from './Logo';
 
 const Footer = () => {
+  const location = useLocation();
+  const isAdminPath = location.pathname.startsWith('/admin');
+
+  if (isAdminPath) return null;
+
   return (
     <footer className="relative bg-background/80 backdrop-blur-xl border-t border-white/[0.08] py-24 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none" />

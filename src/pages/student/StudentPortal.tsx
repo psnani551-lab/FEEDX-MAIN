@@ -20,8 +20,8 @@ import AdminDashboard from "@/components/fxbot/AdminDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const StudentPortalSkeleton = () => (
-    <div className="min-h-screen bg-background text-slate-900 relative">
-        <div className="container mx-auto px-4 pt-32 pb-20 relative z-10">
+    <div className="bg-background text-slate-900 relative">
+        <div className="container mx-auto px-4 pt-10 pb-20 relative z-10">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
                 <div className="flex items-center gap-4 lg:gap-6 w-full md:w-auto">
                     <Skeleton className="w-16 h-16 lg:w-20 lg:h-20 rounded-2xl lg:rounded-3xl" />
@@ -141,13 +141,13 @@ const StudentPortal = () => {
     const resolvedIssuesCount = issues.filter(i => i.status === "Resolved").length;
 
     return (
-        <div className="min-h-screen bg-background text-slate-900 relative">
+        <div className="bg-background text-slate-900 relative">
             {/* Soft decorative background circles */}
             <div className="absolute top-[10%] right-[-5%] w-[30%] h-[30%] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute bottom-[10%] left-[-5%] w-[30%] h-[30%] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none" />
 
 
-            <div className="container mx-auto px-4 pt-32 pb-20 relative z-10">
+            <div className="container mx-auto px-4 pt-6 lg:pt-10 pb-20 relative z-10">
                 {/* Header Section */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
@@ -296,7 +296,7 @@ const StudentPortal = () => {
                     </AnimatePresence>
                 </Tabs>
             </div>
-            
+
         </div>
     );
 };

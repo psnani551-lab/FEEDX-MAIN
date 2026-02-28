@@ -337,6 +337,16 @@ export default function AddSpotlight() {
                   onStatusToggle={handleStatusToggle}
                   onBulkStatusToggle={handleBulkStatusToggle}
                   searchPlaceholder="Search spotlight archives..."
+                  filters={[
+                    {
+                      key: 'status',
+                      label: 'Visibility',
+                      options: [
+                        { label: 'Published', value: 'published' },
+                        { label: 'Draft', value: 'draft' }
+                      ]
+                    }
+                  ]}
                 />
               </CardContent>
             </Card>

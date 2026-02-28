@@ -151,8 +151,8 @@ All colors MUST be HSL.
 
   /* Standard Small Scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
 
   ::-webkit-scrollbar-track {
@@ -160,19 +160,21 @@ All colors MUST be HSL.
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.3);
+    background: hsl(var(--primary) / 0.4);
     border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
     transition: background 0.3s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary) / 0.5);
+    background: hsl(var(--primary) / 0.6);
   }
 
   /* Support for Firefox */
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(var(--primary) / 0.3) transparent;
+    scrollbar-color: hsl(var(--primary) / 0.4) transparent;
   }
 }
 
@@ -195,7 +197,7 @@ All colors MUST be HSL.
 
   .text-fluid-hero {
     font-size: clamp(3.5rem, 12vw + 1rem, 8.5rem);
-    line-height: 0.85;
+    line-height: 1;
     letter-spacing: -0.05em;
   }
 
@@ -409,7 +411,8 @@ All colors MUST be HSL.
   }
 
   /* Hidden natively when Radix UI Dialogs (and other popups) lock scroll */
-  body[data-scroll-locked] .global-navbar {
+  body[data-scroll-locked] .global-navbar,
+  body[data-scroll-locked] .mobile-nav {
     display: none !important;
   }
 }
@@ -454,4 +457,22 @@ All colors MUST be HSL.
 .animate-marquee-left:hover,
 .animate-marquee-right:hover {
   animation-play-state: paused;
+}
+
+@layer utilities {
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite linear;
+    background: linear-gradient(to right, transparent 0%, var(--primary) 50%, transparent 100%);
+    background-size: 200% 100%;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
 }

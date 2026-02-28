@@ -16,6 +16,16 @@ const AnniversaryPopup = () => {
     }
   }, []);
 
+  // Handle scroll lock for navbar visibility
+  useEffect(() => {
+    if (show) {
+      document.body.setAttribute('data-scroll-locked', 'true');
+    } else {
+      document.body.removeAttribute('data-scroll-locked');
+    }
+    return () => document.body.removeAttribute('data-scroll-locked');
+  }, [show]);
+
   // Close on Escape key
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

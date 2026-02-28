@@ -572,6 +572,10 @@ export const institutesAPI = {
     const { error } = await supabase.from('institutes').delete().eq('code', code);
     if (error) throw error;
   },
+  updateStatus: async (code: string, status: 'published' | 'draft') => {
+    const { error } = await supabase.from('institutes').update({ status }).eq('code', code);
+    if (error) throw error;
+  },
 };
 // In a real migration, we would map every single Express endpoint here.
 
@@ -854,5 +858,29 @@ export const fxbotAPI = {
   logout: async (): Promise<void> => {
     localStorage.removeItem("student_session");
     await fxbotSupabase.auth.signOut();
+  }
+};
+
+export const settingsAPI = {
+  getCommunityMembers: async (): Promise<number> => {
+    try {
+      const { data, error } = await supabase
+        .from('platform_settings')
+        .select('value')
+        .eq('id', 'community_members')
+        .single();
+
+      if (error) throw error;
+      return parseInt(data.value, 10) || 6554;
+    } catch {
+      return 6554; // Fallback
+    }
+  },
+  updateCommunityMembers: async (count: number): Promise<void> => {
+    const { error } = await supabase
+      .from('platform_settings')
+      .upsert({ id: 'community_members', value: count.toString() });
+
+    if (error) throw error;
   }
 };

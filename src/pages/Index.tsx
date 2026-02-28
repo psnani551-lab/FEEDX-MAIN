@@ -37,7 +37,7 @@ const Index = () => {
         {/* 1. About Segment */}
         <ErrorBoundary>
           <Suspense fallback={<div className="h-96" />}>
-            <div className="py-20 bg-background relative z-10 -mt-6 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] border-t border-white/5">
+            <div className="py-12 bg-background relative z-10 -mt-6 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] border-t border-white/5">
               <AboutSection />
             </div>
           </Suspense>
@@ -46,7 +46,7 @@ const Index = () => {
         {/* 2. Testimonials Segment */}
         <ErrorBoundary>
           <Suspense fallback={<div className="h-96" />}>
-            <div className="py-20 bg-background relative z-20 -mt-8 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] border-t border-white/5">
+            <div className="py-12 bg-background relative z-20 -mt-8 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] border-t border-white/5">
               <TestimonialsSection />
             </div>
           </Suspense>
@@ -56,12 +56,12 @@ const Index = () => {
         <ErrorBoundary>
           <Suspense fallback={<div className="h-96" />}>
             {/* Events Segment */}
-            <div className="py-20 bg-card/30 relative z-30 -mt-8 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] border-t border-white/5">
+            <div className="py-12 bg-card/30 relative z-30 -mt-8 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] border-t border-white/5">
               <EventsSection />
             </div>
 
             {/* Gallery Region */}
-            <div className="py-20 bg-background relative z-40 -mt-8 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] overflow-hidden border-t border-white/5">
+            <div className="py-12 bg-background relative z-40 -mt-8 rounded-t-[3rem] shadow-[0_-10px_30px_rgba(0,0,0,0.03)] overflow-hidden border-t border-white/5">
               <div className="container mx-auto px-6 lg:px-12 relative z-10">
                 <div className="text-left mb-10 lg:mb-12">
                   <h2 className="text-fluid-h2 font-black text-foreground tracking-tighter uppercase">
@@ -79,7 +79,7 @@ const Index = () => {
             </div>
 
             <div className="border-t border-white/[0.05] relative z-50">
-              
+
             </div>
             <BackToTop />
           </Suspense>

@@ -146,14 +146,25 @@ export default function AddEvent() {
     }
   };
 
-  const handleBulkDelete = async (ids: string[]) => {
-    if (!confirm(`Purge ${ids.length} events?`)) return;
+  const handleBulkDelete = async (ids: string[]): Promise<boolean> => {
+    if (!confirm(`Purge ${ids.length} events?`)) return false;
+    setIsLoading(true);
     try {
-      await Promise.all(ids.map(id => eventsAPI.delete(id)));
-      toast({ title: "Bulk Purge Complete", description: `${ids.length} events removed.` });
+      const results = await Promise.allSettled(ids.map(id => eventsAPI.delete(id)));
+      const failed = results.filter(r => r.status === 'rejected');
+
+      if (failed.length > 0) {
+        toast({ title: "Partial Purge", description: `${ids.length - failed.length} removed, ${failed.length} failed.`, variant: "destructive" });
+      } else {
+        toast({ title: "Bulk Purge Complete", description: `${ids.length} events removed.` });
+      }
       fetchEvents();
+      return true;
     } catch (error) {
       toast({ title: "Bulk Sync Failed", variant: "destructive" });
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -190,16 +201,18 @@ export default function AddEvent() {
     }
   };
 
-  const handleBulkStatusToggle = async (ids: string[], status: 'published' | 'draft') => {
+  const handleBulkStatusToggle = async (ids: string[], status: 'published' | 'draft'): Promise<boolean> => {
+    setIsLoading(true);
     try {
       await Promise.all(ids.map(id => eventsAPI.updateStatus(id, status)));
-      toast({
-        title: "Bulk Update Complete",
-        description: `${ids.length} events ${status === 'published' ? 'published' : 'moved to draft'}.`
-      });
+      toast({ title: "Bulk Update Success", description: `${ids.length} entries ${status}.` });
       fetchEvents();
+      return true;
     } catch (error) {
-      toast({ title: "Bulk Operation Failed", variant: "destructive" });
+      toast({ title: "Update Failed", variant: "destructive" });
+      return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -385,6 +398,24 @@ export default function AddEvent() {
                 onStatusToggle={handleStatusToggle}
                 onBulkStatusToggle={handleBulkStatusToggle}
                 searchPlaceholder="Search event registry..."
+                filters={[
+                  {
+                    key: 'status',
+                    label: 'Event Phase',
+                    options: [
+                      { label: 'Upcoming', value: 'upcoming' },
+                      { label: 'Conducted', value: 'conducted' }
+                    ]
+                  },
+                  {
+                    key: 'adminStatus',
+                    label: 'Visibility',
+                    options: [
+                      { label: 'Published', value: 'published' },
+                      { label: 'Draft', value: 'draft' }
+                    ]
+                  }
+                ]}
               />
             </CardContent>
           </Card>

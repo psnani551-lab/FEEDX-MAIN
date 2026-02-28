@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import AdminLayout from "@/components/AdminLayout";
 import AdminDataTable from "@/components/AdminDataTable";
 import { Button } from "@/components/ui/button";
@@ -140,14 +140,38 @@ export default function AddResource() {
     }
   };
 
-  const handleBulkDelete = async (ids: string[]) => {
-    if (!confirm(`Decimate ${ids.length} assets?`)) return;
+  const handleBulkDelete = async (ids: string[]): Promise<boolean> => {
+    if (!confirm(`Permanently purge ${ids.length} selected assets? This action is irreversible.`)) {
+      console.log("[AddResource] Bulk delete cancelled by user.");
+      return false;
+    }
+
+    setIsUploading(true);
     try {
-      await Promise.all(ids.map(id => resourcesAPI.delete(id)));
-      toast({ title: "Inventory Purged", description: `${ids.length} assets removed from library.` });
-      fetchResources();
+      console.log(`[AddResource] Executing bulk deletion protocol for ${ids.length} items:`, ids);
+      const results = await Promise.allSettled(ids.map(id => resourcesAPI.delete(id)));
+
+      const failed = results.filter(r => r.status === 'rejected');
+      if (failed.length > 0) {
+        console.error(`[AddResource] Deletion partially failed:`, failed);
+        toast({
+          title: "Partial Success",
+          description: `${ids.length - failed.length} removed, but ${failed.length} errors occurred.`,
+          variant: "destructive"
+        });
+      } else {
+        console.log(`[AddResource] Bulk deletion successful for all ${ids.length} items.`);
+        toast({ title: "Inventory Harmonized", description: `${ids.length} assets purged correctly.` });
+      }
+
+      await fetchResources();
+      return true;
     } catch (error) {
-      toast({ title: "Bulk Protocol Error", variant: "destructive" });
+      console.error("[AddResource] Bulk protocol failure:", error);
+      toast({ title: "Protocol Breach", description: "Critical error during bulk operation.", variant: "destructive" });
+      return false;
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -180,7 +204,7 @@ export default function AddResource() {
     }
   };
 
-  const handleBulkStatusToggle = async (ids: string[], status: 'published' | 'draft') => {
+  const handleBulkStatusToggle = async (ids: string[], status: 'published' | 'draft'): Promise<boolean> => {
     try {
       await Promise.all(ids.map(id => resourcesAPI.updateStatus(id, status)));
       toast({
@@ -188,8 +212,10 @@ export default function AddResource() {
         description: `${ids.length} resources ${status === 'published' ? 'published' : 'moved to draft'}.`
       });
       fetchResources();
+      return true;
     } catch (error) {
       toast({ title: "Bulk Operation Failed", variant: "destructive" });
+      return false;
     }
   };
 
@@ -207,6 +233,66 @@ export default function AddResource() {
     });
     setIsDialogOpen(false);
   };
+
+  const dynamicFilters = useMemo(() => {
+    const subjects = new Set<string>();
+    const courseCodes = new Set<string>();
+    const examPhases = new Set<string>();
+
+    resources.forEach(r => {
+      r.tags?.forEach(t => {
+        const tag = t.trim().toUpperCase();
+        // Categorize based on format
+        if (/^[A-Z]{2,3}-\d{3}$/.test(tag)) {
+          courseCodes.add(tag);
+        } else if (/(?:MID\s*\d|SEMESTER|QUIZ|ASSIGNMENT)/i.test(tag)) {
+          examPhases.add(tag);
+        } else {
+          subjects.add(tag);
+        }
+      });
+    });
+
+    const filters: any[] = [
+      {
+        key: 'status',
+        label: 'Visibility',
+        options: [
+          { label: 'Published', value: 'published' },
+          { label: 'Draft', value: 'draft' }
+        ]
+      }
+    ];
+
+    if (subjects.size > 0) {
+      filters.push({
+        key: 'subject',
+        label: 'Subject',
+        targetKey: 'tags',
+        options: Array.from(subjects).sort().map(s => ({ label: s, value: s }))
+      });
+    }
+
+    if (courseCodes.size > 0) {
+      filters.push({
+        key: 'courseCode',
+        label: 'Course Code',
+        targetKey: 'tags',
+        options: Array.from(courseCodes).sort().map(s => ({ label: s, value: s }))
+      });
+    }
+
+    if (examPhases.size > 0) {
+      filters.push({
+        key: 'examType',
+        label: 'Exam Phase',
+        targetKey: 'tags',
+        options: Array.from(examPhases).sort().map(s => ({ label: s, value: s }))
+      });
+    }
+
+    return filters;
+  }, [resources]);
 
   const columns = [
     {
@@ -392,6 +478,7 @@ export default function AddResource() {
                   onStatusToggle={handleStatusToggle}
                   onBulkStatusToggle={handleBulkStatusToggle}
                   searchPlaceholder="Search index..."
+                  filters={dynamicFilters}
                 />
               </CardContent>
             </Card>
