@@ -127,7 +127,7 @@ const Updates = () => {
     <div className="min-h-screen bg-background">
 
       {/* Premium Header with Gradient */}
-      <div className="relative border-b border-white/5 bg-gradient-to-br from-background via-background to-primary/5 pt-24 pb-16 overflow-hidden">
+      <div className="relative border-b border-white/5 bg-gradient-to-br from-background via-background to-primary/5 pt-8 pb-16 overflow-hidden">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 opacity-30">
           <div className="absolute top-20 right-20 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
