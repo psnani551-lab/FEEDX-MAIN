@@ -908,26 +908,48 @@ const SBTET_EXAMS = { 'Mid1': '1', 'Mid2': '2', 'Regular': '3', 'Supplementary':
 
 // Helper: fetch JSON from SBTET — returns null if SBTET returns an error body
 async function fetchSBTET(url) {
+  const start = Date.now();
+  console.log(`[fetchSBTET] 👉 Requesting: ${url}`);
   try {
     const response = await fetch(url, {
       headers: {
         'Accept': 'application/json, text/plain, */*',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
         'Referer': 'https://www.sbtet.telangana.gov.in/',
-      }
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+      },
+      timeout: 15000 // 15s timeout
     });
-    if (!response.ok) return null;
-    const text = await response.text();
-    if (!text.trim()) return null;
-    const json = JSON.parse(text);
-    // SBTET returns 200 with a Message field when the endpoint doesn't match or fails
-    if (json && typeof json === 'object' && !Array.isArray(json) && json.Message) {
-      console.warn('[fetchSBTET] SBTET returned error body:', json.Message.substring(0, 80));
+
+    const duration = Date.now() - start;
+    if (!response.ok) {
+      console.error(`[fetchSBTET] ❌ HTTP Error ${response.status} (${response.statusText}) for ${url} [${duration}ms]`);
       return null;
     }
-    return json;
+
+    const text = await response.text();
+    if (!text.trim()) {
+      console.warn(`[fetchSBTET] ⚠️ Empty response body for ${url} [${duration}ms]`);
+      return null;
+    }
+
+    try {
+      const json = JSON.parse(text);
+      if (json && typeof json === 'object' && !Array.isArray(json) && json.Message) {
+        console.warn(`[fetchSBTET] ⚠️ SBTET Logic Error: ${json.Message.substring(0, 100)}...`);
+        return null;
+      }
+      console.log(`[fetchSBTET] ✅ Success: Received ${text.length} bytes for ${url} [${duration}ms]`);
+      return json;
+    } catch (parseError) {
+      console.error(`[fetchSBTET] ❌ JSON Parse Error: ${parseError.message} [${duration}ms]`);
+      return null;
+    }
   } catch (e) {
-    console.warn('[fetchSBTET] Fetch error:', e.message);
+    const duration = Date.now() - start;
+    console.error(`[fetchSBTET] ❌ Network/Fetch Error: ${e.message} for ${url} [${duration}ms]`);
     return null;
   }
 }
