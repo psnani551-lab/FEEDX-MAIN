@@ -1258,8 +1258,13 @@ const syncFromSupabase = async (reason = 'scheduled') => {
   console.log(`🔄 Supabase sync done: ${successCount} tables synced, ${failCount} failed — ${lastSyncTime}`);
 };
 
-// Endpoint to manually trigger sync (admin-only)
-app.post('/api/sync/trigger', authenticateToken, async (req, res) => {
+// Endpoint to manually trigger sync (simple token check)
+app.post('/api/sync/trigger', async (req, res) => {
+  // Simple auth: check Authorization header matches JWT_SECRET
+  const auth = req.headers['authorization'] || '';
+  if (auth !== `Bearer ${JWT_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
   try {
     await syncFromSupabase('manual trigger');
     res.json({ success: true, message: 'Sync completed', status: syncStatus });
