@@ -1147,8 +1147,130 @@ app.get('*', (req, res, next) => {
   }
 });
 
+
+// ============================================================
+// SUPABASE SYNC ENGINE
+// Keeps VPS JSON files in sync with Supabase (source of truth)
+// Runs on startup + every 2 minutes automatically
+// ============================================================
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
+const SYNC_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
+
+const supabaseFetch = async (table, orderBy = 'created_at') => {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+  try {
+    const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&order=${orderBy}.desc`;
+    const res = await fetch(url, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      signal: AbortSignal.timeout(10000) // 10s timeout
+    });
+    if (!res.ok) {
+      console.warn(`⚠️  Supabase sync: ${table} returned ${res.status}`);
+      return null;
+    }
+    return await res.json();
+  } catch (err) {
+    console.warn(`⚠️  Supabase sync: failed to fetch ${table}:`, err.message);
+    return null;
+  }
+};
+
+// Map of Supabase table → JSON filename (and optional field remaps)
+const SYNC_TABLES = [
+  {
+    table: 'notifications', file: 'notifications.json',
+    transform: (r) => ({ ...r, timestamp: r.created_at || r.timestamp })
+  },
+  {
+    table: 'updates', file: 'updates.json',
+    transform: (r) => ({ ...r, timestamp: r.created_at || r.timestamp })
+  },
+  {
+    table: 'resources', file: 'resources.json',
+    transform: (r) => ({ ...r, timestamp: r.created_at || r.timestamp, longDescription: r.long_description || r.longDescription || '' })
+  },
+  {
+    table: 'events', file: 'events.json',
+    transform: (r) => ({
+      ...r, timestamp: r.created_at || r.timestamp,
+      date: r.event_date || r.date, time: r.event_time || r.time,
+      registerLink: r.register_link || r.registerLink,
+      isComingSoon: r.is_coming_soon ?? r.isComingSoon,
+      adminStatus: r.admin_status || r.adminStatus
+    })
+  },
+  {
+    table: 'spotlight', file: 'spotlight.json',
+    transform: (r) => ({ ...r, timestamp: r.created_at || r.timestamp })
+  },
+  {
+    table: 'testimonials', file: 'testimonials.json',
+    transform: (r) => ({ ...r, timestamp: r.created_at || r.timestamp })
+  },
+  {
+    table: 'projects', file: 'projects.json',
+    transform: (r) => ({ ...r, timestamp: r.created_at || r.timestamp })
+  },
+];
+
+let lastSyncTime = null;
+let syncStatus = { success: 0, failed: 0, lastRun: null };
+
+const syncFromSupabase = async (reason = 'scheduled') => {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.warn('⚠️  Supabase sync skipped: VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY not set in .env');
+    return;
+  }
+
+  console.log(`🔄 Supabase sync started (${reason})...`);
+  let successCount = 0;
+  let failCount = 0;
+
+  for (const { table, file, transform } of SYNC_TABLES) {
+    const rows = await supabaseFetch(table);
+    if (rows === null) {
+      failCount++;
+      continue;
+    }
+    const existing = readJsonFile(file);
+    const synced = rows.map(transform);
+
+    // Only write if data actually changed (avoid unnecessary disk writes)
+    if (JSON.stringify(synced) !== JSON.stringify(existing)) {
+      writeJsonFile(file, synced);
+      console.log(`   ✅ ${table}: ${synced.length} records synced`);
+    }
+    successCount++;
+  }
+
+  lastSyncTime = new Date().toISOString();
+  syncStatus = { success: successCount, failed: failCount, lastRun: lastSyncTime };
+  console.log(`🔄 Supabase sync done: ${successCount} tables synced, ${failCount} failed — ${lastSyncTime}`);
+};
+
+// Endpoint to manually trigger sync (admin-only)
+app.post('/api/sync/trigger', authenticateToken, async (req, res) => {
+  try {
+    await syncFromSupabase('manual trigger');
+    res.json({ success: true, message: 'Sync completed', status: syncStatus });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Endpoint to check sync status (public)
+app.get('/api/sync/status', (req, res) => {
+  res.json({ lastSync: lastSyncTime, status: syncStatus, supabaseConfigured: !!(SUPABASE_URL && SUPABASE_ANON_KEY) });
+});
+
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
   console.log(`\n🚀 Server running on http://0.0.0.0:${PORT}`);
   console.log(`📁 Uploads directory: ${uploadsDir}`);
   console.log(`💾 Data directory: ${dataDir}`);
@@ -1163,6 +1285,16 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('   GET/POST/PUT/DELETE /api/admin/testimonials');
   console.log('   GET/POST/PUT/DELETE /api/admin/projects');
   console.log('   GET/POST/DELETE /api/admin/institutes');
+  console.log('   POST /api/sync/trigger  (admin-protected — force immediate sync)');
+  console.log('   GET  /api/sync/status   (check last sync time)');
   console.log('');
   console.log('✅ Default admin: username=admin, password=admin123\n');
+
+  // Run initial sync on startup
+  await syncFromSupabase('server startup');
+
+  // Schedule recurring sync every 2 minutes
+  setInterval(() => syncFromSupabase('scheduled'), SYNC_INTERVAL_MS);
+  console.log(`🔄 Supabase auto-sync scheduled every ${SYNC_INTERVAL_MS / 60000} minutes\n`);
 });
+
