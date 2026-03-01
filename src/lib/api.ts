@@ -740,13 +740,13 @@ export const fxbotAPI = {
     try {
       const res = await fetch(`/api/fxbot/check-email?email=${encodeURIComponent(email)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return !!data.exists;
-    } catch {
-      const { data, error } = await fxbotSupabase.from('students').select('id').eq('email', email.toLowerCase()).maybeSingle();
-      if (error) throw error;
-      return !!data;
-    }
+      const proxyData = await res.json();
+      // If proxy explicitly returns a false/empty state that might be due to anon RLS, fall through
+      if (proxyData && proxyData.exists) return true;
+    } catch { /* fall through */ }
+    const { data, error } = await fxbotSupabase.from('students').select('id').eq('email', email.toLowerCase()).maybeSingle();
+    if (error) throw error;
+    return !!data;
   },
 
   getStudentProfile: async (email: string): Promise<Student | null> => {
@@ -782,12 +782,12 @@ export const fxbotAPI = {
         body: JSON.stringify({ ...student, email: student.email.toLowerCase(), department: student.department.toUpperCase(), designation: student.role === 'student' ? 'student' : (student.designation || 'Faculty') })
       });
       if (!res.ok) { const e = await res.json(); throw new Error(e.error || `HTTP ${res.status}`); }
-      return await res.json();
-    } catch {
-      const { data, error } = await fxbotSupabase.from('students').insert([{ ...student, email: student.email.toLowerCase(), department: student.department.toUpperCase(), designation: student.role === 'student' ? 'student' : (student.designation || 'Faculty') }]).select().single();
-      if (error) throw error;
-      return data;
-    }
+      const proxyData = await res.json();
+      if (proxyData && Object.keys(proxyData).length > 0) return proxyData;
+    } catch { /* fall through */ }
+    const { data, error } = await fxbotSupabase.from('students').insert([{ ...student, email: student.email.toLowerCase(), department: student.department.toUpperCase(), designation: student.role === 'student' ? 'student' : (student.designation || 'Faculty') }]).select().single();
+    if (error) throw error;
+    return data;
   },
 
   // ── Issue Management ───────────────────────────────────────────────────────
@@ -811,13 +811,14 @@ export const fxbotAPI = {
     try {
       const res = await fetch(`/api/fxbot/issues/student/${encodeURIComponent(studentId)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return Array.isArray(data) ? data.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] })) : [];
-    } catch {
-      const { data, error } = await fxbotSupabase.from('fxbot_issues').select('*, issue_attachments(url)').eq('student_id', studentId).order('created_at', { ascending: false });
-      if (error) throw error;
-      return data.map(item => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] }));
-    }
+      const proxyData = await res.json();
+      if (Array.isArray(proxyData) && proxyData.length > 0) {
+        return proxyData.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] }));
+      }
+    } catch { /* fall through */ }
+    const { data, error } = await fxbotSupabase.from('fxbot_issues').select('*, issue_attachments(url)').eq('student_id', studentId).order('created_at', { ascending: false });
+    if (error) throw error;
+    return data.map(item => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] }));
   },
 
   escalateIssue: async (issueId: string, whomToSend: string): Promise<void> => {
@@ -839,18 +840,19 @@ export const fxbotAPI = {
       const params = new URLSearchParams({ designation: designation || '', department: department || '' });
       const res = await fetch(`/api/fxbot/issues?${params}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return Array.isArray(data) ? data.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] })) : [];
-    } catch {
-      const { designation, department } = user;
-      let query = fxbotSupabase.from('fxbot_issues').select('*, issue_attachments(url)').order('created_at', { ascending: false });
-      if (designation === 'Faculty' || designation === 'HOD' || (user.role === 'faculty' && designation === 'student')) {
-        query = query.eq('department', department.toUpperCase());
+      const proxyData = await res.json();
+      if (Array.isArray(proxyData) && proxyData.length > 0) {
+        return proxyData.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] }));
       }
-      const { data, error } = await query;
-      if (error) throw error;
-      return data.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] }));
+    } catch { /* fall through */ }
+    const { designation, department } = user;
+    let query = fxbotSupabase.from('fxbot_issues').select('*, issue_attachments(url)').order('created_at', { ascending: false });
+    if (designation === 'Faculty' || designation === 'HOD' || (user.role === 'faculty' && designation === 'student')) {
+      query = query.eq('department', department.toUpperCase());
     }
+    const { data, error } = await query;
+    if (error) throw error;
+    return data.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] }));
   },
 
   submitDirective: async (issueId: string, directive: string): Promise<void> => {
