@@ -2,8 +2,8 @@ import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { createClient } from "@supabase/supabase-js";
 
-const fxbotUrl = process.env.NEXT_PUBLIC_FXBOT_SUPABASE_URL as string;
-const fxbotAnonKey = process.env.NEXT_PUBLIC_FXBOT_SUPABASE_ANON_KEY as string;
+const fxbotUrl = import.meta.env.VITE_FXBOT_SUPABASE_URL as string;
+const fxbotAnonKey = import.meta.env.VITE_FXBOT_SUPABASE_ANON_KEY as string;
 
 export const fxbotSupabase = createClient(fxbotUrl, fxbotAnonKey);
 
