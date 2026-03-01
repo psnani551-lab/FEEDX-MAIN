@@ -133,16 +133,30 @@ const StudentAuth = () => {
 
         setIsLoading(true);
         try {
-            // Use direct Supabase Auth for OTP to avoid 'Token Invalid/Consumed' errors via proxy
-            const { data, error } = await fxbotSupabase.auth.verifyOtp({
-                email,
-                token: otp,
-                type: 'email'
+            // Use proxy to avoid mobile timeout on direct Supabase calls
+            const res = await fetch('/api/fxbot/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, token: otp })
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.success || !data.user || !data.access_token) {
+                setOtp("");
+                throw new Error(data.error || 'Verification failed');
+            }
+
+            // Crucial Step: We requested the tokens via our VPS proxy, but we must
+            // inject them into the local Supabase Auth instance so that subsequent
+            // requests requiring `fxbotSupabase.auth.getSession()` work correctly.
+            const { error: sessionError } = await fxbotSupabase.auth.setSession({
+                access_token: data.access_token,
+                refresh_token: data.refresh_token,
             });
 
-            if (error || !data.user || !data.session) {
+            if (sessionError) {
                 setOtp("");
-                throw new Error(error?.message || 'Verification failed');
+                throw new Error('Failed to synchronize secure session. Please try again.');
             }
 
             let profile;
