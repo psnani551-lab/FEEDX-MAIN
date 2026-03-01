@@ -1264,6 +1264,56 @@ app.get('/api/fxbot/check-email', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+// Proxy: Send OTP via Supabase Auth (avoids mobile timeout on direct Supabase calls)
+app.post('/api/fxbot/send-otp', async (req, res) => {
+  if (!FXBOT_URL || !FXBOT_KEY) return res.status(503).json({ error: 'FXBot not configured' });
+  const { email, shouldCreateUser = false } = req.body;
+  if (!email) return res.status(400).json({ error: 'email required' });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const r = await fetch(`${FXBOT_URL}/auth/v1/otp`, {
+      method: 'POST',
+      headers: { 'apikey': FXBOT_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, create_user: shouldCreateUser }),
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    const data = r.ok ? {} : await r.json();
+    if (!r.ok) return res.status(r.status).json({ error: data.error_description || data.msg || 'OTP send failed' });
+    res.json({ success: true });
+  } catch (err) {
+    clearTimeout(timer);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Proxy: Verify OTP via Supabase Auth
+app.post('/api/fxbot/verify-otp', async (req, res) => {
+  if (!FXBOT_URL || !FXBOT_KEY) return res.status(503).json({ error: 'FXBot not configured' });
+  const { email, token } = req.body;
+  if (!email || !token) return res.status(400).json({ error: 'email and token required' });
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const r = await fetch(`${FXBOT_URL}/auth/v1/verify`, {
+      method: 'POST',
+      headers: { 'apikey': FXBOT_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, token, type: 'email' }),
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    const data = await r.json();
+    if (!r.ok) return res.status(r.status).json({ error: data.error_description || data.msg || 'Verification failed' });
+    // Return session info so frontend can use it
+    res.json({ success: true, access_token: data.access_token, refresh_token: data.refresh_token, user: data.user });
+  } catch (err) {
+    clearTimeout(timer);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 // SPA Fallback - Serve index.html for all other routes
 // This MUST be after all API routes and static file serving
 app.get('*', (req, res, next) => {

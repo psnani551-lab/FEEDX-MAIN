@@ -107,14 +107,14 @@ const StudentAuth = () => {
 
         setIsLoading(true);
         try {
-            const { error } = await fxbotSupabase.auth.signInWithOtp({
-                email,
-                options: {
-                    shouldCreateUser: activeTab === "signup",
-                }
+            // Use VPS proxy to avoid mobile timeout on direct Supabase Auth calls
+            const res = await fetch('/api/fxbot/send-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, shouldCreateUser: activeTab === 'signup' })
             });
-
-            if (error) throw error;
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to send OTP');
 
             setIsOtpSent(true);
             setCountdown(60);
@@ -134,19 +134,23 @@ const StudentAuth = () => {
 
         setIsLoading(true);
         try {
-            const { data: { session }, error } = await fxbotSupabase.auth.verifyOtp({
-                email,
-                token: otp,
-                type: 'email'
+            // Use VPS proxy for OTP verification to avoid mobile timeout
+            const res = await fetch('/api/fxbot/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, token: otp })
             });
-
-            if (error) {
-                setOtp(""); // Clear OTP so user can re-enter
-                throw error;
-            }
-            if (!session) {
+            const data = await res.json();
+            if (!res.ok) {
                 setOtp("");
-                throw new Error("Verification failed — no session returned. Try resending the code.");
+                throw new Error(data.error || 'Verification failed');
+            }
+            // Set the session in fxbotSupabase client using tokens from proxy
+            if (data.access_token) {
+                await fxbotSupabase.auth.setSession({
+                    access_token: data.access_token,
+                    refresh_token: data.refresh_token
+                });
             }
 
             let profile;
