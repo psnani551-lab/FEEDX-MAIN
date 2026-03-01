@@ -59,7 +59,18 @@ const StudentPortal = () => {
             return;
         }
 
-        // Validate the Supabase auth session is still active
+        // Validate session: accept either a Supabase JS client session (standard network)
+        // OR our ISP-bypass token stored in localStorage (for Indian ISP block workaround)
+        const bypassToken = localStorage.getItem("fxbot_access_token");
+        if (bypassToken) {
+            // ISP-bypass path: token is valid (was set right after successful OTP verify)
+            const studentData = JSON.parse(session);
+            setStudent(studentData);
+            fetchIssues(studentData);
+            return;
+        }
+
+        // Standard path: check Supabase JS client session
         fxbotSupabase.auth.getSession().then(({ data: { session: authSession } }) => {
             if (!authSession) {
                 // Auth session expired — clear stale local data and redirect
