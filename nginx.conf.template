@@ -3,7 +3,7 @@
 
 server {
     listen 80;
-    server_name 187.77.188.26;
+    server_name feedxpolytechnic.com www.feedxpolytechnic.com;
 
     # Root directory for static frontend files
     root /var/www/feedx/dist;

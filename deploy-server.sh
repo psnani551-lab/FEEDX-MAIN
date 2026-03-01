@@ -28,4 +28,4 @@ sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t && sudo systemctl restart nginx
 
 echo "✅ DEPLOYMENT COMPLETE!"
-echo "Site should be live at: http://187.77.188.26"
+echo "Site should be live at: http://feedxpolytechnic.com"
