@@ -41,7 +41,7 @@ const Navbar = () => {
   return (
     <>
       {/* ── NAVBAR BAR ─────────────────────────────────────────────────────── */}
-      <nav className="global-navbar fixed top-0 left-0 right-0 z-[90] border-b border-white/[0.08] bg-background/80 backdrop-blur-3xl shadow-2xl transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]">
+      <nav className="global-navbar fixed top-0 left-0 right-0 z-[90] border-b border-white/[0.08] bg-background/80 backdrop-blur-3xl shadow-2xl transition-transform duration-500 ease-out">
         <div className="mx-auto w-[95%] max-w-[1440px]">
           <div className="flex items-center justify-between h-16 sm:h-20">
 

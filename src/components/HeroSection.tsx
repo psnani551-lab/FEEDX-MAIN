@@ -113,7 +113,7 @@ const SocialPill = ({ href, icon, label }: { href: string; icon: React.ReactNode
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    className="inline-flex items-center gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white/[0.03] border-2 border-primary/30 hover:border-primary transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_-5px_hsl(var(--primary)/0.4)]"
+    className="inline-flex items-center gap-3 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl bg-white/[0.03] border-2 border-primary/30 hover:border-primary transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_-5px_hsl(var(--primary)/0.4)] group"
   >
     <div className="scale-110">{icon}</div>
     <span className="text-xs font-black uppercase tracking-[0.15em] text-muted-foreground group-hover:text-foreground">{label}</span>
