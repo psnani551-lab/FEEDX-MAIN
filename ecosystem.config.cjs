@@ -6,6 +6,9 @@ module.exports = {
             env: {
                 NODE_ENV: 'production',
                 PORT: 3001,
+                // JWT_SECRET is loaded from the .env file on the VPS.
+                // Set it here as a safety fallback reference only.
+                // IMPORTANT: ensure /var/www/feedx/.env has the correct JWT_SECRET set.
             },
             instances: 1,
             autorestart: true,

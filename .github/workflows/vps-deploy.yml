@@ -29,7 +29,8 @@ jobs:
             echo "📦 Installing dependencies..."
             npm install
             
-            echo "🔨 Building static frontend..."
+            echo "🔨 Building static frontend with production environment..."
+            cp .env.production .env
             npm run build
             
             echo "🚀 Restarting application with PM2..."
