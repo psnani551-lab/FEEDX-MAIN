@@ -123,16 +123,18 @@ export interface GalleryImage {
 // Notifications API
 export const notificationsAPI = {
   getAll: async (): Promise<Notification[]> => {
-    const { data, error } = await supabase
-      .from('notifications')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Supabase fetch error for notifications:', error);
-      throw error;
+    // Use backend API (same domain) — faster and avoids Supabase mobile timeout
+    try {
+      const res = await fetch('/api/notifications');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data) ? data.map((n: any) => ({ ...n, timestamp: n.timestamp || n.created_at })) : [];
+    } catch (err) {
+      console.error('Backend fetch failed for notifications, falling back to Supabase:', err);
+      const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data.map(n => ({ ...n, timestamp: n.created_at }));
     }
-    return data.map(n => ({ ...n, timestamp: n.created_at }));
   },
 
   create: async (data: Omit<Notification, 'id' | 'timestamp'>): Promise<Notification> => {
@@ -174,16 +176,18 @@ export const notificationsAPI = {
 // Updates API
 export const updatesAPI = {
   getAll: async (): Promise<Update[]> => {
-    const { data, error } = await supabase
-      .from('updates')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Supabase fetch error for updates:', error);
-      throw error;
+    // Use backend API (same domain) — faster and avoids Supabase mobile timeout
+    try {
+      const res = await fetch('/api/updates');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data) ? data.map((u: any) => ({ ...u, timestamp: u.timestamp || u.created_at })) : [];
+    } catch (err) {
+      console.error('Backend fetch failed for updates, falling back to Supabase:', err);
+      const { data, error } = await supabase.from('updates').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data.map(u => ({ ...u, timestamp: u.created_at }));
     }
-    return data.map(u => ({ ...u, timestamp: u.created_at }));
   },
 
   create: async (data: Omit<Update, 'id' | 'timestamp'>): Promise<Update> => {
@@ -224,15 +228,17 @@ export const updatesAPI = {
 // Resources API
 export const resourcesAPI = {
   getAll: async (): Promise<Resource[]> => {
-    const { data, error } = await supabase
-      .from('resources')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (error) {
-      console.error('Supabase fetch error for resources:', error);
-      throw error;
+    try {
+      const res = await fetch('/api/resources');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data) ? data.map((r: any) => ({ ...r, timestamp: r.timestamp || r.created_at, longDescription: r.longDescription || r.long_description || '' })) : [];
+    } catch (err) {
+      console.error('Backend fetch failed for resources, falling back to Supabase:', err);
+      const { data, error } = await supabase.from('resources').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data.map(r => ({ ...r, timestamp: r.created_at }));
     }
-    return data.map(r => ({ ...r, timestamp: r.created_at }));
   },
 
   getById: async (id: string): Promise<Resource> => {
@@ -294,23 +300,33 @@ export const resourcesAPI = {
 // Events API
 export const eventsAPI = {
   getAll: async (): Promise<Event[]> => {
-    const { data, error } = await supabase
-      .from('events')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (error) {
-      console.error('Supabase fetch error for events:', error);
-      throw error;
+    try {
+      const res = await fetch('/api/events');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data) ? data.map((e: any) => ({
+        ...e,
+        timestamp: e.timestamp || e.created_at,
+        date: e.date || e.event_date,
+        time: e.time || e.event_time,
+        registerLink: e.registerLink || e.register_link,
+        isComingSoon: e.isComingSoon || e.is_coming_soon,
+        adminStatus: e.adminStatus || e.admin_status
+      })) : [];
+    } catch (err) {
+      console.error('Backend fetch failed for events, falling back to Supabase:', err);
+      const { data, error } = await supabase.from('events').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data.map(e => ({
+        ...e,
+        timestamp: e.created_at,
+        date: e.event_date || e.date,
+        time: e.event_time || e.time,
+        registerLink: e.register_link || e.registerLink,
+        isComingSoon: e.is_coming_soon || e.isComingSoon,
+        adminStatus: e.admin_status || e.adminStatus
+      }));
     }
-    return data.map(e => ({
-      ...e,
-      timestamp: e.created_at,
-      date: e.event_date || e.date,
-      time: e.event_time || e.time,
-      registerLink: e.register_link || e.registerLink,
-      isComingSoon: e.is_coming_soon || e.isComingSoon,
-      adminStatus: e.admin_status || e.adminStatus
-    }));
   },
 
   create: async (data: any): Promise<Event> => {
@@ -384,12 +400,17 @@ export const eventsAPI = {
 // Spotlight API
 export const spotlightAPI = {
   getAll: async (): Promise<Spotlight[]> => {
-    const { data, error } = await supabase.from('spotlight').select('*').order('created_at', { ascending: false });
-    if (error) {
-      console.error('Supabase fetch error for spotlight:', error);
-      throw error;
+    try {
+      const res = await fetch('/api/spotlight');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data) ? data.map((s: any) => ({ ...s, timestamp: s.timestamp || s.created_at })) : [];
+    } catch (err) {
+      console.error('Backend fetch failed for spotlight, falling back to Supabase:', err);
+      const { data, error } = await supabase.from('spotlight').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data.map(s => ({ ...s, timestamp: s.created_at }));
     }
-    return data.map(s => ({ ...s, timestamp: s.created_at }));
   },
 
   create: async (data: any): Promise<Spotlight> => {
@@ -417,12 +438,17 @@ export const spotlightAPI = {
 // Testimonials API
 export const testimonialsAPI = {
   getAll: async (): Promise<Testimonial[]> => {
-    const { data, error } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
-    if (error) {
-      console.error('Supabase fetch error for testimonials:', error);
-      throw error;
+    try {
+      const res = await fetch('/api/testimonials');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data) ? data.map((t: any) => ({ ...t, timestamp: t.timestamp || t.created_at })) : [];
+    } catch (err) {
+      console.error('Backend fetch failed for testimonials, falling back to Supabase:', err);
+      const { data, error } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return data.map(t => ({ ...t, timestamp: t.created_at }));
     }
-    return data.map(t => ({ ...t, timestamp: t.created_at }));
   },
 
   create: async (data: any): Promise<Testimonial> => {
