@@ -718,8 +718,15 @@ export interface FXBotIssue {
 
 // Helper: get current user's JWT for proxy authorization
 const getAuthHeader = async (): Promise<string | undefined> => {
-  const { data: { session } } = await fxbotSupabase.auth.getSession();
-  return session?.access_token ? `Bearer ${session.access_token}` : undefined;
+  try {
+    const { data } = await fxbotSupabase.auth.getSession();
+    if (data?.session?.access_token) {
+      return `Bearer ${data.session.access_token}`;
+    }
+  } catch (err) {
+    console.error("Error getting session:", err);
+  }
+  return undefined;
 };
 
 // Helper: trigger VPS sync after admin writes so data appears instantly

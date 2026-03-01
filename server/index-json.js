@@ -1158,12 +1158,19 @@ const fxbotRequest = async (method, path, body = null, authHeader = null) => {
   if (!FXBOT_URL || !FXBOT_KEY) throw new Error('FXBot Supabase not configured');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
+
+  // Validate the authHeader to prevent "Bearer undefined" from failing requests
+  let safeAuth = `Bearer ${FXBOT_KEY}`;
+  if (authHeader && authHeader !== 'Bearer undefined' && authHeader !== 'Bearer null') {
+    safeAuth = authHeader;
+  }
+
   try {
     const opts = {
       method,
       headers: {
         'apikey': FXBOT_KEY,
-        'Authorization': authHeader || `Bearer ${FXBOT_KEY}`,
+        'Authorization': safeAuth,
         'Content-Type': 'application/json',
         'Prefer': method === 'POST' ? 'return=representation' : 'return=minimal'
       },
