@@ -1287,10 +1287,22 @@ app.post('/api/fxbot/send-otp', async (req, res) => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
   try {
+    // Determine if user already exists in Supabase Auth by checking the students table.
+    // If they exist → create_user: false (magic link, avoids 409 on verify).
+    // If brand new → create_user: true (signup OTP).
+    let createUser = shouldCreateUser;
+    if (shouldCreateUser) {
+      try {
+        const checkRes = await fxbotRequest('GET', `students?email=eq.${encodeURIComponent(email.toLowerCase())}&select=id&limit=1`);
+        const alreadyExists = !!(checkRes.data && checkRes.data.length > 0);
+        if (alreadyExists) createUser = false; // existing student → magic link flow
+      } catch (_) { /* non-critical, fall through */ }
+    }
+
     const r = await fetch(`${FXBOT_URL}/auth/v1/otp`, {
       method: 'POST',
       headers: { 'apikey': FXBOT_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, create_user: shouldCreateUser }),
+      body: JSON.stringify({ email, create_user: createUser }),
       signal: controller.signal
     });
     clearTimeout(timer);
@@ -1302,6 +1314,7 @@ app.post('/api/fxbot/send-otp', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // Proxy: Verify OTP via Supabase Auth
 app.post('/api/fxbot/verify-otp', async (req, res) => {
