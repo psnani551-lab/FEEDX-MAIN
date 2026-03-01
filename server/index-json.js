@@ -1310,23 +1310,33 @@ app.post('/api/fxbot/verify-otp', async (req, res) => {
   if (!email || !token) return res.status(400).json({ error: 'email and token required' });
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
-  try {
-    // By default, 6-digit OTPs use type 'email' or 'signup'.
-    // We pass what the client requests or default to 'email' to match frontend usage and prevent
-    // double-burning the token.
+
+  const tryVerify = async (type) => {
     const r = await fetch(`${FXBOT_URL}/auth/v1/verify`, {
       method: 'POST',
       headers: { 'apikey': FXBOT_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, token, type: req.body.type || 'email' }),
+      body: JSON.stringify({ email, token, type }),
       signal: controller.signal
     });
-    clearTimeout(timer);
-
     let data;
     try { data = await r.json(); } catch (e) { data = {}; }
+    return { ok: r.ok, status: r.status, data };
+  };
 
-    if (!r.ok) {
-      return res.status(r.status).json({ error: data.error_description || data.msg || 'Verification failed' });
+  try {
+    // First attempt: 'email' type (works for new users + signup OTPs)
+    let { ok, status, data } = await tryVerify('email');
+    clearTimeout(timer);
+
+    if (!ok && status === 409) {
+      // 409 = email already confirmed → existing user sent a magiclink OTP
+      // Safe to retry same token with 'magiclink' type (token not consumed by a 409)
+      const fb = await tryVerify('magiclink');
+      ok = fb.ok; status = fb.status; data = fb.data;
+    }
+
+    if (!ok) {
+      return res.status(status).json({ error: data.error_description || data.msg || 'Verification failed' });
     }
 
     // Return session info so frontend can use it
@@ -1336,6 +1346,7 @@ app.post('/api/fxbot/verify-otp', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 // SPA Fallback - Serve index.html for all other routes
