@@ -1311,15 +1311,39 @@ app.post('/api/fxbot/verify-otp', async (req, res) => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
   try {
+    // 1. Check if user already exists to determine the correct OTP type
+    const checkRes = await fxbotRequest('GET', `students?email=eq.${encodeURIComponent(email.toLowerCase())}&select=id&limit=1`);
+    const isNewUser = !(checkRes.data && checkRes.data.length > 0);
+    const otpType = isNewUser ? 'signup' : 'magiclink';
+
     const r = await fetch(`${FXBOT_URL}/auth/v1/verify`, {
       method: 'POST',
       headers: { 'apikey': FXBOT_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, token, type: 'email' }),
+      body: JSON.stringify({ email, token, type: otpType }),
       signal: controller.signal
     });
     clearTimeout(timer);
-    const data = await r.json();
-    if (!r.ok) return res.status(r.status).json({ error: data.error_description || data.msg || 'Verification failed' });
+
+    // If magiclink fails on an edge case, we could technically fallback to 'email', but 'signup'/'magiclink' is standard.
+    let data;
+    try { data = await r.json(); } catch (e) { data = {}; }
+
+    if (!r.ok) {
+      // Small fallback logic if Supabase prefers 'email' for existing users in some config states
+      if (!isNewUser && r.status >= 400 && r.status < 500) {
+        const fallback = await fetch(`${FXBOT_URL}/auth/v1/verify`, {
+          method: 'POST',
+          headers: { 'apikey': FXBOT_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, token, type: 'email' })
+        });
+        const fallbackData = await fallback.json().catch(() => ({}));
+        if (fallback.ok) {
+          return res.json({ success: true, access_token: fallbackData.access_token, refresh_token: fallbackData.refresh_token, user: fallbackData.user });
+        }
+      }
+      return res.status(r.status).json({ error: data.error_description || data.msg || 'Verification failed' });
+    }
+
     // Return session info so frontend can use it
     res.json({ success: true, access_token: data.access_token, refresh_token: data.refresh_token, user: data.user });
   } catch (err) {
