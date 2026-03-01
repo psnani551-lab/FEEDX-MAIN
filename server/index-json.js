@@ -1160,6 +1160,8 @@ const SYNC_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 
 const supabaseFetch = async (table, orderBy = 'created_at') => {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000); // 10s timeout
   try {
     const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&order=${orderBy}.desc`;
     const res = await fetch(url, {
@@ -1168,14 +1170,16 @@ const supabaseFetch = async (table, orderBy = 'created_at') => {
         'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json'
       },
-      signal: AbortSignal.timeout(10000) // 10s timeout
+      signal: controller.signal
     });
+    clearTimeout(timer);
     if (!res.ok) {
       console.warn(`⚠️  Supabase sync: ${table} returned ${res.status}`);
       return null;
     }
     return await res.json();
   } catch (err) {
+    clearTimeout(timer);
     console.warn(`⚠️  Supabase sync: failed to fetch ${table}:`, err.message);
     return null;
   }
