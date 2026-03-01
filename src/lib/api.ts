@@ -753,24 +753,25 @@ export const fxbotAPI = {
     try {
       const res = await fetch(`/api/fxbot/student?email=${encodeURIComponent(email)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
-    } catch {
-      const { data, error } = await fxbotSupabase.from('students').select('*').eq('email', email.toLowerCase()).maybeSingle();
-      if (error) throw error;
-      return data;
-    }
+      const proxyData = await res.json();
+      // Proxy returns null when anon key is blocked by RLS — fall back to authenticated client
+      if (proxyData !== null) return proxyData;
+    } catch { /* fall through to direct Supabase */ }
+    const { data, error } = await fxbotSupabase.from('students').select('*').eq('email', email.toLowerCase()).maybeSingle();
+    if (error) throw error;
+    return data;
   },
 
   getStudentById: async (studentId: string): Promise<Student | null> => {
     try {
       const res = await fetch(`/api/fxbot/student/${encodeURIComponent(studentId)}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
-    } catch {
-      const { data, error } = await fxbotSupabase.from('students').select('*').eq('id', studentId).maybeSingle();
-      if (error) throw error;
-      return data;
-    }
+      const proxyData = await res.json();
+      if (proxyData !== null) return proxyData;
+    } catch { /* fall through */ }
+    const { data, error } = await fxbotSupabase.from('students').select('*').eq('id', studentId).maybeSingle();
+    if (error) throw error;
+    return data;
   },
 
   createStudent: async (student: Omit<Student, 'id' | 'created_at'>): Promise<Student> => {
