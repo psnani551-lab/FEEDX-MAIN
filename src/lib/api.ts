@@ -716,6 +716,12 @@ export interface FXBotIssue {
   attachments?: string[];
 }
 
+// Helper: get current user's JWT for proxy authorization
+const getAuthHeader = async (): Promise<string | undefined> => {
+  const { data: { session } } = await fxbotSupabase.auth.getSession();
+  return session?.access_token ? `Bearer ${session.access_token}` : undefined;
+};
+
 // Helper: trigger VPS sync after admin writes so data appears instantly
 const triggerSync = () => fetch('/api/sync/trigger', { method: 'POST' }).catch(() => {/* non-critical */ });
 
@@ -723,7 +729,9 @@ export const fxbotAPI = {
   // ── Access Code Validation ─────────────────────────────────────────────────
   validateAdminCode: async (code: string, designation: 'Principal' | 'Admin'): Promise<boolean> => {
     try {
-      const res = await fetch(`/api/fxbot/admin-codes?code=${encodeURIComponent(code.trim().toUpperCase())}&designation=${encodeURIComponent(designation)}`);
+      const res = await fetch(`/api/fxbot/admin-codes?code=${encodeURIComponent(code.trim().toUpperCase())}&designation=${encodeURIComponent(designation)}`, {
+        headers: { ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string }) }
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       return !!data.valid;
@@ -738,147 +746,118 @@ export const fxbotAPI = {
   // ── Student Auth & Record Management ──────────────────────────────────────
   checkEmailExists: async (email: string): Promise<boolean> => {
     try {
-      const res = await fetch(`/api/fxbot/check-email?email=${encodeURIComponent(email)}`);
+      const res = await fetch(`/api/fxbot/check-email?email=${encodeURIComponent(email)}`, {
+        headers: { ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string }) }
+      });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const proxyData = await res.json();
-      // If proxy explicitly returns a false/empty state that might be due to anon RLS, fall through
-      if (proxyData && proxyData.exists) return true;
-    } catch { /* fall through */ }
-    const { data, error } = await fxbotSupabase.from('students').select('id').eq('email', email.toLowerCase()).maybeSingle();
-    if (error) throw error;
-    return !!data;
+      return !!proxyData?.exists;
+    } catch { return false; }
   },
 
   getStudentProfile: async (email: string): Promise<Student | null> => {
-    try {
-      const res = await fetch(`/api/fxbot/student?email=${encodeURIComponent(email)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const proxyData = await res.json();
-      // Proxy returns null when anon key is blocked by RLS — fall back to authenticated client
-      if (proxyData !== null) return proxyData;
-    } catch { /* fall through to direct Supabase */ }
-    const { data, error } = await fxbotSupabase.from('students').select('*').eq('email', email.toLowerCase()).maybeSingle();
-    if (error) throw error;
-    return data;
+    const res = await fetch(`/api/fxbot/student?email=${encodeURIComponent(email)}`, {
+      headers: { ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string }) }
+    });
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new Error(e.error || `HTTP ${res.status}`);
+    }
+    return await res.json();
   },
 
   getStudentById: async (studentId: string): Promise<Student | null> => {
-    try {
-      const res = await fetch(`/api/fxbot/student/${encodeURIComponent(studentId)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const proxyData = await res.json();
-      if (proxyData !== null) return proxyData;
-    } catch { /* fall through */ }
-    const { data, error } = await fxbotSupabase.from('students').select('*').eq('id', studentId).maybeSingle();
-    if (error) throw error;
-    return data;
+    const res = await fetch(`/api/fxbot/student/${encodeURIComponent(studentId)}`, {
+      headers: { ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string }) }
+    });
+    if (!res.ok) {
+      const e = await res.json().catch(() => ({}));
+      throw new Error(e.error || `HTTP ${res.status}`);
+    }
+    return await res.json();
   },
 
   createStudent: async (student: Omit<Student, 'id' | 'created_at'>): Promise<Student> => {
-    try {
-      const res = await fetch('/api/fxbot/student', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...student, email: student.email.toLowerCase(), department: student.department.toUpperCase(), designation: student.role === 'student' ? 'student' : (student.designation || 'Faculty') })
-      });
-      if (!res.ok) { const e = await res.json(); throw new Error(e.error || `HTTP ${res.status}`); }
-      const proxyData = await res.json();
-      if (proxyData && Object.keys(proxyData).length > 0) return proxyData;
-    } catch { /* fall through */ }
-    const { data, error } = await fxbotSupabase.from('students').insert([{ ...student, email: student.email.toLowerCase(), department: student.department.toUpperCase(), designation: student.role === 'student' ? 'student' : (student.designation || 'Faculty') }]).select().single();
-    if (error) throw error;
-    return data;
+    const res = await fetch('/api/fxbot/student', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string })
+      },
+      body: JSON.stringify({ ...student, email: student.email.toLowerCase(), department: student.department.toUpperCase(), designation: student.role === 'student' ? 'student' : (student.designation || 'Faculty') })
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error || `HTTP ${res.status}`); }
+    return await res.json();
   },
 
   // ── Issue Management ───────────────────────────────────────────────────────
   submitIssue: async (issue: Omit<FXBotIssue, 'status' | 'created_at' | 'updated_at'>): Promise<FXBotIssue> => {
-    try {
-      const res = await fetch('/api/fxbot/issues', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...issue, department: issue.department.toUpperCase() })
-      });
-      if (!res.ok) { const e = await res.json(); throw new Error(e.error || `HTTP ${res.status}`); }
-      return await res.json();
-    } catch {
-      const { data, error } = await fxbotSupabase.from('fxbot_issues').insert([{ ...issue, department: issue.department.toUpperCase(), status: 'Pending' }]).select().single();
-      if (error) throw error;
-      return data;
-    }
+    const res = await fetch('/api/fxbot/issues', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string })
+      },
+      body: JSON.stringify({ ...issue, department: issue.department.toUpperCase() })
+    });
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error || `HTTP ${res.status}`); }
+    return await res.json();
   },
 
   getStudentIssues: async (studentId: string): Promise<FXBotIssue[]> => {
-    try {
-      const res = await fetch(`/api/fxbot/issues/student/${encodeURIComponent(studentId)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const proxyData = await res.json();
-      if (Array.isArray(proxyData) && proxyData.length > 0) {
-        return proxyData.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] }));
-      }
-    } catch { /* fall through */ }
-    const { data, error } = await fxbotSupabase.from('fxbot_issues').select('*, issue_attachments(url)').eq('student_id', studentId).order('created_at', { ascending: false });
-    if (error) throw error;
-    return data.map(item => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] }));
+    const res = await fetch(`/api/fxbot/issues/student/${encodeURIComponent(studentId)}`, {
+      headers: { ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string }) }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return Array.isArray(data) ? data.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] })) : [];
   },
 
   escalateIssue: async (issueId: string, whomToSend: string): Promise<void> => {
-    try {
-      const res = await fetch(`/api/fxbot/issues/${encodeURIComponent(issueId)}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'Escalated', whom_to_send: whomToSend })
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    } catch {
-      const { error } = await fxbotSupabase.from('fxbot_issues').update({ status: 'Escalated', whom_to_send: whomToSend, updated_at: new Date().toISOString() }).eq('id', issueId);
-      if (error) throw error;
-    }
+    const res = await fetch(`/api/fxbot/issues/${encodeURIComponent(issueId)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string })
+      },
+      body: JSON.stringify({ status: 'Escalated', whom_to_send: whomToSend })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
   },
 
   getFacultyIssues: async (user: Student): Promise<FXBotIssue[]> => {
-    try {
-      const { designation, department } = user;
-      const params = new URLSearchParams({ designation: designation || '', department: department || '' });
-      const res = await fetch(`/api/fxbot/issues?${params}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const proxyData = await res.json();
-      if (Array.isArray(proxyData) && proxyData.length > 0) {
-        return proxyData.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] }));
-      }
-    } catch { /* fall through */ }
     const { designation, department } = user;
-    let query = fxbotSupabase.from('fxbot_issues').select('*, issue_attachments(url)').order('created_at', { ascending: false });
-    if (designation === 'Faculty' || designation === 'HOD' || (user.role === 'faculty' && designation === 'student')) {
-      query = query.eq('department', department.toUpperCase());
-    }
-    const { data, error } = await query;
-    if (error) throw error;
-    return data.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] }));
+    const params = new URLSearchParams({ designation: designation || '', department: department || '' });
+    const res = await fetch(`/api/fxbot/issues?${params}`, {
+      headers: { ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string }) }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return Array.isArray(data) ? data.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] })) : [];
   },
 
   submitDirective: async (issueId: string, directive: string): Promise<void> => {
-    try {
-      const res = await fetch(`/api/fxbot/issues/${encodeURIComponent(issueId)}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ internal_directive: directive })
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    } catch {
-      const { error } = await fxbotSupabase.from('fxbot_issues').update({ internal_directive: directive, updated_at: new Date().toISOString() }).eq('id', issueId);
-      if (error) throw error;
-    }
+    const res = await fetch(`/api/fxbot/issues/${encodeURIComponent(issueId)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string })
+      },
+      body: JSON.stringify({ internal_directive: directive })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
   },
 
   updateIssueStatus: async (issueId: string, status: string, resolution?: string): Promise<void> => {
-    try {
-      const res = await fetch(`/api/fxbot/issues/${encodeURIComponent(issueId)}`, {
-        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, resolution_message: resolution, resolved_at: status === 'Resolved' ? new Date().toISOString() : null })
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    } catch {
-      const { error } = await fxbotSupabase.from('fxbot_issues').update({ status, resolution_message: resolution, resolved_at: status === 'Resolved' ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq('id', issueId);
-      if (error) throw error;
-    }
+    const res = await fetch(`/api/fxbot/issues/${encodeURIComponent(issueId)}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string })
+      },
+      body: JSON.stringify({ status, resolution_message: resolution, resolved_at: status === 'Resolved' ? new Date().toISOString() : null })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
   },
 
   logout: async (): Promise<void> => {

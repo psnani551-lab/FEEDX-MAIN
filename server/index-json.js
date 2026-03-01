@@ -1154,7 +1154,7 @@ app.post('/api/sync/trigger', async (req, res) => {
 const FXBOT_URL = process.env.VITE_FXBOT_SUPABASE_URL;
 const FXBOT_KEY = process.env.VITE_FXBOT_SUPABASE_ANON_KEY;
 
-const fxbotRequest = async (method, path, body = null) => {
+const fxbotRequest = async (method, path, body = null, authHeader = null) => {
   if (!FXBOT_URL || !FXBOT_KEY) throw new Error('FXBot Supabase not configured');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 15000);
@@ -1163,7 +1163,7 @@ const fxbotRequest = async (method, path, body = null) => {
       method,
       headers: {
         'apikey': FXBOT_KEY,
-        'Authorization': `Bearer ${FXBOT_KEY}`,
+        'Authorization': authHeader || `Bearer ${FXBOT_KEY}`,
         'Content-Type': 'application/json',
         'Prefer': method === 'POST' ? 'return=representation' : 'return=minimal'
       },
@@ -1185,28 +1185,31 @@ app.get('/api/fxbot/student', async (req, res) => {
   try {
     const { email } = req.query;
     if (!email) return res.status(400).json({ error: 'email required' });
-    const r = await fxbotRequest('GET', `students?email=eq.${encodeURIComponent(email.toLowerCase())}&select=*&limit=1`);
-    res.status(r.status).json(r.data && r.data.length > 0 ? r.data[0] : null);
+    const r = await fxbotRequest('GET', `students?email=eq.${encodeURIComponent(email.toLowerCase())}&select=*&limit=1`, null, req.headers.authorization);
+    if (!r.ok) return res.status(r.status).json(r.data);
+    res.json(r.data && r.data.length > 0 ? r.data[0] : null);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // Student lookup by id
 app.get('/api/fxbot/student/:id', async (req, res) => {
   try {
-    const r = await fxbotRequest('GET', `students?id=eq.${req.params.id}&select=*&limit=1`);
-    res.status(r.status).json(r.data && r.data.length > 0 ? r.data[0] : null);
+    const r = await fxbotRequest('GET', `students?id=eq.${req.params.id}&select=*&limit=1`, null, req.headers.authorization);
+    if (!r.ok) return res.status(r.status).json(r.data);
+    res.json(r.data && r.data.length > 0 ? r.data[0] : null);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // Create student
 app.post('/api/fxbot/student', async (req, res) => {
   try {
-    const r = await fxbotRequest('POST', 'students', req.body);
-    res.status(r.status).json(r.data && r.data.length > 0 ? r.data[0] : r.data);
+    const r = await fxbotRequest('POST', 'students', req.body, req.headers.authorization);
+    if (!r.ok) return res.status(r.status).json(r.data);
+    res.json(r.data && r.data.length > 0 ? r.data[0] : null);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Validate admin access code
+// Validate Admin Code (publicly accessible, anon allowed)
 app.get('/api/fxbot/admin-codes', async (req, res) => {
   try {
     const { code, designation } = req.query;
@@ -1215,43 +1218,48 @@ app.get('/api/fxbot/admin-codes', async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Submit issue
+// POST Issue
 app.post('/api/fxbot/issues', async (req, res) => {
   try {
-    const r = await fxbotRequest('POST', 'fxbot_issues', { ...req.body, status: 'Pending' });
-    res.status(r.status).json(r.data && r.data.length > 0 ? r.data[0] : r.data);
+    const r = await fxbotRequest('POST', 'fxbot_issues', { ...req.body, status: 'Pending' }, req.headers.authorization);
+    if (!r.ok) return res.status(r.status).json(r.data);
+    res.json(r.data && r.data.length > 0 ? r.data[0] : null);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Get issues by student_id
-app.get('/api/fxbot/issues/student/:studentId', async (req, res) => {
+// GET Student Issues
+app.get('/api/fxbot/issues/student/:id', async (req, res) => {
   try {
-    const r = await fxbotRequest('GET', `fxbot_issues?student_id=eq.${req.params.studentId}&select=*,issue_attachments(url)&order=created_at.desc`);
-    res.status(r.status).json(r.data || []);
+    const r = await fxbotRequest('GET', `fxbot_issues?student_id=eq.${req.params.id}&select=*,issue_attachments(url)&order=created_at.desc`, null, req.headers.authorization);
+    if (!r.ok) return res.status(r.status).json(r.data);
+    res.json(r.data || []);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Get issues by department (faculty/hod view) or all (principal/admin)
+// GET Faculty Issues
 app.get('/api/fxbot/issues', async (req, res) => {
   try {
     const { department, designation } = req.query;
     let path = 'fxbot_issues?select=*,issue_attachments(url)&order=created_at.desc';
-    if (designation === 'Faculty' || designation === 'HOD') {
-      path += `&department=eq.${encodeURIComponent(department?.toUpperCase() || '')}`;
+    if (designation === 'Faculty' || designation === 'HOD') { // Add filtering for normal faculty
+      path += `&department=eq.${encodeURIComponent(department)}`;
     }
-    const r = await fxbotRequest('GET', path);
-    res.status(r.status).json(r.data || []);
+    const r = await fxbotRequest('GET', path, null, req.headers.authorization);
+    if (!r.ok) return res.status(r.status).json(r.data);
+    res.json(r.data || []);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// Update issue (status, resolution, directive, escalation)
+// PATCH Issue
 app.patch('/api/fxbot/issues/:id', async (req, res) => {
   try {
     const r = await fxbotRequest('PATCH',
       `fxbot_issues?id=eq.${req.params.id}`,
-      { ...req.body, updated_at: new Date().toISOString() }
+      { ...req.body, updated_at: new Date().toISOString() },
+      req.headers.authorization
     );
-    res.status(r.status).json({ success: r.ok });
+    if (!r.ok) return res.status(r.status).json(r.data);
+    res.json({ success: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -1259,7 +1267,7 @@ app.patch('/api/fxbot/issues/:id', async (req, res) => {
 app.get('/api/fxbot/check-email', async (req, res) => {
   try {
     const { email } = req.query;
-    const r = await fxbotRequest('GET', `students?email=eq.${encodeURIComponent(email?.toLowerCase() || '')}&select=id&limit=1`);
+    const r = await fxbotRequest('GET', `students?email=eq.${encodeURIComponent(email?.toLowerCase() || '')}&select=id&limit=1`, null, req.headers.authorization);
     res.json({ exists: !!(r.data && r.data.length > 0) });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
