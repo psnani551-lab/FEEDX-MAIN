@@ -34,34 +34,54 @@ const RecommendedResources = ({ weakSubjects, topSubjects }: RecommendedResource
   const recommendedResources = useMemo(() => {
     if (resources.length === 0) return [];
 
-    // Extract subject keywords from weak subjects
-    const weakSubjectKeywords = weakSubjects.map(s => {
-      const subjectName = s.subject.toLowerCase();
-      // Extract key terms from subject names
-      const keywords = subjectName.split(/[\s-]+/).filter(word => word.length > 2);
-      return keywords;
-    }).flat();
+    // Common words to filter out from subject names for better matching
+    const stopWords = new Set(['engineering', 'applied', 'basic', 'fundamental', 'theory', 'lab', 'laboratory', 'ii', 'iii', 'iv', 'i', 'and', 'with', 'for', 'the', 'system', 'systems', 'concepts']);
 
-    // Score resources based on tag matches
+    // Extract subject keywords from weak subjects
+    const weakSubjectContexts = weakSubjects.map(s => {
+      const subjectName = s.subject.toLowerCase();
+      const subjectCode = s.subject.match(/[A-Z]+-\d+/)?.[0]?.toLowerCase() || '';
+
+      // Extract key terms from subject names, filtering out stop words
+      const keywords = subjectName.split(/[\s-]+/)
+        .filter(word => word.length > 2 && !stopWords.has(word));
+
+      return { keywords, code: subjectCode };
+    });
+
+    // Score resources based on depth of matching
     const scoredResources = resources.map(resource => {
       let score = 0;
       const resourceTags = resource.tags.map(tag => tag.toLowerCase());
-      
-      // Check if resource tags match weak subject keywords
-      weakSubjectKeywords.forEach(keyword => {
-        resourceTags.forEach(tag => {
-          if (tag.includes(keyword) || keyword.includes(tag)) {
-            score += 2; // Higher score for weak subjects
+      const resourceTitle = resource.title.toLowerCase();
+      const resourceDesc = resource.description.toLowerCase();
+
+      weakSubjectContexts.forEach(context => {
+        // 1. Exact Subject Code Match (Highest Weight)
+        if (context.code && (resourceTitle.includes(context.code) || resourceTags.includes(context.code))) {
+          score += 15;
+        }
+
+        // 2. Keyword Matches in Tags (High Weight)
+        context.keywords.forEach(keyword => {
+          resourceTags.forEach(tag => {
+            if (tag === keyword) {
+              score += 8; // Exact tag match
+            } else if (tag.includes(keyword) || keyword.includes(tag)) {
+              score += 4; // Partial tag match
+            }
+          });
+        });
+
+        // 3. Keyword Matches in Title/Description (Medium Weight)
+        context.keywords.forEach(keyword => {
+          if (resourceTitle.includes(keyword)) {
+            score += 5;
+          }
+          if (resourceDesc.includes(keyword)) {
+            score += 2;
           }
         });
-      });
-
-      // Also check title and description
-      const searchText = `${resource.title} ${resource.description}`.toLowerCase();
-      weakSubjectKeywords.forEach(keyword => {
-        if (searchText.includes(keyword)) {
-          score += 1;
-        }
       });
 
       return { resource, score };
@@ -110,7 +130,7 @@ const RecommendedResources = ({ weakSubjects, topSubjects }: RecommendedResource
             <p className="text-muted-foreground">
               No specific recommendations available at the moment. Check out all available resources.
             </p>
-            <Button 
+            <Button
               onClick={() => navigate('/resources')}
               className="bg-gradient-brand hover:opacity-90"
             >
@@ -163,8 +183,8 @@ const RecommendedResources = ({ weakSubjects, topSubjects }: RecommendedResource
         {/* Resources Grid - Mobile First */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {recommendedResources.map((resource, index) => (
-            <Card 
-              key={resource.id} 
+            <Card
+              key={resource.id}
               className="border border-border bg-card/50 hover:border-primary/50 transition-all duration-300 cursor-pointer hover:shadow-lg group"
               style={{ animationDelay: `${index * 0.1}s` }}
               onClick={() => navigate(`/resources/${resource.id}`)}
@@ -195,8 +215,8 @@ const RecommendedResources = ({ weakSubjects, topSubjects }: RecommendedResource
                     )}
                   </div>
                 )}
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="w-full bg-gradient-brand hover:opacity-90 transition-smooth"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -212,7 +232,7 @@ const RecommendedResources = ({ weakSubjects, topSubjects }: RecommendedResource
 
         {/* View All Button */}
         <div className="mt-6 text-center">
-          <Button 
+          <Button
             variant="outline"
             onClick={() => navigate('/resources')}
             className="border-border hover:bg-card hover:border-primary/50"
