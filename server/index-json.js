@@ -1130,6 +1130,24 @@ if (process.env.NODE_ENV === 'production') {
   console.log('📦 Serving frontend from:', distPath);
 }
 
+// Sync routes MUST be registered before the catch-all wildcard
+app.get('/api/sync/status', (req, res) => {
+  res.json({ lastSync: lastSyncTime, status: syncStatus, supabaseConfigured: !!(SUPABASE_URL && SUPABASE_ANON_KEY) });
+});
+
+app.post('/api/sync/trigger', async (req, res) => {
+  const auth = req.headers['authorization'] || '';
+  if (auth !== `Bearer ${JWT_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    await syncFromSupabase('manual trigger');
+    res.json({ success: true, message: 'Sync completed', status: syncStatus });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // SPA Fallback - Serve index.html for all other routes
 // This MUST be after all API routes and static file serving
 app.get('*', (req, res, next) => {
@@ -1258,26 +1276,6 @@ const syncFromSupabase = async (reason = 'scheduled') => {
   syncStatus = { success: successCount, failed: failCount, lastRun: lastSyncTime };
   console.log(`🔄 Supabase sync done: ${successCount} tables synced, ${failCount} failed — ${lastSyncTime}`);
 };
-
-// Endpoint to manually trigger sync (simple token check)
-app.post('/api/sync/trigger', async (req, res) => {
-  // Simple auth: check Authorization header matches JWT_SECRET
-  const auth = req.headers['authorization'] || '';
-  if (auth !== `Bearer ${JWT_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  try {
-    await syncFromSupabase('manual trigger');
-    res.json({ success: true, message: 'Sync completed', status: syncStatus });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// Endpoint to check sync status (public)
-app.get('/api/sync/status', (req, res) => {
-  res.json({ lastSync: lastSyncTime, status: syncStatus, supabaseConfigured: !!(SUPABASE_URL && SUPABASE_ANON_KEY) });
-});
 
 // Start server
 app.listen(PORT, '0.0.0.0', async () => {
