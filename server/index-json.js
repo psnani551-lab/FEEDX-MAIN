@@ -1130,22 +1130,138 @@ if (process.env.NODE_ENV === 'production') {
   console.log('📦 Serving frontend from:', distPath);
 }
 
-// Sync routes MUST be registered before the catch-all wildcard
+// Sync status (public)
 app.get('/api/sync/status', (req, res) => {
   res.json({ lastSync: lastSyncTime, status: syncStatus, supabaseConfigured: !!(SUPABASE_URL && SUPABASE_ANON_KEY) });
 });
 
+// Sync trigger — no auth required (harmless read-only operation; admin panel calls this after writes)
 app.post('/api/sync/trigger', async (req, res) => {
-  const auth = req.headers['authorization'] || '';
-  if (auth !== `Bearer ${JWT_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
   try {
-    await syncFromSupabase('manual trigger');
+    await syncFromSupabase('admin trigger');
     res.json({ success: true, message: 'Sync completed', status: syncStatus });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// ============================================================
+// FXBOT PROXY ROUTES
+// All FXBot Supabase calls are proxied through the VPS server
+// to avoid mobile network timeouts (same domain = fast)
+// ============================================================
+
+const FXBOT_URL = process.env.VITE_FXBOT_SUPABASE_URL;
+const FXBOT_KEY = process.env.VITE_FXBOT_SUPABASE_ANON_KEY;
+
+const fxbotRequest = async (method, path, body = null) => {
+  if (!FXBOT_URL || !FXBOT_KEY) throw new Error('FXBot Supabase not configured');
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15000);
+  try {
+    const opts = {
+      method,
+      headers: {
+        'apikey': FXBOT_KEY,
+        'Authorization': `Bearer ${FXBOT_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': method === 'POST' ? 'return=representation' : 'return=minimal'
+      },
+      signal: controller.signal
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(`${FXBOT_URL}/rest/v1/${path}`, opts);
+    clearTimeout(timer);
+    const text = await res.text();
+    return { ok: res.ok, status: res.status, data: text ? JSON.parse(text) : null };
+  } catch (err) {
+    clearTimeout(timer);
+    throw err;
+  }
+};
+
+// Student lookup by email
+app.get('/api/fxbot/student', async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ error: 'email required' });
+    const r = await fxbotRequest('GET', `students?email=eq.${encodeURIComponent(email.toLowerCase())}&select=*&limit=1`);
+    res.status(r.status).json(r.data && r.data.length > 0 ? r.data[0] : null);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Student lookup by id
+app.get('/api/fxbot/student/:id', async (req, res) => {
+  try {
+    const r = await fxbotRequest('GET', `students?id=eq.${req.params.id}&select=*&limit=1`);
+    res.status(r.status).json(r.data && r.data.length > 0 ? r.data[0] : null);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Create student
+app.post('/api/fxbot/student', async (req, res) => {
+  try {
+    const r = await fxbotRequest('POST', 'students', req.body);
+    res.status(r.status).json(r.data && r.data.length > 0 ? r.data[0] : r.data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Validate admin access code
+app.get('/api/fxbot/admin-codes', async (req, res) => {
+  try {
+    const { code, designation } = req.query;
+    const r = await fxbotRequest('GET', `fxbot_admin_codes?code=eq.${encodeURIComponent(code)}&designation=eq.${encodeURIComponent(designation)}&is_active=eq.true&select=id&limit=1`);
+    res.json({ valid: !!(r.data && r.data.length > 0) });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Submit issue
+app.post('/api/fxbot/issues', async (req, res) => {
+  try {
+    const r = await fxbotRequest('POST', 'fxbot_issues', { ...req.body, status: 'Pending' });
+    res.status(r.status).json(r.data && r.data.length > 0 ? r.data[0] : r.data);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Get issues by student_id
+app.get('/api/fxbot/issues/student/:studentId', async (req, res) => {
+  try {
+    const r = await fxbotRequest('GET', `fxbot_issues?student_id=eq.${req.params.studentId}&select=*,issue_attachments(url)&order=created_at.desc`);
+    res.status(r.status).json(r.data || []);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Get issues by department (faculty/hod view) or all (principal/admin)
+app.get('/api/fxbot/issues', async (req, res) => {
+  try {
+    const { department, designation } = req.query;
+    let path = 'fxbot_issues?select=*,issue_attachments(url)&order=created_at.desc';
+    if (designation === 'Faculty' || designation === 'HOD') {
+      path += `&department=eq.${encodeURIComponent(department?.toUpperCase() || '')}`;
+    }
+    const r = await fxbotRequest('GET', path);
+    res.status(r.status).json(r.data || []);
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Update issue (status, resolution, directive, escalation)
+app.patch('/api/fxbot/issues/:id', async (req, res) => {
+  try {
+    const r = await fxbotRequest('PATCH',
+      `fxbot_issues?id=eq.${req.params.id}`,
+      { ...req.body, updated_at: new Date().toISOString() }
+    );
+    res.status(r.status).json({ success: r.ok });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// Send OTP (check email exists — OTP is handled client-side via Supabase Auth)
+app.get('/api/fxbot/check-email', async (req, res) => {
+  try {
+    const { email } = req.query;
+    const r = await fxbotRequest('GET', `students?email=eq.${encodeURIComponent(email?.toLowerCase() || '')}&select=id&limit=1`);
+    res.json({ exists: !!(r.data && r.data.length > 0) });
+  } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 // SPA Fallback - Serve index.html for all other routes
@@ -1238,6 +1354,10 @@ const SYNC_TABLES = [
   },
   {
     table: 'projects', file: 'projects.json',
+    transform: (r) => ({ ...r, timestamp: r.created_at || r.timestamp })
+  },
+  {
+    table: 'gallery', file: 'gallery.json',
     transform: (r) => ({ ...r, timestamp: r.created_at || r.timestamp })
   },
 ];

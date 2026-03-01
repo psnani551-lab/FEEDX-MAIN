@@ -716,169 +716,166 @@ export interface FXBotIssue {
   attachments?: string[];
 }
 
-export const fxbotAPI = {
-  // ── Access Code Validation (Principal / Admin signup protection) ──────────
-  validateAdminCode: async (code: string, designation: 'Principal' | 'Admin'): Promise<boolean> => {
-    const { data, error } = await fxbotSupabase
-      .from('fxbot_admin_codes')
-      .select('id')
-      .eq('code', code.trim().toUpperCase())
-      .eq('designation', designation)
-      .eq('is_active', true)
-      .maybeSingle();
+// Helper: trigger VPS sync after admin writes so data appears instantly
+const triggerSync = () => fetch('/api/sync/trigger', { method: 'POST' }).catch(() => {/* non-critical */ });
 
-    if (error) throw error;
-    return !!data;
+export const fxbotAPI = {
+  // ── Access Code Validation ─────────────────────────────────────────────────
+  validateAdminCode: async (code: string, designation: 'Principal' | 'Admin'): Promise<boolean> => {
+    try {
+      const res = await fetch(`/api/fxbot/admin-codes?code=${encodeURIComponent(code.trim().toUpperCase())}&designation=${encodeURIComponent(designation)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return !!data.valid;
+    } catch {
+      // Fallback to direct Supabase
+      const { data, error } = await fxbotSupabase.from('fxbot_admin_codes').select('id').eq('code', code.trim().toUpperCase()).eq('designation', designation).eq('is_active', true).maybeSingle();
+      if (error) throw error;
+      return !!data;
+    }
   },
 
-  // Student Auth & Record Management
+  // ── Student Auth & Record Management ──────────────────────────────────────
   checkEmailExists: async (email: string): Promise<boolean> => {
-    const { data, error } = await fxbotSupabase
-      .from('students')
-      .select('id')
-      .eq('email', email.toLowerCase())
-      .maybeSingle();
-
-    if (error) throw error;
-    return !!data;
+    try {
+      const res = await fetch(`/api/fxbot/check-email?email=${encodeURIComponent(email)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return !!data.exists;
+    } catch {
+      const { data, error } = await fxbotSupabase.from('students').select('id').eq('email', email.toLowerCase()).maybeSingle();
+      if (error) throw error;
+      return !!data;
+    }
   },
 
   getStudentProfile: async (email: string): Promise<Student | null> => {
-    const { data, error } = await fxbotSupabase
-      .from('students')
-      .select('*')
-      .eq('email', email.toLowerCase())
-      .maybeSingle();
-
-    if (error) throw error;
-    return data;
+    try {
+      const res = await fetch(`/api/fxbot/student?email=${encodeURIComponent(email)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch {
+      const { data, error } = await fxbotSupabase.from('students').select('*').eq('email', email.toLowerCase()).maybeSingle();
+      if (error) throw error;
+      return data;
+    }
   },
 
-  // Admin-only: fetch full student identity by UUID (for audit view)
   getStudentById: async (studentId: string): Promise<Student | null> => {
-    const { data, error } = await fxbotSupabase
-      .from('students')
-      .select('*')
-      .eq('id', studentId)
-      .maybeSingle();
-
-    if (error) throw error;
-    return data;
+    try {
+      const res = await fetch(`/api/fxbot/student/${encodeURIComponent(studentId)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } catch {
+      const { data, error } = await fxbotSupabase.from('students').select('*').eq('id', studentId).maybeSingle();
+      if (error) throw error;
+      return data;
+    }
   },
 
   createStudent: async (student: Omit<Student, 'id' | 'created_at'>): Promise<Student> => {
-    const { data, error } = await fxbotSupabase
-      .from('students')
-      .insert([{
-        ...student,
-        email: student.email.toLowerCase(),
-        department: student.department.toUpperCase(),
-        designation: student.role === 'student' ? 'student' : (student.designation || 'Faculty')
-      }])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    try {
+      const res = await fetch('/api/fxbot/student', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...student, email: student.email.toLowerCase(), department: student.department.toUpperCase(), designation: student.role === 'student' ? 'student' : (student.designation || 'Faculty') })
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error || `HTTP ${res.status}`); }
+      return await res.json();
+    } catch {
+      const { data, error } = await fxbotSupabase.from('students').insert([{ ...student, email: student.email.toLowerCase(), department: student.department.toUpperCase(), designation: student.role === 'student' ? 'student' : (student.designation || 'Faculty') }]).select().single();
+      if (error) throw error;
+      return data;
+    }
   },
 
-  // Issue Management
+  // ── Issue Management ───────────────────────────────────────────────────────
   submitIssue: async (issue: Omit<FXBotIssue, 'status' | 'created_at' | 'updated_at'>): Promise<FXBotIssue> => {
-    const { data, error } = await fxbotSupabase
-      .from('fxbot_issues')
-      .insert([{
-        ...issue,
-        department: issue.department.toUpperCase(), // Normalize department
-        status: 'Pending'
-      }])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+    try {
+      const res = await fetch('/api/fxbot/issues', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...issue, department: issue.department.toUpperCase() })
+      });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error || `HTTP ${res.status}`); }
+      return await res.json();
+    } catch {
+      const { data, error } = await fxbotSupabase.from('fxbot_issues').insert([{ ...issue, department: issue.department.toUpperCase(), status: 'Pending' }]).select().single();
+      if (error) throw error;
+      return data;
+    }
   },
 
   getStudentIssues: async (studentId: string): Promise<FXBotIssue[]> => {
-    const { data, error } = await fxbotSupabase
-      .from('fxbot_issues')
-      .select('*, issue_attachments(url)')
-      .eq('student_id', studentId)
-      .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return data.map(item => ({
-      ...item,
-      attachments: item.issue_attachments?.map((a: any) => a.url) || []
-    }));
+    try {
+      const res = await fetch(`/api/fxbot/issues/student/${encodeURIComponent(studentId)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data) ? data.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] })) : [];
+    } catch {
+      const { data, error } = await fxbotSupabase.from('fxbot_issues').select('*, issue_attachments(url)').eq('student_id', studentId).order('created_at', { ascending: false });
+      if (error) throw error;
+      return data.map(item => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] }));
+    }
   },
 
   escalateIssue: async (issueId: string, whomToSend: string): Promise<void> => {
-    const { error } = await fxbotSupabase
-      .from('fxbot_issues')
-      .update({
-        status: 'Escalated',
-        whom_to_send: whomToSend,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', issueId);
-
-    if (error) throw error;
+    try {
+      const res = await fetch(`/api/fxbot/issues/${encodeURIComponent(issueId)}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'Escalated', whom_to_send: whomToSend })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch {
+      const { error } = await fxbotSupabase.from('fxbot_issues').update({ status: 'Escalated', whom_to_send: whomToSend, updated_at: new Date().toISOString() }).eq('id', issueId);
+      if (error) throw error;
+    }
   },
 
   getFacultyIssues: async (user: Student): Promise<FXBotIssue[]> => {
-    const { designation, department } = user;
-    let query = fxbotSupabase
-      .from('fxbot_issues')
-      .select('*, issue_attachments(url)')
-      .order('created_at', { ascending: false });
-
-    // Tiered Filtering Logic
-    if (designation === 'Faculty' || designation === 'HOD' || (user.role === 'faculty' && designation === 'student')) {
-      query = query.eq('department', department.toUpperCase());
-    }
-    // Principal and Admin see Global (all departments)
-
-    const { data, error } = await query;
-    if (error) throw error;
-
-    // Process result and apply Principal Identity Masking
-    return data.map((item: any) => {
-      const issue: FXBotIssue = {
-        ...item,
-        attachments: item.issue_attachments?.map((a: any) => a.url) || []
-      };
-
-      if (designation === 'Principal') {
-        // Principal masking: They see "FXID" (username) but we mask the student_id or name in UI
-        (issue as any)._principalMask = true;
+    try {
+      const { designation, department } = user;
+      const params = new URLSearchParams({ designation: designation || '', department: department || '' });
+      const res = await fetch(`/api/fxbot/issues?${params}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data) ? data.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] })) : [];
+    } catch {
+      const { designation, department } = user;
+      let query = fxbotSupabase.from('fxbot_issues').select('*, issue_attachments(url)').order('created_at', { ascending: false });
+      if (designation === 'Faculty' || designation === 'HOD' || (user.role === 'faculty' && designation === 'student')) {
+        query = query.eq('department', department.toUpperCase());
       }
-      return issue;
-    });
+      const { data, error } = await query;
+      if (error) throw error;
+      return data.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] }));
+    }
   },
 
   submitDirective: async (issueId: string, directive: string): Promise<void> => {
-    const { error } = await fxbotSupabase
-      .from('fxbot_issues')
-      .update({
-        internal_directive: directive,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', issueId);
-    if (error) throw error;
+    try {
+      const res = await fetch(`/api/fxbot/issues/${encodeURIComponent(issueId)}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ internal_directive: directive })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch {
+      const { error } = await fxbotSupabase.from('fxbot_issues').update({ internal_directive: directive, updated_at: new Date().toISOString() }).eq('id', issueId);
+      if (error) throw error;
+    }
   },
 
   updateIssueStatus: async (issueId: string, status: string, resolution?: string): Promise<void> => {
-    const { error } = await fxbotSupabase
-      .from('fxbot_issues')
-      .update({
-        status,
-        resolution_message: resolution,
-        resolved_at: status === 'Resolved' ? new Date().toISOString() : null,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', issueId);
-
-    if (error) throw error;
+    try {
+      const res = await fetch(`/api/fxbot/issues/${encodeURIComponent(issueId)}`, {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, resolution_message: resolution, resolved_at: status === 'Resolved' ? new Date().toISOString() : null })
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    } catch {
+      const { error } = await fxbotSupabase.from('fxbot_issues').update({ status, resolution_message: resolution, resolved_at: status === 'Resolved' ? new Date().toISOString() : null, updated_at: new Date().toISOString() }).eq('id', issueId);
+      if (error) throw error;
+    }
   },
 
   logout: async (): Promise<void> => {
@@ -886,6 +883,8 @@ export const fxbotAPI = {
     await fxbotSupabase.auth.signOut();
   }
 };
+
+
 
 export const settingsAPI = {
   getCommunityMembers: async (): Promise<number> => {
