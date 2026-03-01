@@ -240,6 +240,8 @@ const parseSemesterResultsJson = (rawData: any, fallbackPin: string): StudentRes
   };
 };
 
+import { SEOHead } from "@/components/SEOHead";
+
 const StudentAnalytics = () => {
   const navigate = useNavigate();
   const [pin, setPin] = useState('');

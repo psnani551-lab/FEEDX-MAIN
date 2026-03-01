@@ -4,11 +4,18 @@ import { useNavigate } from "react-router-dom";
 import AboutSection from "@/components/AboutSection";
 import { Button } from "@/components/ui/button";
 
+import { SEOHead } from "@/components/SEOHead";
+
 const About = () => {
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="About Us"
+        description="Learn about FeedX's vision to empower polytechnic students beyond the classroom with real-world skills and career opportunities."
+        keywords="about feedx, polytechnic education, student empowerment, telangana polytechnic"
+      />
 
       {/* Premium Hero Section */}
       <div className="relative pt-32 pb-20 overflow-hidden border-b border-white/[0.05]">

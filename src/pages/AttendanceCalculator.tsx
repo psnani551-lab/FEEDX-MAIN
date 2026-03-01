@@ -10,6 +10,8 @@ import { useState } from 'react';
 import { attendanceIllustration as attendenceIllustration } from '@/lib/illustrations';
 import { toast } from 'sonner';
 
+import { SEOHead } from "@/components/SEOHead";
+
 const AttendanceCalculator = () => {
   const [pin, setPin] = useState('');
   const [isFetching, setIsFetching] = useState(false);

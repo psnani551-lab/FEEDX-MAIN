@@ -7,6 +7,8 @@ import { ArrowRight, ChevronDown, Bot, ExternalLink } from 'lucide-react';
 import { projectsIllustration } from '@/lib/illustrations';
 import { projectsAPI, Project } from '@/lib/api';
 
+import { SEOHead } from "@/components/SEOHead";
+
 const Projects = () => {
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -183,7 +185,7 @@ const Projects = () => {
 
         {/* Call to Action (kept minimal for official demo readiness) */}
       </div>
-      
+
     </div>
   );
 };

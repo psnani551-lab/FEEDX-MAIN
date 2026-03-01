@@ -26,9 +26,16 @@ const SectionLoader = () => (
   </div>
 );
 
+import { SEOHead } from '@/components/SEOHead';
+
 const Index = () => {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-primary/30 selection:text-white">
+      <SEOHead
+        title="Home"
+        description="FEEDX is Telangana's leading anonymous student feedback portal for polytechnic students. Access resources, track analytics, and drive positive change."
+        keywords="feedx, polytechnic telangana, student feedback, sbtet, polytechnic resources"
+      />
       <main className="space-y-0">
         <HeroSection />
 

@@ -1,9 +1,29 @@
-# Nginx Configuration for FeedX - HTTP INITIAL (IP Access)
+# Nginx Configuration for FeedX - PERMANENT PRODUCTION (SSL)
 # Location: /etc/nginx/sites-available/feedx
 
+# HTTP -> HTTPS Redirect
 server {
     listen 80;
     server_name feedxpolytechnic.com www.feedxpolytechnic.com;
+    return 301 https://$host$request_uri;
+}
+
+# HTTPS Server
+server {
+    listen 443 ssl http2;
+    server_name feedxpolytechnic.com www.feedxpolytechnic.com;
+
+    # SSL Certificate Paths (Let's Encrypt)
+    ssl_certificate /etc/letsencrypt/live/feedxpolytechnic.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/feedxpolytechnic.com/privkey.pem;
+
+    # SSL Best Practices
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_tickets off;
 
     # Root directory for static frontend files
     root /var/www/feedx/dist;
@@ -14,6 +34,7 @@ server {
     add_header X-XSS-Protection "1; mode=block";
     add_header X-Content-Type-Options "nosniff";
     add_header Referrer-Policy "no-referrer-when-downgrade";
+    add_header Strict-Transport-Security "max-age=31536000" always;
 
     # Frontend Routing (SPA Fallback)
     location / {
@@ -51,12 +72,3 @@ server {
     gzip_comp_level 6;
     gzip_types text/plain text/css text/xml application/json application/javascript application/xml+rss application/atom+xml image/svg+xml;
 }
-
-# SSL TEMP PLACEHOLDER (Enable after pointing domain & running Certbot)
-# server {
-#     listen 443 ssl http2;
-#     server_name your-domain.com;
-#     ssl_certificate /etc/letsencrypt/live/your-domain.com/fullchain.pem;
-#     ssl_certificate_key /etc/letsencrypt/live/your-domain.com/privkey.pem;
-#     ...
-# }

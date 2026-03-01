@@ -8,6 +8,8 @@ import { ExternalLink, Search, BookOpen, Award, Users, Briefcase, FileText, Grad
 import { noDataIllustration, resourcesIllustration } from '@/lib/illustrations';
 import { resourcesAPI, Resource as AdminResource } from '@/lib/api';
 
+import { SEOHead } from "@/components/SEOHead";
+
 const Resources = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
