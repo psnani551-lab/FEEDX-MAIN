@@ -146,17 +146,16 @@ const StudentAuth = () => {
                 throw new Error(data.error || 'Verification failed');
             }
 
-            // Crucial Step: We requested the tokens via our VPS proxy, but we must
-            // inject them into the local Supabase Auth instance so that subsequent
-            // requests requiring `fxbotSupabase.auth.getSession()` work correctly.
-            const { error: sessionError } = await fxbotSupabase.auth.setSession({
-                access_token: data.access_token,
-                refresh_token: data.refresh_token,
-            });
-
-            if (sessionError) {
-                setOtp("");
-                throw new Error('Failed to synchronize secure session. Please try again.');
+            // Store tokens directly in localStorage instead of calling setSession().
+            // Direct browser-to-Supabase connections are blocked by Indian ISPs,
+            // so setSession() (which pings Supabase auth endpoints) would fail.
+            // Our VPS proxy handles ALL Supabase calls, so we only need the token
+            // stored locally so getAuthHeader() can pick it up for proxy requests.
+            if (data.access_token) {
+                localStorage.setItem('fxbot_access_token', data.access_token);
+                if (data.refresh_token) {
+                    localStorage.setItem('fxbot_refresh_token', data.refresh_token);
+                }
             }
 
             let profile;

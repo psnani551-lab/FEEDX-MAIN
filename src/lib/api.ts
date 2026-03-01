@@ -721,7 +721,13 @@ export interface FXBotIssue {
 }
 
 // Helper: get current user's JWT for proxy authorization
+// Priority: localStorage (ISP-bypass store) → Supabase JS client session
 const getAuthHeader = async (): Promise<string | undefined> => {
+  // Check our ISP-bypass token store first (set after proxy OTP verification)
+  const localToken = localStorage.getItem('fxbot_access_token');
+  if (localToken) return `Bearer ${localToken}`;
+
+  // Fallback to Supabase JS client session (works on non-blocked networks)
   try {
     const { data } = await fxbotSupabase.auth.getSession();
     if (data?.session?.access_token) {
