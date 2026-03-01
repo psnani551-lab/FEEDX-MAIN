@@ -759,22 +759,26 @@ export const fxbotAPI = {
     const res = await fetch(`/api/fxbot/student?email=${encodeURIComponent(email)}`, {
       headers: { ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string }) }
     });
+    if (res.status === 406) return null; // Supabase returns 406 when single row not found
     if (!res.ok) {
       const e = await res.json().catch(() => ({}));
       throw new Error(e.error || `HTTP ${res.status}`);
     }
-    return await res.json();
+    const data = await res.json();
+    return data && Object.keys(data).length > 0 ? data : null;
   },
 
   getStudentById: async (studentId: string): Promise<Student | null> => {
     const res = await fetch(`/api/fxbot/student/${encodeURIComponent(studentId)}`, {
       headers: { ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string }) }
     });
+    if (res.status === 406) return null; // Supabase returns 406 when single row not found
     if (!res.ok) {
       const e = await res.json().catch(() => ({}));
       throw new Error(e.error || `HTTP ${res.status}`);
     }
-    return await res.json();
+    const data = await res.json();
+    return data && Object.keys(data).length > 0 ? data : null;
   },
 
   createStudent: async (student: Omit<Student, 'id' | 'created_at'>): Promise<Student> => {
