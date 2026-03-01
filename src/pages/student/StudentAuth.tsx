@@ -6,8 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { fxbotAPI } from "@/lib/api";
-import { fxbotSupabase } from "@/integrations/supabase/fxbot-client";
+import { fxbotAPI, fxbotSupabase } from "@/lib/api";
 import { generateUsername } from "@/lib/utils/username";
 import { useToast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -134,23 +133,16 @@ const StudentAuth = () => {
 
         setIsLoading(true);
         try {
-            // Use VPS proxy for OTP verification to avoid mobile timeout
-            const res = await fetch('/api/fxbot/verify-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, token: otp })
+            // Use direct Supabase Auth for OTP to avoid 'Token Invalid/Consumed' errors via proxy
+            const { data, error } = await fxbotSupabase.auth.verifyOtp({
+                email,
+                token: otp,
+                type: 'email'
             });
-            const data = await res.json();
-            if (!res.ok) {
+
+            if (error || !data.user || !data.session) {
                 setOtp("");
-                throw new Error(data.error || 'Verification failed');
-            }
-            // Set the session in fxbotSupabase client using tokens from proxy
-            if (data.access_token) {
-                await fxbotSupabase.auth.setSession({
-                    access_token: data.access_token,
-                    refresh_token: data.refresh_token
-                });
+                throw new Error(error?.message || 'Verification failed');
             }
 
             let profile;
