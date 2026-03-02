@@ -31,6 +31,17 @@ console.log('✅ Uploads directory ready:', uploadsDir);
 const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const ADMIN_API_KEY = process.env.VITE_ADMIN_API_KEY || 'feedx-default-admin-key-2025';
+
+// Security Middleware: API Key Check
+// Used for write operations from the admin panel to bypass DNS/ISP header limits
+const checkAdminKey = (req, res, next) => {
+  const apiKey = req.headers['x-admin-api-key'];
+  if (apiKey && apiKey === ADMIN_API_KEY) {
+    return next();
+  }
+  return res.status(401).json({ error: 'Unauthorized: Admin API Key required' });
+};
 
 // Helper functions for JSON file storage
 const readJsonFile = (filename) => {
@@ -145,9 +156,19 @@ initializeAdmin();
 app.use(cors({
   origin: true,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-api-key']
 }));
+
+// Global Cache-Control for JSON data
+app.use('/api', (req, res, next) => {
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+});
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
@@ -644,7 +665,7 @@ const createAdminCrudRoutes = (resourceName) => {
   // PUT update (protected)
   app.put(`/api/admin/${resourceName}/:id`, verifyToken, (req, res) => {
     const data = readJsonFile(filename);
-    const index = data.findIndex(d => d.id === req.params.id);
+    const index = data.findIndex(d => d.id == req.params.id); // Loose matching for numeric IDs
     if (index === -1) {
       return res.status(404).json({ error: `${resourceName} not found` });
     }
@@ -664,7 +685,7 @@ const createAdminCrudRoutes = (resourceName) => {
   // DELETE (protected)
   app.delete(`/api/admin/${resourceName}/:id`, verifyToken, (req, res) => {
     let data = readJsonFile(filename);
-    const index = data.findIndex(d => d.id === req.params.id);
+    const index = data.findIndex(d => d.id == req.params.id); // Loose matching for numeric IDs
     if (index === -1) {
       return res.status(404).json({ error: `${resourceName} not found` });
     }
@@ -697,7 +718,7 @@ createAdminCrudRoutes('projects');
 const createPublicWriteRoutes = (resourceName) => {
   const filename = `${resourceName}.json`;
 
-  app.post(`/api/${resourceName}`, (req, res) => {
+  app.post(`/api/${resourceName}`, checkAdminKey, (req, res) => {
     const data = readJsonFile(filename);
     const newItem = {
       id: generateId(),
@@ -710,18 +731,18 @@ const createPublicWriteRoutes = (resourceName) => {
     res.status(201).json(newItem);
   });
 
-  app.put(`/api/${resourceName}/:id`, (req, res) => {
+  app.put(`/api/${resourceName}/:id`, checkAdminKey, (req, res) => {
     const data = readJsonFile(filename);
-    const index = data.findIndex(d => d.id === req.params.id);
+    const index = data.findIndex(d => d.id == req.params.id); // Loose matching
     if (index === -1) return res.status(404).json({ error: `${resourceName} not found` });
     data[index] = { ...data[index], ...req.body, updatedAt: new Date().toISOString() };
     writeJsonFile(filename, data);
     res.json(data[index]);
   });
 
-  app.delete(`/api/${resourceName}/:id`, (req, res) => {
+  app.delete(`/api/${resourceName}/:id`, checkAdminKey, (req, res) => {
     let data = readJsonFile(filename);
-    const index = data.findIndex(d => d.id === req.params.id);
+    const index = data.findIndex(d => d.id == req.params.id); // Loose matching
     if (index === -1) return res.status(404).json({ error: `${resourceName} not found` });
     data.splice(index, 1);
     writeJsonFile(filename, data);
@@ -729,9 +750,9 @@ const createPublicWriteRoutes = (resourceName) => {
     res.json({ success: true });
   });
 
-  app.patch(`/api/${resourceName}/:id/status`, (req, res) => {
+  app.patch(`/api/${resourceName}/:id/status`, checkAdminKey, (req, res) => {
     const data = readJsonFile(filename);
-    const index = data.findIndex(d => d.id === req.params.id);
+    const index = data.findIndex(d => d.id == req.params.id); // Loose matching
     if (index === -1) return res.status(404).json({ error: `${resourceName} not found` });
     data[index] = { ...data[index], status: req.body.status, updatedAt: new Date().toISOString() };
     writeJsonFile(filename, data);
@@ -751,14 +772,16 @@ createPublicWriteRoutes('projects');
 // Public write endpoints for events (no VPS JWT required — admin uses Supabase auth)
 // These write directly to events.json so the admin list updates immediately.
 // ─────────────────────────────────────────────────────────────────────────────
-app.post('/api/events', (req, res) => {
+app.post('/api/events', checkAdminKey, (req, res) => {
   const data = readJsonFile('events.json');
   const newItem = {
     id: generateId(),
     status: 'published',
     ...req.body,
     date: req.body.date || req.body.event_date || 'TBA',
+    event_date: req.body.date || req.body.event_date || 'TBA', // Sync
     time: req.body.time || req.body.event_time || 'TBA',
+    event_time: req.body.time || req.body.event_time || 'TBA', // Sync
     timestamp: new Date().toISOString()
   };
   data.unshift(newItem);
@@ -766,18 +789,25 @@ app.post('/api/events', (req, res) => {
   res.status(201).json(newItem);
 });
 
-app.put('/api/events/:id', (req, res) => {
+app.put('/api/events/:id', checkAdminKey, (req, res) => {
   const data = readJsonFile('events.json');
-  const index = data.findIndex(d => d.id === req.params.id);
+  const index = data.findIndex(d => d.id == req.params.id); // Loose matching
   if (index === -1) return res.status(404).json({ error: 'event not found' });
-  data[index] = { ...data[index], ...req.body, updatedAt: new Date().toISOString() };
+
+  // Synchronize field names for legacy compatibility
+  const updates = { ...req.body };
+  if (updates.date) updates.event_date = updates.date;
+  if (updates.time) updates.event_time = updates.time;
+  if (updates.isComingSoon !== undefined) updates.is_coming_soon = updates.isComingSoon;
+
+  data[index] = { ...data[index], ...updates, updatedAt: new Date().toISOString() };
   writeJsonFile('events.json', data);
   res.json(data[index]);
 });
 
-app.delete('/api/events/:id', (req, res) => {
+app.delete('/api/events/:id', checkAdminKey, (req, res) => {
   let data = readJsonFile('events.json');
-  const index = data.findIndex(d => d.id === req.params.id);
+  const index = data.findIndex(d => d.id == req.params.id); // Loose matching
   if (index === -1) return res.status(404).json({ error: 'event not found' });
   data.splice(index, 1);
   writeJsonFile('events.json', data);
@@ -785,9 +815,9 @@ app.delete('/api/events/:id', (req, res) => {
   res.json({ success: true });
 });
 
-app.patch('/api/events/:id/status', (req, res) => {
+app.patch('/api/events/:id/status', checkAdminKey, (req, res) => {
   const data = readJsonFile('events.json');
-  const index = data.findIndex(d => d.id === req.params.id);
+  const index = data.findIndex(d => d.id == req.params.id); // Loose matching
   if (index === -1) return res.status(404).json({ error: 'event not found' });
   data[index] = { ...data[index], status: req.body.status, updatedAt: new Date().toISOString() };
   writeJsonFile('events.json', data);
@@ -1172,8 +1202,8 @@ app.get('/api/gallery', (req, res) => {
   }
 });
 
-// Create gallery image (protected)
-app.post('/api/gallery', verifyToken, (req, res) => {
+// Create gallery image (secured via checkAdminKey)
+app.post('/api/gallery', checkAdminKey, (req, res) => {
   try {
     const { url, order } = req.body;
     if (!url) {
@@ -1190,7 +1220,7 @@ app.post('/api/gallery', verifyToken, (req, res) => {
 
     gallery.push(newImage);
     writeJsonFile('gallery.json', gallery);
-    logAction(req.user.username, 'CREATE', 'gallery', newImage.id, { url });
+    console.log(`✅ Created gallery item:`, newImage.id);
 
     res.status(201).json(newImage);
   } catch (error) {
@@ -1199,18 +1229,18 @@ app.post('/api/gallery', verifyToken, (req, res) => {
   }
 });
 
-// Delete gallery image (protected)
-app.delete('/api/gallery/:id', verifyToken, (req, res) => {
+// Delete gallery image (secured via checkAdminKey)
+app.delete('/api/gallery/:id', checkAdminKey, (req, res) => {
   try {
     const gallery = readJsonFile('gallery.json');
-    const filteredGallery = gallery.filter(img => img.id !== req.params.id);
+    const filteredGallery = gallery.filter(img => img.id != req.params.id); // Loose matching
 
     if (gallery.length === filteredGallery.length) {
       return res.status(404).json({ error: 'Image not found' });
     }
 
     writeJsonFile('gallery.json', filteredGallery);
-    logAction(req.user.username, 'DELETE', 'gallery', req.params.id);
+    console.log(`✅ Deleted gallery item:`, req.params.id);
 
     res.json({ success: true, message: 'Image deleted successfully' });
   } catch (error) {
@@ -1219,8 +1249,8 @@ app.delete('/api/gallery/:id', verifyToken, (req, res) => {
   }
 });
 
-// Reorder gallery images (protected)
-app.put('/api/gallery/reorder', verifyToken, (req, res) => {
+// Reorder gallery images (secured via checkAdminKey)
+app.put('/api/gallery/reorder', checkAdminKey, (req, res) => {
   try {
     const images = req.body;
     if (!Array.isArray(images)) {
@@ -1228,8 +1258,6 @@ app.put('/api/gallery/reorder', verifyToken, (req, res) => {
     }
 
     writeJsonFile('gallery.json', images);
-    logAction(req.user.username, 'UPDATE', 'gallery', 'reorder', { count: images.length });
-
     res.json({ success: true, message: 'Gallery reordered successfully' });
   } catch (error) {
     console.error('Error reordering gallery:', error);

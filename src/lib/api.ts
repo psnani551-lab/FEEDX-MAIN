@@ -4,8 +4,18 @@ import { createClient } from "@supabase/supabase-js";
 
 const fxbotUrl = import.meta.env.VITE_FXBOT_SUPABASE_URL as string;
 const fxbotAnonKey = import.meta.env.VITE_FXBOT_SUPABASE_ANON_KEY as string;
+const ADMIN_API_KEY = import.meta.env.VITE_ADMIN_API_KEY as string || 'feedx-default-admin-key-2025';
 
 export const fxbotSupabase = createClient(fxbotUrl, fxbotAnonKey);
+
+// Helper: Secure headers for Admin write operations
+const adminHeaders = () => ({
+  'Content-Type': 'application/json',
+  'x-admin-api-key': ADMIN_API_KEY
+});
+
+// Helper: Cache busting timestamp
+const getTimestamp = () => `t=${Date.now()}`;
 
 
 // Types
@@ -89,7 +99,7 @@ export interface Project {
 
 export const projectsAPI = {
   getAll: async (): Promise<Project[]> => {
-    const res = await fetch('/api/projects');
+    const res = await fetch(`/api/projects?${getTimestamp()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return Array.isArray(data) ? data.map((p: any) => ({ ...p, timestamp: p.timestamp || p.created_at, projectUrl: p.projectUrl || p.project_url })) : [];
@@ -97,20 +107,23 @@ export const projectsAPI = {
   create: async (data: Omit<Project, 'id' | 'timestamp'>): Promise<Project> => {
     const res = await fetch('/api/projects', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   },
   delete: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/projects/${id}`, {
+      method: 'DELETE',
+      headers: adminHeaders()
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
   },
   update: async (id: string, data: Partial<Project>): Promise<void> => {
     const res = await fetch(`/api/projects/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -125,7 +138,7 @@ export interface GalleryImage {
 
 export const notificationsAPI = {
   getAll: async (): Promise<Notification[]> => {
-    const res = await fetch('/api/notifications');
+    const res = await fetch(`/api/notifications?${getTimestamp()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return Array.isArray(data) ? data.map((n: any) => ({ ...n, timestamp: n.timestamp || n.created_at })) : [];
@@ -134,7 +147,7 @@ export const notificationsAPI = {
   create: async (data: Omit<Notification, 'id' | 'timestamp'>): Promise<Notification> => {
     const res = await fetch('/api/notifications', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -143,14 +156,17 @@ export const notificationsAPI = {
   },
 
   delete: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/notifications/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/notifications/${id}`, {
+      method: 'DELETE',
+      headers: adminHeaders()
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
   },
 
   update: async (id: string, data: Partial<Notification>): Promise<void> => {
     const res = await fetch(`/api/notifications/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -159,7 +175,7 @@ export const notificationsAPI = {
   updateStatus: async (id: string, status: 'published' | 'draft'): Promise<void> => {
     const res = await fetch(`/api/notifications/${id}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify({ status })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -169,7 +185,7 @@ export const notificationsAPI = {
 // Updates API
 export const updatesAPI = {
   getAll: async (): Promise<Update[]> => {
-    const res = await fetch('/api/updates');
+    const res = await fetch(`/api/updates?${getTimestamp()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return Array.isArray(data) ? data.map((u: any) => ({ ...u, timestamp: u.timestamp || u.created_at })) : [];
@@ -178,7 +194,7 @@ export const updatesAPI = {
   create: async (data: Omit<Update, 'id' | 'timestamp'>): Promise<Update> => {
     const res = await fetch('/api/updates', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -187,14 +203,17 @@ export const updatesAPI = {
   },
 
   delete: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/updates/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/updates/${id}`, {
+      method: 'DELETE',
+      headers: adminHeaders()
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
   },
 
   update: async (id: string, data: Partial<Update>): Promise<void> => {
     const res = await fetch(`/api/updates/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -203,7 +222,7 @@ export const updatesAPI = {
   updateStatus: async (id: string, status: 'published' | 'draft'): Promise<void> => {
     const res = await fetch(`/api/updates/${id}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify({ status })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -213,16 +232,16 @@ export const updatesAPI = {
 // Resources API
 export const resourcesAPI = {
   getAll: async (): Promise<Resource[]> => {
-    const res = await fetch('/api/resources');
+    const res = await fetch(`/api/resources?${getTimestamp()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return Array.isArray(data) ? data.map((r: any) => ({ ...r, timestamp: r.timestamp || r.created_at, longDescription: r.longDescription || r.long_description || '' })) : [];
   },
 
   getById: async (id: string): Promise<Resource> => {
-    const res = await fetch('/api/resources');
+    const res = await fetch(`/api/resources?${getTimestamp()}`);
     const data = await res.json();
-    const item = data.find((r: any) => r.id === id);
+    const item = data.find((r: any) => r.id == id); // Loose matching for flexibility
     if (!item) throw new Error('Resource not found');
     return { ...item, timestamp: item.timestamp || item.created_at, longDescription: item.longDescription || item.long_description || '' };
   },
@@ -230,7 +249,7 @@ export const resourcesAPI = {
   create: async (data: Omit<Resource, 'id' | 'timestamp'>): Promise<Resource> => {
     const res = await fetch('/api/resources', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -239,14 +258,17 @@ export const resourcesAPI = {
   },
 
   delete: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/resources/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/resources/${id}`, {
+      method: 'DELETE',
+      headers: adminHeaders()
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
   },
 
   update: async (id: string, data: Partial<Resource>): Promise<void> => {
     const res = await fetch(`/api/resources/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -255,7 +277,7 @@ export const resourcesAPI = {
   updateStatus: async (id: string, status: 'published' | 'draft'): Promise<void> => {
     const res = await fetch(`/api/resources/${id}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify({ status })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -266,7 +288,7 @@ export const resourcesAPI = {
 export const eventsAPI = {
   getAll: async (): Promise<Event[]> => {
     try {
-      const res = await fetch('/api/events');
+      const res = await fetch(`/api/events?${getTimestamp()}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       return Array.isArray(data) ? data.map((e: any) => ({
@@ -295,28 +317,27 @@ export const eventsAPI = {
   },
 
   create: async (data: any): Promise<Event> => {
-    // Write directly to VPS JSON — list updates immediately
-    const payload = { ...data };
     const res = await fetch('/api/events', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      headers: adminHeaders(),
+      body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   },
 
   delete: async (id: string): Promise<void> => {
-    // Delete from VPS JSON — admin list updates immediately
-    const res = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/events/${id}`, {
+      method: 'DELETE',
+      headers: adminHeaders()
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
   },
 
   update: async (id: string, data: any): Promise<void> => {
-    // Update in VPS JSON directly
     const res = await fetch(`/api/events/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -325,7 +346,7 @@ export const eventsAPI = {
   updateStatus: async (id: string, status: string): Promise<void> => {
     const res = await fetch(`/api/events/${id}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify({ status })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -335,7 +356,7 @@ export const eventsAPI = {
 // Spotlight API
 export const spotlightAPI = {
   getAll: async (): Promise<Spotlight[]> => {
-    const res = await fetch('/api/spotlight');
+    const res = await fetch(`/api/spotlight?${getTimestamp()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return Array.isArray(data) ? data.map((s: any) => ({ ...s, timestamp: s.timestamp || s.created_at })) : [];
@@ -344,7 +365,7 @@ export const spotlightAPI = {
   create: async (data: any): Promise<Spotlight> => {
     const res = await fetch('/api/spotlight', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -353,14 +374,17 @@ export const spotlightAPI = {
   },
 
   delete: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/spotlight/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/spotlight/${id}`, {
+      method: 'DELETE',
+      headers: adminHeaders()
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
   },
 
   update: async (id: string, data: Partial<Spotlight>): Promise<void> => {
     const res = await fetch(`/api/spotlight/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -369,7 +393,7 @@ export const spotlightAPI = {
   updateStatus: async (id: string, status: 'published' | 'draft'): Promise<void> => {
     const res = await fetch(`/api/spotlight/${id}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify({ status })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -379,7 +403,7 @@ export const spotlightAPI = {
 // Testimonials API
 export const testimonialsAPI = {
   getAll: async (): Promise<Testimonial[]> => {
-    const res = await fetch('/api/testimonials');
+    const res = await fetch(`/api/testimonials?${getTimestamp()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return Array.isArray(data) ? data.map((t: any) => ({ ...t, timestamp: t.timestamp || t.created_at })) : [];
@@ -388,7 +412,7 @@ export const testimonialsAPI = {
   create: async (data: any): Promise<Testimonial> => {
     const res = await fetch('/api/testimonials', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -397,14 +421,17 @@ export const testimonialsAPI = {
   },
 
   delete: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/testimonials/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/testimonials/${id}`, {
+      method: 'DELETE',
+      headers: adminHeaders()
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
   },
 
   update: async (id: string, data: Partial<Testimonial>): Promise<void> => {
     const res = await fetch(`/api/testimonials/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify(data)
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -413,7 +440,7 @@ export const testimonialsAPI = {
   updateStatus: async (id: string, status: 'published' | 'draft'): Promise<void> => {
     const res = await fetch(`/api/testimonials/${id}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify({ status })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -423,7 +450,7 @@ export const testimonialsAPI = {
 // Gallery API
 export const galleryAPI = {
   getAll: async (): Promise<GalleryImage[]> => {
-    const res = await fetch('/api/gallery');
+    const res = await fetch(`/api/gallery?${getTimestamp()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     return Array.isArray(data) ? data.map((img: any) => ({ id: img.id, url: img.url, order: img.display_order ?? img.order ?? 0 })) : [];
@@ -432,26 +459,29 @@ export const galleryAPI = {
   create: async (image: { url: string; order: number }) => {
     const res = await fetch('/api/gallery', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url: image.url, display_order: image.order })
+      headers: adminHeaders(),
+      body: JSON.stringify({ url: image.url, order: image.order })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   },
 
   delete: async (id: string) => {
-    const res = await fetch(`/api/gallery/${id}`, { method: 'DELETE' });
+    const res = await fetch(`/api/gallery/${id}`, {
+      method: 'DELETE',
+      headers: adminHeaders()
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
   },
 
-  reorder: async (images: { id: string; order: number }[]) => {
-    await Promise.all(images.map(img =>
-      fetch(`/api/gallery/${img.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ display_order: img.order })
-      })
-    ));
+  reorder: async (images: GalleryImage[]) => {
+    const res = await fetch('/api/gallery/reorder', {
+      method: 'PUT',
+      headers: adminHeaders(),
+      body: JSON.stringify({ images })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
   },
 };
 
@@ -833,19 +863,18 @@ export const fxbotAPI = {
 export const settingsAPI = {
   getCommunityMembers: async (): Promise<number> => {
     try {
-      // Use VPS endpoint — no direct Supabase contact (ISP-block safe)
-      const res = await fetch('/api/settings');
+      const res = await fetch(`/api/settings?${getTimestamp()}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       return parseInt(data.community_members, 10) || 6554;
     } catch {
-      return 6554; // Fallback
+      return 6554;
     }
   },
   updateCommunityMembers: async (count: number): Promise<void> => {
     const res = await fetch('/api/settings', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: adminHeaders(),
       body: JSON.stringify({ community_members: count.toString() })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
