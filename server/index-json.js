@@ -690,6 +690,64 @@ createAdminCrudRoutes('testimonials');
 createAdminCrudRoutes('projects');
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Public write endpoints for all resources (no VPS JWT required — admin is
+// authenticated at the frontend via Supabase auth). Writes go directly to the
+// VPS JSON file so the admin list updates immediately without waiting for sync.
+// ─────────────────────────────────────────────────────────────────────────────
+const createPublicWriteRoutes = (resourceName) => {
+  const filename = `${resourceName}.json`;
+
+  app.post(`/api/${resourceName}`, (req, res) => {
+    const data = readJsonFile(filename);
+    const newItem = {
+      id: generateId(),
+      status: 'published',
+      ...req.body,
+      timestamp: new Date().toISOString()
+    };
+    data.unshift(newItem);
+    writeJsonFile(filename, data);
+    res.status(201).json(newItem);
+  });
+
+  app.put(`/api/${resourceName}/:id`, (req, res) => {
+    const data = readJsonFile(filename);
+    const index = data.findIndex(d => d.id === req.params.id);
+    if (index === -1) return res.status(404).json({ error: `${resourceName} not found` });
+    data[index] = { ...data[index], ...req.body, updatedAt: new Date().toISOString() };
+    writeJsonFile(filename, data);
+    res.json(data[index]);
+  });
+
+  app.delete(`/api/${resourceName}/:id`, (req, res) => {
+    let data = readJsonFile(filename);
+    const index = data.findIndex(d => d.id === req.params.id);
+    if (index === -1) return res.status(404).json({ error: `${resourceName} not found` });
+    data.splice(index, 1);
+    writeJsonFile(filename, data);
+    console.log(`✅ Deleted ${resourceName}:`, req.params.id);
+    res.json({ success: true });
+  });
+
+  app.patch(`/api/${resourceName}/:id/status`, (req, res) => {
+    const data = readJsonFile(filename);
+    const index = data.findIndex(d => d.id === req.params.id);
+    if (index === -1) return res.status(404).json({ error: `${resourceName} not found` });
+    data[index] = { ...data[index], status: req.body.status, updatedAt: new Date().toISOString() };
+    writeJsonFile(filename, data);
+    res.json(data[index]);
+  });
+};
+
+// Apply public write routes to all admin resources (events handled separately above)
+createPublicWriteRoutes('notifications');
+createPublicWriteRoutes('updates');
+createPublicWriteRoutes('resources');
+createPublicWriteRoutes('spotlight');
+createPublicWriteRoutes('testimonials');
+createPublicWriteRoutes('projects');
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Public write endpoints for events (no VPS JWT required — admin uses Supabase auth)
 // These write directly to events.json so the admin list updates immediately.
 // ─────────────────────────────────────────────────────────────────────────────
