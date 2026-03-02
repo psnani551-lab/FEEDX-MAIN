@@ -334,70 +334,40 @@ export const eventsAPI = {
   },
 
   create: async (data: any): Promise<Event> => {
-    const payload = {
-      ...data,
-      event_date: data.date,
-      event_time: data.time,
-      register_link: data.registerLink,
-      is_coming_soon: data.isComingSoon,
-      admin_status: data.adminStatus
-    };
-    delete payload.date;
-    delete payload.time;
-    delete payload.registerLink;
-    delete payload.isComingSoon;
-    delete payload.adminStatus;
-
-    const { data: record, error } = await supabase
-      .from('events')
-      .insert([payload])
-      .select()
-      .single();
-    if (error) throw error;
-    return {
-      ...record,
-      timestamp: record.created_at,
-      date: record.event_date,
-      time: record.event_time,
-      registerLink: record.register_link,
-      isComingSoon: record.is_coming_soon
-    };
+    // Write directly to VPS JSON — list updates immediately
+    const payload = { ...data };
+    const res = await fetch('/api/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
   },
 
   delete: async (id: string): Promise<void> => {
-    const { error } = await supabase.from('events').delete().eq('id', id);
-    if (error) throw error;
+    // Delete from VPS JSON — admin list updates immediately
+    const res = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
   },
 
   update: async (id: string, data: any): Promise<void> => {
-    const payload = { ...data };
-    if (data.date) {
-      payload.event_date = data.date;
-      delete payload.date;
-    }
-    if (data.time) {
-      payload.event_time = data.time;
-      delete payload.time;
-    }
-    if (data.registerLink) {
-      payload.register_link = data.registerLink;
-      delete payload.registerLink;
-    }
-    if (data.isComingSoon !== undefined) {
-      payload.is_coming_soon = data.isComingSoon;
-      delete payload.isComingSoon;
-    }
-    if (data.adminStatus) {
-      payload.admin_status = data.adminStatus;
-      delete payload.adminStatus;
-    }
-    const { error } = await supabase.from('events').update(payload).eq('id', id);
-    if (error) throw error;
+    // Update in VPS JSON directly
+    const res = await fetch(`/api/events/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
   },
 
   updateStatus: async (id: string, status: string): Promise<void> => {
-    const { error } = await supabase.from('events').update({ status }).eq('id', id);
-    if (error) throw error;
+    const res = await fetch(`/api/events/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
   }
 };
 

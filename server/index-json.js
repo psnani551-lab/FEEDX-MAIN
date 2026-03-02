@@ -689,6 +689,53 @@ createAdminCrudRoutes('spotlight');
 createAdminCrudRoutes('testimonials');
 createAdminCrudRoutes('projects');
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Public write endpoints for events (no VPS JWT required — admin uses Supabase auth)
+// These write directly to events.json so the admin list updates immediately.
+// ─────────────────────────────────────────────────────────────────────────────
+app.post('/api/events', (req, res) => {
+  const data = readJsonFile('events.json');
+  const newItem = {
+    id: generateId(),
+    status: 'published',
+    ...req.body,
+    date: req.body.date || req.body.event_date || 'TBA',
+    time: req.body.time || req.body.event_time || 'TBA',
+    timestamp: new Date().toISOString()
+  };
+  data.unshift(newItem);
+  writeJsonFile('events.json', data);
+  res.status(201).json(newItem);
+});
+
+app.put('/api/events/:id', (req, res) => {
+  const data = readJsonFile('events.json');
+  const index = data.findIndex(d => d.id === req.params.id);
+  if (index === -1) return res.status(404).json({ error: 'event not found' });
+  data[index] = { ...data[index], ...req.body, updatedAt: new Date().toISOString() };
+  writeJsonFile('events.json', data);
+  res.json(data[index]);
+});
+
+app.delete('/api/events/:id', (req, res) => {
+  let data = readJsonFile('events.json');
+  const index = data.findIndex(d => d.id === req.params.id);
+  if (index === -1) return res.status(404).json({ error: 'event not found' });
+  data.splice(index, 1);
+  writeJsonFile('events.json', data);
+  console.log('✅ Deleted event:', req.params.id);
+  res.json({ success: true });
+});
+
+app.patch('/api/events/:id/status', (req, res) => {
+  const data = readJsonFile('events.json');
+  const index = data.findIndex(d => d.id === req.params.id);
+  if (index === -1) return res.status(404).json({ error: 'event not found' });
+  data[index] = { ...data[index], status: req.body.status, updatedAt: new Date().toISOString() };
+  writeJsonFile('events.json', data);
+  res.json(data[index]);
+});
+
 // ================== APPEARANCE SETTINGS ==================
 app.get('/api/admin/appearance', (req, res) => {
   const settings = readJsonFile('appearance.json');
