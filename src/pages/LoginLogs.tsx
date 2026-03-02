@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from "@/components/AdminLayout";
 import AdminDataTable from "@/components/AdminDataTable";
@@ -55,58 +55,31 @@ export default function LoginLogs() {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      let query = supabase
-        .from('login_logs')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Fetch real login data from VPS — no Supabase contact, ISP-safe
+      let url = '/api/auth/login-logs';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
 
-      if (filterUsername) {
-        query = query.ilike('email', `%${filterUsername}%`);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      let normalizedLogs: LoginLog[] = (data || []).map(log => ({
+      let normalizedLogs: LoginLog[] = (data || []).map((log: any) => ({
         id: log.id,
-        username: log.email || 'Unknown',
-        login_time: log.created_at,
+        username: log.username || log.email || 'Unknown',
+        login_time: log.login_time || log.created_at,
         ip_address: log.ip_address || '—',
         success: log.success ?? true,
-        device_info: log.user_agent
+        device_info: log.userAgent || log.user_agent || log.device_info
       }));
 
-      // Simulate a rich history if the database has absolutely 0 logs
-      if (normalizedLogs.length === 0 && !filterUsername) {
-        normalizedLogs = Array.from({ length: 45 }).map((_, i) => {
-          const isSuccess = Math.random() > 0.15; // 85% success rate
-          const d = new Date();
-          d.setHours(d.getHours() - Math.floor(Math.random() * 72)); // Spread over 3 days
-          const ips = ['192.168.1.45', '10.0.0.12', '45.33.22.11', '104.22.8.19', '172.16.0.4', '8.8.8.8'];
-          const devices = [
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.15',
-            'Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Mobile/15E148 Safari/604.1',
-            'Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Mobile Safari/537.36',
-            'Mozilla/5.0 (X11; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/117.0'
-          ];
-          const users = ['admin@feedx.com', 'system_service', 'moderator_01', 'unknown_identity', 'root'];
-
-          return {
-            id: 1000 - i,
-            username: users[Math.floor(Math.random() * users.length)],
-            login_time: d.toISOString(),
-            ip_address: ips[Math.floor(Math.random() * ips.length)],
-            success: isSuccess,
-            device_info: devices[Math.floor(Math.random() * devices.length)]
-          };
-        }).sort((a, b) => new Date(b.login_time).getTime() - new Date(a.login_time).getTime());
+      // Filter by username if provided
+      if (filterUsername) {
+        normalizedLogs = normalizedLogs.filter(l =>
+          l.username.toLowerCase().includes(filterUsername.toLowerCase())
+        );
       }
 
       setLogs(normalizedLogs);
     } catch (error) {
-      toast({ title: 'Audit Retrieval Error', variant: 'destructive' });
+      toast({ title: 'Audit Retrieval Error', description: 'Could not load login logs.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }

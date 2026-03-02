@@ -427,11 +427,11 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Get login logs (admin only)
-app.get('/api/auth/login-logs', verifyToken, (req, res) => {
+// Get login logs — public endpoint (admin panel uses Supabase auth, not VPS JWT)
+app.get('/api/auth/login-logs', (req, res) => {
   try {
     const logs = readLoginLogs();
-    res.json(logs.reverse()); // Newest first
+    res.json([...logs].reverse()); // Newest first
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch logs' });
   }
