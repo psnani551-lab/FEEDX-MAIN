@@ -8,8 +8,60 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
+import { createClient } from '@supabase/supabase-js';
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Initialize Supabase Admin client (bypass RLS for server-side sync)
+const supabaseAdmin = createClient(
+  process.env.VITE_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+// Helper to mirror JSON changes to Supabase
+const syncToSupabase = async (resourceName, action, id, data = {}, pkField = 'id') => {
+  try {
+    const table = resourceName;
+    console.log(`🔄 Syncing ${action} on ${table}/${id} to Supabase...`);
+
+    if (action === 'DELETE') {
+      const { error } = await supabaseAdmin.from(table).delete().eq(pkField, id);
+      if (error) throw error;
+    } else {
+      // For CREATE/UPDATE, we use upsert to keep it robust
+      let payload = { ...data };
+      if (pkField === 'id' && !payload.id) payload.id = id;
+      if (pkField === 'code' && !payload.code) payload.code = id;
+      if (pkField === 'email' && !payload.email) payload.email = id;
+
+      if (table === 'events') {
+        payload = {
+          ...payload,
+          event_date: payload.date || payload.event_date,
+          event_time: payload.time || payload.event_time,
+          register_link: payload.registerLink || payload.register_link,
+          is_coming_soon: payload.isComingSoon || payload.is_coming_soon,
+          admin_status: payload.adminStatus || payload.admin_status
+        };
+        ['date', 'time', 'registerLink', 'isComingSoon', 'adminStatus'].forEach(k => delete payload[k]);
+      }
+
+      if (table === 'resources') {
+        if (payload.longDescription) payload.long_description = payload.longDescription;
+        delete payload.longDescription;
+      }
+
+      const { error } = await supabaseAdmin.from(table).upsert(payload, { onConflict: pkField });
+      if (error) throw error;
+    }
+
+    console.log(`✅ Supabase sync successful for ${table}/${id}`);
+  } catch (err) {
+    console.error(`❌ Supabase sync failed for ${resourceName}/${id}:`, err.message);
+    // We don't throw here to avoid blocking the JSON-based response
+  }
+};
 
 // Data directory for JSON files
 const dataDir = path.join(__dirname, '..', 'data');
@@ -31,17 +83,6 @@ console.log('✅ Uploads directory ready:', uploadsDir);
 const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const ADMIN_API_KEY = process.env.VITE_ADMIN_API_KEY || 'feedx-default-admin-key-2025';
-
-// Security Middleware: API Key Check
-// Used for write operations from the admin panel to bypass DNS/ISP header limits
-const checkAdminKey = (req, res, next) => {
-  const apiKey = req.headers['x-admin-api-key'];
-  if (apiKey && apiKey === ADMIN_API_KEY) {
-    return next();
-  }
-  return res.status(401).json({ error: 'Unauthorized: Admin API Key required' });
-};
 
 // Helper functions for JSON file storage
 const readJsonFile = (filename) => {
@@ -156,19 +197,9 @@ initializeAdmin();
 app.use(cors({
   origin: true,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-api-key']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
-
-// Global Cache-Control for JSON data
-app.use('/api', (req, res, next) => {
-  if (req.method === 'GET') {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-  }
-  next();
-});
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
@@ -448,11 +479,11 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Get login logs — public endpoint (admin panel uses Supabase auth, not VPS JWT)
-app.get('/api/auth/login-logs', (req, res) => {
+// Get login logs (admin only)
+app.get('/api/auth/login-logs', verifyToken, (req, res) => {
   try {
     const logs = readLoginLogs();
-    res.json([...logs].reverse()); // Newest first
+    res.json(logs.reverse()); // Newest first
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch logs' });
   }
@@ -656,6 +687,9 @@ const createAdminCrudRoutes = (resourceName) => {
     data.unshift(newItem);
     writeJsonFile(filename, data);
 
+    // Mirror to Supabase
+    syncToSupabase(resourceName, 'CREATE', newItem.id, newItem);
+
     logAction(req.user, 'CREATE', resourceName, newItem.id, { title: newItem.title || newItem.name });
 
     console.log(`✅ Created ${resourceName}:`, newItem.id);
@@ -665,7 +699,7 @@ const createAdminCrudRoutes = (resourceName) => {
   // PUT update (protected)
   app.put(`/api/admin/${resourceName}/:id`, verifyToken, (req, res) => {
     const data = readJsonFile(filename);
-    const index = data.findIndex(d => d.id == req.params.id); // Loose matching for numeric IDs
+    const index = data.findIndex(d => d.id === req.params.id);
     if (index === -1) {
       return res.status(404).json({ error: `${resourceName} not found` });
     }
@@ -673,6 +707,9 @@ const createAdminCrudRoutes = (resourceName) => {
     const oldItem = { ...data[index] };
     data[index] = { ...data[index], ...req.body, updatedAt: new Date().toISOString() };
     writeJsonFile(filename, data);
+
+    // Mirror to Supabase
+    syncToSupabase(resourceName, 'UPDATE', req.params.id, req.body);
 
     logAction(req.user, 'UPDATE', resourceName, req.params.id, {
       title: data[index].title || data[index].name,
@@ -685,7 +722,7 @@ const createAdminCrudRoutes = (resourceName) => {
   // DELETE (protected)
   app.delete(`/api/admin/${resourceName}/:id`, verifyToken, (req, res) => {
     let data = readJsonFile(filename);
-    const index = data.findIndex(d => d.id == req.params.id); // Loose matching for numeric IDs
+    const index = data.findIndex(d => d.id === req.params.id);
     if (index === -1) {
       return res.status(404).json({ error: `${resourceName} not found` });
     }
@@ -693,6 +730,9 @@ const createAdminCrudRoutes = (resourceName) => {
     const deletedItem = data[index];
     data.splice(index, 1);
     writeJsonFile(filename, data);
+
+    // Mirror to Supabase
+    syncToSupabase(resourceName, 'DELETE', req.params.id);
 
     logAction(req.user, 'DELETE', resourceName, req.params.id, { title: deletedItem.title || deletedItem.name });
 
@@ -711,116 +751,65 @@ createAdminCrudRoutes('testimonials');
 createAdminCrudRoutes('projects');
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Public write endpoints for all resources (no VPS JWT required — admin is
-// authenticated at the frontend via Supabase auth). Writes go directly to the
-// VPS JSON file so the admin list updates immediately without waiting for sync.
-// ─────────────────────────────────────────────────────────────────────────────
-const createPublicWriteRoutes = (resourceName) => {
-  const filename = `${resourceName}.json`;
-
-  app.post(`/api/${resourceName}`, checkAdminKey, (req, res) => {
-    const data = readJsonFile(filename);
-    const newItem = {
-      id: generateId(),
-      status: 'published',
-      ...req.body,
-      timestamp: new Date().toISOString()
-    };
-    data.unshift(newItem);
-    writeJsonFile(filename, data);
-    res.status(201).json(newItem);
-  });
-
-  app.put(`/api/${resourceName}/:id`, checkAdminKey, (req, res) => {
-    const data = readJsonFile(filename);
-    const index = data.findIndex(d => d.id == req.params.id); // Loose matching
-    if (index === -1) return res.status(404).json({ error: `${resourceName} not found` });
-    data[index] = { ...data[index], ...req.body, updatedAt: new Date().toISOString() };
-    writeJsonFile(filename, data);
-    res.json(data[index]);
-  });
-
-  app.delete(`/api/${resourceName}/:id`, checkAdminKey, (req, res) => {
-    let data = readJsonFile(filename);
-    const index = data.findIndex(d => d.id == req.params.id); // Loose matching
-    if (index === -1) return res.status(404).json({ error: `${resourceName} not found` });
-    data.splice(index, 1);
-    writeJsonFile(filename, data);
-    console.log(`✅ Deleted ${resourceName}:`, req.params.id);
-    res.json({ success: true });
-  });
-
-  app.patch(`/api/${resourceName}/:id/status`, checkAdminKey, (req, res) => {
-    const data = readJsonFile(filename);
-    const index = data.findIndex(d => d.id == req.params.id); // Loose matching
-    if (index === -1) return res.status(404).json({ error: `${resourceName} not found` });
-    data[index] = { ...data[index], status: req.body.status, updatedAt: new Date().toISOString() };
-    writeJsonFile(filename, data);
-    res.json(data[index]);
-  });
-};
-
-// Apply public write routes to all admin resources (events handled separately above)
-createPublicWriteRoutes('notifications');
-createPublicWriteRoutes('updates');
-createPublicWriteRoutes('resources');
-createPublicWriteRoutes('spotlight');
-createPublicWriteRoutes('testimonials');
-createPublicWriteRoutes('projects');
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Public write endpoints for events (no VPS JWT required — admin uses Supabase auth)
 // These write directly to events.json so the admin list updates immediately.
 // ─────────────────────────────────────────────────────────────────────────────
-app.post('/api/events', checkAdminKey, (req, res) => {
+app.post('/api/events', (req, res) => {
   const data = readJsonFile('events.json');
   const newItem = {
     id: generateId(),
     status: 'published',
     ...req.body,
     date: req.body.date || req.body.event_date || 'TBA',
-    event_date: req.body.date || req.body.event_date || 'TBA', // Sync
     time: req.body.time || req.body.event_time || 'TBA',
-    event_time: req.body.time || req.body.event_time || 'TBA', // Sync
     timestamp: new Date().toISOString()
   };
   data.unshift(newItem);
   writeJsonFile('events.json', data);
+
+  // Mirror to Supabase
+  syncToSupabase('events', 'CREATE', newItem.id, newItem);
+
   res.status(201).json(newItem);
 });
 
-app.put('/api/events/:id', checkAdminKey, (req, res) => {
+app.put('/api/events/:id', (req, res) => {
   const data = readJsonFile('events.json');
-  const index = data.findIndex(d => d.id == req.params.id); // Loose matching
+  const index = data.findIndex(d => d.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: 'event not found' });
-
-  // Synchronize field names for legacy compatibility
-  const updates = { ...req.body };
-  if (updates.date) updates.event_date = updates.date;
-  if (updates.time) updates.event_time = updates.time;
-  if (updates.isComingSoon !== undefined) updates.is_coming_soon = updates.isComingSoon;
-
-  data[index] = { ...data[index], ...updates, updatedAt: new Date().toISOString() };
+  data[index] = { ...data[index], ...req.body, updatedAt: new Date().toISOString() };
   writeJsonFile('events.json', data);
+
+  // Mirror to Supabase
+  syncToSupabase('events', 'UPDATE', req.params.id, req.body);
+
   res.json(data[index]);
 });
 
-app.delete('/api/events/:id', checkAdminKey, (req, res) => {
+app.delete('/api/events/:id', (req, res) => {
   let data = readJsonFile('events.json');
-  const index = data.findIndex(d => d.id == req.params.id); // Loose matching
+  const index = data.findIndex(d => d.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: 'event not found' });
   data.splice(index, 1);
   writeJsonFile('events.json', data);
+
+  // Mirror to Supabase
+  syncToSupabase('events', 'DELETE', req.params.id);
+
   console.log('✅ Deleted event:', req.params.id);
   res.json({ success: true });
 });
 
-app.patch('/api/events/:id/status', checkAdminKey, (req, res) => {
+app.patch('/api/events/:id/status', (req, res) => {
   const data = readJsonFile('events.json');
-  const index = data.findIndex(d => d.id == req.params.id); // Loose matching
+  const index = data.findIndex(d => d.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: 'event not found' });
   data[index] = { ...data[index], status: req.body.status, updatedAt: new Date().toISOString() };
   writeJsonFile('events.json', data);
+
+  // Mirror to Supabase
+  syncToSupabase('events', 'UPDATE', req.params.id, { status: req.body.status });
+
   res.json(data[index]);
 });
 
@@ -981,6 +970,10 @@ app.post('/api/subscribe', (req, res) => {
   });
 
   writeJsonFile('subscriptions.json', subscriptions);
+
+  // Mirror to Supabase
+  syncToSupabase('subscriptions', 'CREATE', email, { name, email, created_at: new Date().toISOString() }, 'email');
+
   res.json({ success: true, message: 'Successfully subscribed' });
 });
 
@@ -1045,6 +1038,10 @@ app.post('/api/admin/institutes', verifyToken, (req, res) => {
     }
 
     writeJsonFile('institutes.json', institutes);
+
+    // Mirror to Supabase
+    syncToSupabase('institutes', 'UPDATE', instituteData.code, instituteData, 'code');
+
     res.json(instituteData);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1056,6 +1053,10 @@ app.delete('/api/admin/institutes/:code', verifyToken, (req, res) => {
     const institutes = readJsonFile('institutes.json');
     const filtered = institutes.filter(i => i.code.toUpperCase() !== req.params.code.toUpperCase());
     writeJsonFile('institutes.json', filtered);
+
+    // Mirror to Supabase
+    syncToSupabase('institutes', 'DELETE', req.params.code.toUpperCase(), {}, 'code');
+
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -1202,8 +1203,8 @@ app.get('/api/gallery', (req, res) => {
   }
 });
 
-// Create gallery image (secured via checkAdminKey)
-app.post('/api/gallery', checkAdminKey, (req, res) => {
+// Create gallery image (protected)
+app.post('/api/gallery', verifyToken, (req, res) => {
   try {
     const { url, order } = req.body;
     if (!url) {
@@ -1220,7 +1221,11 @@ app.post('/api/gallery', checkAdminKey, (req, res) => {
 
     gallery.push(newImage);
     writeJsonFile('gallery.json', gallery);
-    console.log(`✅ Created gallery item:`, newImage.id);
+
+    // Mirror to Supabase
+    syncToSupabase('gallery', 'CREATE', newImage.id, newImage);
+
+    logAction(req.user.username, 'CREATE', 'gallery', newImage.id, { url });
 
     res.status(201).json(newImage);
   } catch (error) {
@@ -1229,18 +1234,22 @@ app.post('/api/gallery', checkAdminKey, (req, res) => {
   }
 });
 
-// Delete gallery image (secured via checkAdminKey)
-app.delete('/api/gallery/:id', checkAdminKey, (req, res) => {
+// Delete gallery image (protected)
+app.delete('/api/gallery/:id', verifyToken, (req, res) => {
   try {
     const gallery = readJsonFile('gallery.json');
-    const filteredGallery = gallery.filter(img => img.id != req.params.id); // Loose matching
+    const filteredGallery = gallery.filter(img => img.id !== req.params.id);
 
     if (gallery.length === filteredGallery.length) {
       return res.status(404).json({ error: 'Image not found' });
     }
 
     writeJsonFile('gallery.json', filteredGallery);
-    console.log(`✅ Deleted gallery item:`, req.params.id);
+
+    // Mirror to Supabase
+    syncToSupabase('gallery', 'DELETE', req.params.id);
+
+    logAction(req.user.username, 'DELETE', 'gallery', req.params.id);
 
     res.json({ success: true, message: 'Image deleted successfully' });
   } catch (error) {
@@ -1249,8 +1258,8 @@ app.delete('/api/gallery/:id', checkAdminKey, (req, res) => {
   }
 });
 
-// Reorder gallery images (secured via checkAdminKey)
-app.put('/api/gallery/reorder', checkAdminKey, (req, res) => {
+// Reorder gallery images (protected)
+app.put('/api/gallery/reorder', verifyToken, (req, res) => {
   try {
     const images = req.body;
     if (!Array.isArray(images)) {
@@ -1258,6 +1267,12 @@ app.put('/api/gallery/reorder', checkAdminKey, (req, res) => {
     }
 
     writeJsonFile('gallery.json', images);
+
+    // Mirror to Supabase (update all orders)
+    images.forEach(img => syncToSupabase('gallery', 'UPDATE', img.id, img));
+
+    logAction(req.user.username, 'UPDATE', 'gallery', 'reorder', { count: images.length });
+
     res.json({ success: true, message: 'Gallery reordered successfully' });
   } catch (error) {
     console.error('Error reordering gallery:', error);
@@ -1310,6 +1325,12 @@ app.put('/api/settings', (req, res) => {
   const current = readJsonFile('settings.json') || {};
   const updated = { ...current, ...req.body };
   writeJsonFile('settings.json', updated);
+
+  // Mirror to Supabase platform_settings
+  if (req.body.community_members) {
+    syncToSupabase('platform_settings', 'UPDATE', 'community_members', { value: req.body.community_members.toString() });
+  }
+
   res.json(updated);
 });
 
