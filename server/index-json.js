@@ -151,6 +151,32 @@ app.use(cors({
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Global response interceptor: rewrite Supabase Storage URLs → /api/image-proxy
+// Fixes "blank images" on ISP-blocked networks (India) without touching each endpoint.
+// Only activates when the response contains *.supabase.co/storage/ URLs.
+// ─────────────────────────────────────────────────────────────────────────────
+app.use((req, res, next) => {
+  // Only rewrite on API data routes, skip image-proxy itself to avoid loops
+  if (req.path.startsWith('/api/image-proxy')) return next();
+  const originalJson = res.json.bind(res);
+  res.json = (data) => {
+    try {
+      const str = JSON.stringify(data);
+      if (str.includes('.supabase.co/storage/')) {
+        const rewritten = str.replace(
+          /https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/[^"'\s\\]*/g,
+          (match) => `/api/image-proxy?url=${encodeURIComponent(match)}`
+        );
+        return originalJson(JSON.parse(rewritten));
+      }
+    } catch (_) { /* non-critical, fall through */ }
+    return originalJson(data);
+  };
+  next();
+});
+
+
 // Set a tight but functional Content Security Policy to avoid default-src 'none'
 app.use((req, res, next) => {
   res.setHeader(
@@ -1105,6 +1131,41 @@ app.put('/api/gallery/reorder', verifyToken, (req, res) => {
     res.status(500).json({ error: 'Failed to reorder gallery images' });
   }
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Image Proxy: serve Supabase Storage images through VPS so ISP block doesn't
+// break images on pages (all *.supabase.co URLs are DNS-blocked in India).
+// Usage: /api/image-proxy?url=https://xxx.supabase.co/storage/v1/...
+// ─────────────────────────────────────────────────────────────────────────────
+app.get('/api/image-proxy', async (req, res) => {
+  const { url } = req.query;
+  if (!url || typeof url !== 'string') return res.status(400).send('url required');
+  // Security: only proxy Supabase storage URLs
+  if (!url.includes('.supabase.co/storage/')) return res.status(403).send('only supabase storage urls allowed');
+  try {
+    const upstream = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    if (!upstream.ok) return res.status(upstream.status).send('upstream error');
+    const contentType = upstream.headers.get('content-type') || 'image/jpeg';
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // cache 24h in browser
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    const buf = await upstream.arrayBuffer();
+    res.send(Buffer.from(buf));
+  } catch (err) {
+    res.status(500).send('proxy error: ' + err.message);
+  }
+});
+
+// Utility: rewrite all Supabase Storage URLs in an API response object so
+// images are served via /api/image-proxy instead of blocked *.supabase.co
+const rewriteImageUrls = (obj) => {
+  const str = JSON.stringify(obj);
+  const rewritten = str.replace(
+    /https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/[^"'\s]*/g,
+    (match) => `/api/image-proxy?url=${encodeURIComponent(match)}`
+  );
+  return JSON.parse(rewritten);
+};
 
 // Health check
 app.get('/api/health', (req, res) => {
