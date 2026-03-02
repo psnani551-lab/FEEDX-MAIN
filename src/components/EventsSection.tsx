@@ -10,6 +10,18 @@ import {
     DialogContent,
 } from "@/components/ui/dialog";
 
+// Auto-determine event phase from date+time in IST—same logic as admin panel.
+const computeEventPhase = (date: string, time?: string): 'upcoming' | 'conducted' => {
+    if (!date || date === 'Coming Soon' || date === 'TBA') return 'upcoming';
+    try {
+        const timeStr = (time && time !== 'TBA') ? time : '23:59';
+        const eventDateTime = new Date(`${date}T${timeStr}:00+05:30`);
+        return eventDateTime > new Date() ? 'upcoming' : 'conducted';
+    } catch {
+        return 'upcoming';
+    }
+};
+
 const EventsSection = () => {
     const [events, setEvents] = useState<Event[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -34,12 +46,12 @@ const EventsSection = () => {
         fetchEvents();
     }, []);
 
-    const upcomingEvents = events.filter(e => e.status === 'upcoming');
-    const conductedEvents = events.filter(e => e.status === 'conducted');
+    const upcomingEvents = events.filter(e => computeEventPhase(e.date, e.time) === 'upcoming');
+    const conductedEvents = events.filter(e => computeEventPhase(e.date, e.time) === 'conducted');
 
     const handleEventAction = (event: Event) => {
-        // For upcoming events with links, follow the link. For others, show details.
-        if (event.status === 'upcoming' && event.registerLink && event.registerLink !== '#') {
+        const phase = computeEventPhase(event.date, event.time);
+        if (phase === 'upcoming' && event.registerLink && event.registerLink !== '#') {
             window.open(event.registerLink, '_blank');
         } else {
             setSelectedEvent(event);
@@ -47,13 +59,14 @@ const EventsSection = () => {
     };
 
     const handleModalSecondaryAction = (event: Event) => {
-        if (event.status === 'conducted') {
+        const phase = computeEventPhase(event.date, event.time);
+        if (phase === 'conducted') {
             if (event.registerLink && event.registerLink !== '#') {
                 window.open(event.registerLink, '_blank');
             } else {
                 navigate('/celebrations');
             }
-        } else if (event.status === 'upcoming' && event.registerLink && event.registerLink !== '#') {
+        } else if (phase === 'upcoming' && event.registerLink && event.registerLink !== '#') {
             window.open(event.registerLink, '_blank');
         }
     };
@@ -204,71 +217,75 @@ const EventsSection = () => {
     );
 };
 
-const EventCard = ({ event, onAction }: { event: Event; onAction: () => void }) => (
-    <div className="group bg-white/[0.02] border border-white/[0.05] rounded-[32px] overflow-hidden hover:border-primary/50 hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.3)] transition-all duration-500 p-2 flex flex-col h-full">
-        <div className="relative aspect-[16/10] rounded-[24px] overflow-hidden mb-6 flex-shrink-0">
-            <img
-                src={event.image ? getImageUrl(event.image) : noDataIllustration}
-                alt={event.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                loading="lazy"
-            />
-            <div className="absolute top-4 right-4">
-                <div className={`px - 3 py - 1 rounded - full text - [9px] font - black uppercase tracking - widest backdrop - blur - md border ${event.status === 'upcoming' ? 'bg-primary/20 text-primary border-primary/30' : 'bg-white/10 text-muted-foreground border-white/20'} `}>
-                    {event.status === 'upcoming' ? 'Upcoming' : 'Conducted'}
-                </div>
-            </div>
-        </div>
-
-        <div className="px-6 pb-6 pt-2 flex flex-col flex-grow">
-            <div className="flex-grow">
-                <h3 className="text-xl font-bold text-foreground mb-3 tracking-tight line-clamp-1 group-hover:text-primary transition-colors">{event.title}</h3>
-                <p className="text-sm text-muted-foreground mb-8 line-clamp-2 leading-relaxed font-medium">{event.description}</p>
-
-                <div className="space-y-4 mb-6">
-                    {/* Event Details */}
-                    <div className="space-y-2 border-t border-white/[0.05] pt-6">
-                        <div className="flex items-center text-sm font-medium">
-                            <Calendar className="w-4 h-4 mr-3 text-primary" />
-                            {event.date === "Coming Soon" ? (
-                                <span className="text-primary animate-pulse text-xs font-bold uppercase tracking-widest">Coming Soon</span>
-                            ) : (
-                                <span className="text-muted-foreground text-xs">{event.date}</span>
-                            )}
-                        </div>
-                        <div className="flex items-center text-sm font-medium">
-                            <Clock className="w-4 h-4 mr-3 text-primary" />
-                            <span className="text-muted-foreground text-xs">{event.time}</span>
-                        </div>
-                        <div className="flex items-center text-sm font-medium text-muted-foreground">
-                            <MapPin className="w-4 h-4 mr-3 text-primary" />
-                            <span className="text-xs">{event.location}</span>
-                        </div>
+const EventCard = ({ event, onAction }: { event: Event; onAction: () => void }) => {
+    const phase = computeEventPhase(event.date, event.time);
+    return (
+        <div className="group bg-white/[0.02] border border-white/[0.05] rounded-[32px] overflow-hidden hover:border-primary/50 hover:shadow-[0_0_30px_-5px_hsl(var(--primary)/0.3)] transition-all duration-500 p-2 flex flex-col h-full">
+            <div className="relative aspect-[16/10] rounded-[24px] overflow-hidden mb-6 flex-shrink-0">
+                <img
+                    src={event.image ? getImageUrl(event.image) : noDataIllustration}
+                    alt={event.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                    loading="lazy"
+                />
+                <div className="absolute top-4 right-4">
+                    <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest backdrop-blur-md border ${phase === 'upcoming'
+                            ? 'bg-primary/20 text-primary border-primary/30'
+                            : 'bg-white/10 text-muted-foreground border-white/20'
+                        }`}>
+                        {phase === 'upcoming' ? 'Upcoming' : 'Conducted'}
                     </div>
                 </div>
             </div>
 
-            {/* Action Button - Locked at Bottom */}
-            <div className="mt-auto pt-4">
-                {event.status === 'upcoming' ? (
-                    <Button
-                        className="w-full h-12 bg-primary text-white hover:bg-primary/90 transition-all rounded-xl font-bold text-xs uppercase tracking-widest shadow-glow focus-visible:ring-0 focus-visible:ring-offset-0"
-                        onClick={onAction}
-                    >
-                        Register Now
-                    </Button>
-                ) : (
-                    <Button
-                        variant="outline"
-                        className="w-full h-12 border-2 border-primary/50 hover:bg-primary/5 transition-all rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/50 active:border-primary/50"
-                        onClick={onAction}
-                    >
-                        View Details
-                    </Button>
-                )}
+            <div className="px-6 pb-6 pt-2 flex flex-col flex-grow">
+                <div className="flex-grow">
+                    <h3 className="text-xl font-bold text-foreground mb-3 tracking-tight line-clamp-1 group-hover:text-primary transition-colors">{event.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-8 line-clamp-2 leading-relaxed font-medium">{event.description}</p>
+
+                    <div className="space-y-4 mb-6">
+                        <div className="space-y-2 border-t border-white/[0.05] pt-6">
+                            <div className="flex items-center text-sm font-medium">
+                                <Calendar className="w-4 h-4 mr-3 text-primary" />
+                                {event.date === "Coming Soon" ? (
+                                    <span className="text-primary animate-pulse text-xs font-bold uppercase tracking-widest">Coming Soon</span>
+                                ) : (
+                                    <span className="text-muted-foreground text-xs">{event.date}</span>
+                                )}
+                            </div>
+                            <div className="flex items-center text-sm font-medium">
+                                <Clock className="w-4 h-4 mr-3 text-primary" />
+                                <span className="text-muted-foreground text-xs">{event.time}</span>
+                            </div>
+                            <div className="flex items-center text-sm font-medium text-muted-foreground">
+                                <MapPin className="w-4 h-4 mr-3 text-primary" />
+                                <span className="text-xs">{event.location}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-auto pt-4">
+                    {phase === 'upcoming' ? (
+                        <Button
+                            className="w-full h-12 bg-primary text-white hover:bg-primary/90 transition-all rounded-xl font-bold text-xs uppercase tracking-widest shadow-glow focus-visible:ring-0 focus-visible:ring-offset-0"
+                            onClick={onAction}
+                        >
+                            Register Now
+                        </Button>
+                    ) : (
+                        <Button
+                            variant="outline"
+                            className="w-full h-12 border-2 border-primary/50 hover:bg-primary/5 transition-all rounded-xl font-bold text-xs uppercase tracking-widest shadow-sm focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-primary/50 active:border-primary/50"
+                            onClick={onAction}
+                        >
+                            View Details
+                        </Button>
+                    )}
+                </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 export default EventsSection;

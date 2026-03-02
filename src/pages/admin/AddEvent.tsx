@@ -14,6 +14,19 @@ import { useAutoSave } from "@/hooks/useAutoSave";
 import { X, Upload, Loader2, Calendar, MapPin, Link as LinkIcon, Sparkles, Trophy, Globe, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
+// Auto-determine event phase from date+time using IST.
+// No manual input needed — system computes this reliably.
+const computeEventPhase = (date: string, time?: string): 'upcoming' | 'conducted' => {
+  if (!date || date === 'Coming Soon' || date === 'TBA') return 'upcoming';
+  try {
+    const timeStr = (time && time !== 'TBA') ? time : '23:59';
+    // Parse in IST (UTC+5:30) for accurate India-based comparison
+    const eventDateTime = new Date(`${date}T${timeStr}:00+05:30`);
+    return eventDateTime > new Date() ? 'upcoming' : 'conducted';
+  } catch {
+    return 'upcoming';
+  }
+};
 
 export default function AddEvent() {
   const { toast } = useToast();
@@ -87,7 +100,11 @@ export default function AddEvent() {
         ...formData,
         date: formData.isComingSoon ? "Coming Soon" : formData.date || "TBA",
         time: formData.isComingSoon ? "TBA" : formData.time || "TBA",
-        status: formData.status,
+        // Status auto-computed from date/time — never set manually
+        status: computeEventPhase(
+          formData.isComingSoon ? "Coming Soon" : formData.date,
+          formData.isComingSoon ? "TBA" : formData.time
+        ),
       };
 
       if (isEditMode && editingItem) {
@@ -263,11 +280,17 @@ export default function AddEvent() {
     {
       key: "status",
       label: "Phase",
-      render: (item: Event) => (
-        <Badge className={`uppercase text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full ${item.status === 'upcoming' ? 'bg-amber-500/10 text-amber-500 border-0' : 'bg-blue-500/10 text-blue-500 border-0'}`}>
-          {item.status}
-        </Badge>
-      )
+      render: (item: Event) => {
+        const phase = computeEventPhase(item.date, item.time);
+        return (
+          <Badge className={`uppercase text-[9px] font-black tracking-widest px-2 py-0.5 rounded-full ${phase === 'upcoming'
+              ? 'bg-amber-500/10 text-amber-500 border-0'
+              : 'bg-emerald-500/10 text-emerald-500 border-0'
+            }`}>
+            {phase}
+          </Badge>
+        );
+      }
     }
   ];
 
@@ -405,14 +428,6 @@ export default function AddEvent() {
                     options: [
                       { label: 'Upcoming', value: 'upcoming' },
                       { label: 'Conducted', value: 'conducted' }
-                    ]
-                  },
-                  {
-                    key: 'adminStatus',
-                    label: 'Visibility',
-                    options: [
-                      { label: 'Published', value: 'published' },
-                      { label: 'Draft', value: 'draft' }
                     ]
                   }
                 ]}
