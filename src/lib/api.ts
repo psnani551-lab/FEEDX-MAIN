@@ -885,23 +885,26 @@ export const fxbotAPI = {
 export const settingsAPI = {
   getCommunityMembers: async (): Promise<number> => {
     try {
-      const { data, error } = await supabase
-        .from('platform_settings')
-        .select('value')
-        .eq('id', 'community_members')
-        .single();
-
-      if (error) throw error;
-      return parseInt(data.value, 10) || 6554;
+      // Use VPS endpoint — no direct Supabase contact (ISP-block safe)
+      const res = await fetch('/api/settings');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return parseInt(data.community_members, 10) || 6554;
     } catch {
       return 6554; // Fallback
     }
   },
   updateCommunityMembers: async (count: number): Promise<void> => {
-    const { error } = await supabase
-      .from('platform_settings')
-      .upsert({ id: 'community_members', value: count.toString() });
-
-    if (error) throw error;
+    // Get admin JWT for authenticated PUT request
+    const token = localStorage.getItem('admin_token');
+    const res = await fetch('/api/settings', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
+      body: JSON.stringify({ community_members: count.toString() })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
   }
 };

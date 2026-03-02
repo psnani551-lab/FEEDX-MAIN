@@ -1167,6 +1167,19 @@ const rewriteImageUrls = (obj) => {
   return JSON.parse(rewritten);
 };
 
+// Settings API — stored in settings.json (no Supabase dependency, ISP-safe)
+app.get('/api/settings', (req, res) => {
+  const settings = readJsonFile('settings.json') || {};
+  res.json(settings);
+});
+
+app.put('/api/settings', verifyToken, (req, res) => {
+  const current = readJsonFile('settings.json') || {};
+  const updated = { ...current, ...req.body };
+  writeJsonFile('settings.json', updated);
+  res.json(updated);
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
