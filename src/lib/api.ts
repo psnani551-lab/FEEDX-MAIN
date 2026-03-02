@@ -721,22 +721,11 @@ export interface FXBotIssue {
 }
 
 // Helper: get current user's JWT for proxy authorization
-// Priority: localStorage (ISP-bypass store) → Supabase JS client session
+// Reads exclusively from localStorage (set after proxy OTP verification)
+// No direct Supabase contact — ISP-block safe
 const getAuthHeader = async (): Promise<string | undefined> => {
-  // Check our ISP-bypass token store first (set after proxy OTP verification)
   const localToken = localStorage.getItem('fxbot_access_token');
-  if (localToken) return `Bearer ${localToken}`;
-
-  // Fallback to Supabase JS client session (works on non-blocked networks)
-  try {
-    const { data } = await fxbotSupabase.auth.getSession();
-    if (data?.session?.access_token) {
-      return `Bearer ${data.session.access_token}`;
-    }
-  } catch (err) {
-    console.error("Error getting session:", err);
-  }
-  return undefined;
+  return localToken ? `Bearer ${localToken}` : undefined;
 };
 
 // Helper: trigger VPS sync after admin writes so data appears instantly
@@ -745,19 +734,13 @@ const triggerSync = () => fetch('/api/sync/trigger', { method: 'POST' }).catch((
 export const fxbotAPI = {
   // ── Access Code Validation ─────────────────────────────────────────────────
   validateAdminCode: async (code: string, designation: 'Principal' | 'Admin'): Promise<boolean> => {
-    try {
-      const res = await fetch(`/api/fxbot/admin-codes?code=${encodeURIComponent(code.trim().toUpperCase())}&designation=${encodeURIComponent(designation)}`, {
-        headers: { ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string }) }
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return !!data.valid;
-    } catch {
-      // Fallback to direct Supabase
-      const { data, error } = await fxbotSupabase.from('fxbot_admin_codes').select('id').eq('code', code.trim().toUpperCase()).eq('designation', designation).eq('is_active', true).maybeSingle();
-      if (error) throw error;
-      return !!data;
-    }
+    // All requests go through VPS proxy — no direct Supabase contact (ISP-block safe)
+    const res = await fetch(`/api/fxbot/admin-codes?code=${encodeURIComponent(code.trim().toUpperCase())}&designation=${encodeURIComponent(designation)}`, {
+      headers: { ...(await getAuthHeader() && { 'Authorization': await getAuthHeader() as string }) }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return !!data.valid;
   },
 
   // ── Student Auth & Record Management ──────────────────────────────────────
@@ -882,8 +865,18 @@ export const fxbotAPI = {
   },
 
   logout: async (): Promise<void> => {
-    localStorage.removeItem("student_session");
-    await fxbotSupabase.auth.signOut();
+    // Clear all local ISP-bypass tokens and student session
+    const token = localStorage.getItem('fxbot_access_token');
+    localStorage.removeItem('fxbot_access_token');
+    localStorage.removeItem('fxbot_refresh_token');
+    localStorage.removeItem('student_session');
+    // Inform VPS to invalidate server-side session (fire-and-forget, non-critical)
+    if (token) {
+      fetch('/api/fxbot/sign-out', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).catch(() => { });
+    }
   }
 };
 

@@ -5,7 +5,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Student, FXBotIssue, fxbotAPI } from "@/lib/api";
-import { fxbotSupabase } from "@/integrations/supabase/fxbot-client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import SubmitIssue from "@/components/fxbot/SubmitIssue";
@@ -59,29 +58,11 @@ const StudentPortal = () => {
             return;
         }
 
-        // Validate session: accept either a Supabase JS client session (standard network)
-        // OR our ISP-bypass token stored in localStorage (for Indian ISP block workaround)
-        const bypassToken = localStorage.getItem("fxbot_access_token");
-        if (bypassToken) {
-            // ISP-bypass path: token is valid (was set right after successful OTP verify)
-            const studentData = JSON.parse(session);
-            setStudent(studentData);
-            fetchIssues(studentData);
-            return;
-        }
-
-        // Standard path: check Supabase JS client session
-        fxbotSupabase.auth.getSession().then(({ data: { session: authSession } }) => {
-            if (!authSession) {
-                // Auth session expired — clear stale local data and redirect
-                localStorage.removeItem("student_session");
-                navigate("/student/auth");
-                return;
-            }
-            const studentData = JSON.parse(session);
-            setStudent(studentData);
-            fetchIssues(studentData);
-        });
+        // Session guard: accept localStorage ISP-bypass token OR existing student_session.
+        // No direct Supabase contact needed — ISP-block safe.
+        const studentData = JSON.parse(session);
+        setStudent(studentData);
+        fetchIssues(studentData);
     }, [navigate]);
 
     const fetchIssues = async (user: Student) => {
@@ -98,39 +79,13 @@ const StudentPortal = () => {
         }
     };
 
-    // Real-time synchronization subscription
+    // 5-second polling for issue updates — replaces Supabase Realtime (ISP-block safe)
     useEffect(() => {
         if (!student) return;
-
-        const channel = fxbotSupabase
-            .channel('public:issues')
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'issues',
-                    filter: student.role === 'faculty'
-                        ? `department=eq.${student.department}`
-                        : `student_id=eq.${student.id}`
-                },
-                (payload) => {
-                    console.log('Real-time update received:', payload);
-                    fetchIssues(student);
-
-                    if (payload.eventType === 'UPDATE' && payload.new.status !== payload.old.status) {
-                        toast({
-                            title: "Status Synchronized",
-                            description: `Issue ${payload.new.id} transitioned to ${payload.new.status}.`
-                        });
-                    }
-                }
-            )
-            .subscribe();
-
-        return () => {
-            fxbotSupabase.removeChannel(channel);
-        };
+        const interval = setInterval(() => {
+            fetchIssues(student);
+        }, 5000);
+        return () => clearInterval(interval);
     }, [student]);
 
     const handleLogout = async () => {

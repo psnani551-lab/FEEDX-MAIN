@@ -1316,6 +1316,24 @@ app.post('/api/fxbot/send-otp', async (req, res) => {
 });
 
 
+// Proxy: Sign out (invalidate Supabase server-side session via VPS — ISP-block safe)
+app.post('/api/fxbot/sign-out', async (req, res) => {
+  if (!FXBOT_URL || !FXBOT_KEY) return res.status(503).json({ error: 'FXBot not configured' });
+  try {
+    await fetch(`${FXBOT_URL}/auth/v1/logout`, {
+      method: 'POST',
+      headers: {
+        'apikey': FXBOT_KEY,
+        'Authorization': req.headers.authorization || `Bearer ${FXBOT_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Proxy: Verify OTP via Supabase Auth
 app.post('/api/fxbot/verify-otp', async (req, res) => {
   if (!FXBOT_URL || !FXBOT_KEY) return res.status(503).json({ error: 'FXBot not configured' });

@@ -186,7 +186,10 @@ const StudentAuth = () => {
                 profile = await fxbotAPI.getStudentProfile(email);
                 if (!profile) {
                     // Auth verified but student row missing — guide user to sign up
-                    await fxbotSupabase.auth.signOut();
+                    // Clear local session tokens (no direct Supabase contact needed)
+                    localStorage.removeItem('fxbot_access_token');
+                    localStorage.removeItem('fxbot_refresh_token');
+                    localStorage.removeItem('student_session');
                     setIsOtpSent(false);
                     setOtp("");
                     setActiveTab("signup");
