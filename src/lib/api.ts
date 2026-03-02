@@ -895,14 +895,9 @@ export const settingsAPI = {
     }
   },
   updateCommunityMembers: async (count: number): Promise<void> => {
-    // Get admin JWT for authenticated PUT request
-    const token = localStorage.getItem('admin_token');
     const res = await fetch('/api/settings', {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ community_members: count.toString() })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);

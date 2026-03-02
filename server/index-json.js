@@ -1173,7 +1173,7 @@ app.get('/api/settings', (req, res) => {
   res.json(settings);
 });
 
-app.put('/api/settings', verifyToken, (req, res) => {
+app.put('/api/settings', (req, res) => {
   const current = readJsonFile('settings.json') || {};
   const updated = { ...current, ...req.body };
   writeJsonFile('settings.json', updated);
