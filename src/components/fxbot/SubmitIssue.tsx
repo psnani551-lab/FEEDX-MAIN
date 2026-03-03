@@ -258,7 +258,7 @@ const SubmitIssue = ({ studentId, department, onSuccess }: SubmitIssueProps) => 
                                 <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/[0.02] transition-colors" />
                                 <Input
                                     type="file"
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50"
                                     multiple
                                     accept="image/*,video/*,.pdf"
                                     onChange={(e) => {
