@@ -1501,9 +1501,22 @@ app.get('/api/fxbot/admin-codes', async (req, res) => {
 // POST Issue
 app.post('/api/fxbot/issues', async (req, res) => {
   try {
-    const r = await fxbotRequest('POST', 'fxbot_issues', { ...req.body, status: 'Pending' }, req.headers.authorization);
+    const { attachments, ...issueData } = req.body;
+    const r = await fxbotRequest('POST', 'fxbot_issues', { ...issueData, status: 'Pending' }, req.headers.authorization);
+
     if (!r.ok) return res.status(r.status).json(r.data);
-    res.json(r.data && r.data.length > 0 ? r.data[0] : null);
+
+    const newIssue = r.data && r.data.length > 0 ? r.data[0] : null;
+
+    if (newIssue && attachments && attachments.length > 0) {
+      const attachmentRows = attachments.map(url => ({
+        issue_id: newIssue.id,
+        url: url
+      }));
+      await fxbotRequest('POST', 'issue_attachments', attachmentRows, req.headers.authorization);
+    }
+
+    res.json(newIssue);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
