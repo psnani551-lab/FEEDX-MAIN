@@ -1506,17 +1506,23 @@ app.post('/api/fxbot/issues', async (req, res) => {
 
     if (!r.ok) return res.status(r.status).json(r.data);
 
-    const newIssue = r.data && r.data.length > 0 ? r.data[0] : null;
+    // Some configurations of Supabase PostgREST might return an empty representation for POST if `Prefer: return=minimal` somehow crept in
+    // However, the frontend always generates and provides the ID in issueData!
+    const issueIdToUse = (r.data && r.data.length > 0 && r.data[0].id) || issueData.id;
 
-    if (newIssue && attachments && attachments.length > 0) {
+    if (issueIdToUse && attachments && attachments.length > 0) {
       const attachmentRows = attachments.map(url => ({
-        issue_id: newIssue.id,
+        issue_id: issueIdToUse,
         url: url
       }));
-      await fxbotRequest('POST', 'issue_attachments', attachmentRows, req.headers.authorization);
+      try {
+        await fxbotRequest('POST', 'issue_attachments', attachmentRows, req.headers.authorization);
+      } catch (attError) {
+        console.error("Failed to insert attachments:", attError);
+      }
     }
 
-    res.json(newIssue);
+    res.json(r.data && r.data.length > 0 ? r.data[0] : { id: issueIdToUse, ...issueData });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

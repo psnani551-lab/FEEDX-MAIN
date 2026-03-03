@@ -296,7 +296,7 @@ const HODDashboard = ({ issues, onRefresh, hodProfile }: HODDashboardProps) => {
                                     </div>
                                 </section>
 
-                                {selectedIssue.issue_attachments && selectedIssue.issue_attachments.length > 0 && (
+                                {selectedIssue.attachments && selectedIssue.attachments.length > 0 && (
                                     <section className="space-y-4">
                                         <div className="flex items-center gap-3 text-blue-600">
                                             <div className="p-2 bg-blue-50 rounded-xl">
@@ -305,8 +305,7 @@ const HODDashboard = ({ issues, onRefresh, hodProfile }: HODDashboardProps) => {
                                             <h3 className="font-black uppercase tracking-widest text-xs text-blue-600">Supporting Evidence</h3>
                                         </div>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                            {selectedIssue.issue_attachments.map((attachment, i) => {
-                                                const url = attachment.url;
+                                            {selectedIssue.attachments.map((url, i) => {
                                                 const isVideo = url.toLowerCase().includes('.mp4') || url.toLowerCase().includes('video');
                                                 const isPdf = url.toLowerCase().includes('.pdf');
 
