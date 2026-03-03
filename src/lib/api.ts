@@ -710,6 +710,7 @@ export interface FXBotIssue {
   created_at: string;
   updated_at: string;
   attachments?: string[];
+  issue_attachments?: { url: string }[];
 }
 
 // Helper: get current user's JWT for proxy authorization

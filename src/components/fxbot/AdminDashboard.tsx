@@ -8,7 +8,7 @@ import { format, differenceInHours } from "date-fns";
 import {
     AlertTriangle, Clock, CheckCircle2, TrendingUp, ShieldAlert,
     Loader2, User, Phone, Hash, CalendarClock, Building2, FileText,
-    MessageSquare, ChevronRight, Database, Activity
+    MessageSquare, ChevronRight, Database, Activity, ExternalLink
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -401,6 +401,51 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
                                         {selectedIssue.description}
                                     </div>
                                 </section>
+
+                                {selectedIssue.issue_attachments && selectedIssue.issue_attachments.length > 0 && (
+                                    <section className="space-y-2">
+                                        <div className="flex items-center gap-2 text-blue-600">
+                                            <div className="p-1.5 bg-blue-50 rounded-lg">
+                                                <ExternalLink className="h-3.5 w-3.5 text-blue-600" />
+                                            </div>
+                                            <h3 className="font-black uppercase tracking-widest text-xs text-blue-600">Supporting Evidence</h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-2">
+                                            {selectedIssue.issue_attachments.map((attachment, i) => {
+                                                const url = attachment.url;
+                                                const isVideo = url.toLowerCase().includes('.mp4') || url.toLowerCase().includes('video');
+                                                const isPdf = url.toLowerCase().includes('.pdf');
+
+                                                if (isVideo) {
+                                                    return (
+                                                        <a key={i} href={url} target="_blank" rel="noreferrer" className="block relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-900 aspect-video hover:border-blue-500 transition-colors">
+                                                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/20 transition-colors z-10 text-white font-bold text-[10px] uppercase tracking-widest gap-2">
+                                                                ▶ Play
+                                                            </div>
+                                                            <video src={url} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity" />
+                                                        </a>
+                                                    );
+                                                }
+                                                if (isPdf) {
+                                                    return (
+                                                        <a key={i} href={url} target="_blank" rel="noreferrer" className="flex items-center justify-center h-full min-h-[100px] rounded-xl border-2 border-dashed border-slate-200 hover:border-blue-500 bg-slate-50 hover:bg-blue-50 transition-colors group">
+                                                            <div className="text-center group-hover:scale-105 transition-transform">
+                                                                <FileText className="h-6 w-6 text-blue-500 mx-auto mb-1.5" />
+                                                                <span className="text-[9px] font-black uppercase text-slate-600 tracking-widest">View PDF</span>
+                                                            </div>
+                                                        </a>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <a key={i} href={url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-xl border border-slate-200 hover:border-blue-500 transition-colors group aspect-video bg-slate-100">
+                                                        <img src={url} alt={`Evidence ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                    </a>
+                                                );
+                                            })}
+                                        </div>
+                                    </section>
+                                )}
 
                                 {/* ── HOD Directive ── */}
                                 {selectedIssue.internal_directive && (

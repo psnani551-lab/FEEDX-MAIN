@@ -2,7 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { FXBotIssue } from "@/lib/api";
 import { format } from "date-fns";
-import { CheckCircle2, History, MessageSquare, ChevronRight } from "lucide-react";
+import { CheckCircle2, History, MessageSquare, ChevronRight, ExternalLink, FileText, Image, FileVideo } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -65,6 +65,16 @@ const ResolvedIssues = ({ issues }: ResolvedIssuesProps) => {
                                                 <p className="text-[11px] text-slate-600 font-bold leading-relaxed max-w-[340px]">
                                                     {issue.resolution_message || "System-generated resolution: Protocol successfully finalized."}
                                                 </p>
+                                                {issue.issue_attachments && issue.issue_attachments.length > 0 && (
+                                                    <div className="flex flex-wrap gap-2 mt-3">
+                                                        {issue.issue_attachments.map((att, i) => (
+                                                            <a key={i} href={att.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 bg-white border border-slate-200 px-2.5 py-1.5 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors group shadow-sm">
+                                                                {att.url.toLowerCase().includes('video') || att.url.toLowerCase().includes('.mp4') ? <FileVideo className="h-3.5 w-3.5 text-blue-500" /> : att.url.toLowerCase().includes('.pdf') ? <FileText className="h-3.5 w-3.5 text-red-500" /> : <Image className="h-3.5 w-3.5 text-emerald-500" />}
+                                                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-600">Proof {i + 1}</span>
+                                                            </a>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </TableCell>
@@ -118,6 +128,17 @@ const ResolvedIssues = ({ issues }: ResolvedIssuesProps) => {
                                 <p className="text-[11px] text-slate-700 font-bold leading-relaxed">
                                     {issue.resolution_message || "Protocol successfully finalized."}
                                 </p>
+                                {issue.issue_attachments && issue.issue_attachments.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t border-emerald-100/50">
+                                        <span className="w-full text-[9px] font-black text-emerald-600 uppercase tracking-widest mb-1">Attached Evidence</span>
+                                        {issue.issue_attachments.map((att, i) => (
+                                            <a key={i} href={att.url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 bg-white border border-emerald-100 px-2.5 py-1.5 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors group shadow-sm">
+                                                {att.url.toLowerCase().includes('video') || att.url.toLowerCase().includes('.mp4') ? <FileVideo className="h-3 w-3 text-blue-500" /> : att.url.toLowerCase().includes('.pdf') ? <FileText className="h-3 w-3 text-red-500" /> : <Image className="h-3 w-3 text-emerald-500" />}
+                                                <span className="text-[9px] font-black uppercase tracking-widest text-slate-500 group-hover:text-blue-600">View {i + 1}</span>
+                                            </a>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                                 <div className="flex flex-col">

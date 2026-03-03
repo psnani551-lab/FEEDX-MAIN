@@ -326,6 +326,51 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
                                     </div>
                                 </section>
 
+                                {selectedIssue.issue_attachments && selectedIssue.issue_attachments.length > 0 && (
+                                    <section className="space-y-4">
+                                        <div className="flex items-center gap-3 text-blue-600">
+                                            <div className="p-2 bg-blue-50 rounded-xl">
+                                                <ExternalLink className="h-5 w-5" />
+                                            </div>
+                                            <h3 className="font-black uppercase tracking-widest text-xs text-blue-600">Supporting Evidence</h3>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {selectedIssue.issue_attachments.map((attachment, i) => {
+                                                const url = attachment.url;
+                                                const isVideo = url.toLowerCase().includes('.mp4') || url.toLowerCase().includes('video');
+                                                const isPdf = url.toLowerCase().includes('.pdf');
+
+                                                if (isVideo) {
+                                                    return (
+                                                        <a key={i} href={url} target="_blank" rel="noreferrer" className="block relative group rounded-2xl overflow-hidden border border-slate-200 bg-slate-900 aspect-video hover:border-blue-500 transition-colors">
+                                                            <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/20 transition-colors z-10 text-white font-bold text-xs uppercase tracking-widest gap-2">
+                                                                ▶ Play Video
+                                                            </div>
+                                                            <video src={url} className="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition-opacity" />
+                                                        </a>
+                                                    );
+                                                }
+                                                if (isPdf) {
+                                                    return (
+                                                        <a key={i} href={url} target="_blank" rel="noreferrer" className="flex items-center justify-center h-full min-h-[120px] rounded-2xl border-2 border-dashed border-slate-200 hover:border-blue-500 bg-slate-50 hover:bg-blue-50 transition-colors group">
+                                                            <div className="text-center group-hover:scale-105 transition-transform">
+                                                                <FileText className="h-8 w-8 text-blue-500 mx-auto mb-2" />
+                                                                <span className="text-[10px] font-black uppercase text-slate-600 tracking-widest">View PDF Document</span>
+                                                            </div>
+                                                        </a>
+                                                    );
+                                                }
+
+                                                return (
+                                                    <a key={i} href={url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-2xl border border-slate-200 hover:border-blue-500 transition-colors group aspect-video bg-slate-100">
+                                                        <img src={url} alt={`Evidence ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                    </a>
+                                                );
+                                            })}
+                                        </div>
+                                    </section>
+                                )}
+
                                 {selectedIssue.internal_directive && (
                                     <section className="space-y-4">
                                         <div className="flex items-center gap-3 text-red-600">
