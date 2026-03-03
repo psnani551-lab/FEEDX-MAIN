@@ -11,6 +11,11 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.*
+data/*.json
+server/*.json
+!server/users.json
 
 # Virtual Environments
 venv/
