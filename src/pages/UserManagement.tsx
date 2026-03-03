@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase } from "@/integrations/supabase/client";
+import { authAPI } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from "@/components/AdminLayout";
 import AdminDataTable from "@/components/AdminDataTable";
@@ -42,22 +43,16 @@ export default function UserManagement() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('login_logs') // For now, we'll list admins from login logs or a dedicated table
-        .select('email, created_at')
-        .order('created_at', { ascending: false });
+      const data = await authAPI.getAuditLogs();
 
-      if (error) throw error;
-
-      // Since we don't have a dedicated 'admin_users' table yet in the schema, 
-      // we'll derive unique users from logs for the UI, or just show a warning.
-      const uniqueUsers: User[] = Array.from(new Set(data?.map(l => l.email))).map((email, idx) => ({
+      // Derive unique users from logs for the UI
+      const uniqueUsers: User[] = Array.from(new Set(data?.map((l: any) => l.email))).map((email: any, idx) => ({
         id: idx,
-        username: (email as string) || 'Admin',
-        name: (email as string)?.split('@')[0] || 'Administrator',
-        email: (email as string) || '',
+        username: email || 'Admin',
+        name: email?.split('@')[0] || 'Administrator',
+        email: email || '',
         phone: 'N/A',
-        created_at: (data?.find(l => l.email === email)?.created_at as string) || new Date().toISOString()
+        created_at: data?.find((l: any) => l.email === email)?.created_at || new Date().toISOString()
       }));
 
       setUsers(uniqueUsers);
@@ -72,27 +67,19 @@ export default function UserManagement() {
     e.preventDefault();
     setFormLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            name: formData.name,
-            username: formData.username,
-            phone: formData.phone,
-            pin: formData.pin
-          }
-        }
+      await authAPI.signup(formData.email, formData.password, {
+        name: formData.name,
+        username: formData.username,
+        phone: formData.phone,
+        pin: formData.pin
       });
-
-      if (error) throw error;
 
       toast({ title: 'Identity Created', description: `User ${formData.username} has been granted access.` });
       setFormData({ username: '', password: '', name: '', email: '', phone: '', pin: '' });
       setShowForm(false);
       fetchUsers();
-    } catch (error) {
-      toast({ title: 'Protocol Failure', description: error instanceof Error ? error.message : 'Registration failed', variant: 'destructive' });
+    } catch (error: any) {
+      toast({ title: 'Protocol Failure', description: error.message || 'Registration failed', variant: 'destructive' });
     } finally {
       setFormLoading(false);
     }

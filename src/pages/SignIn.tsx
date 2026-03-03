@@ -6,33 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { authAPI } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
-// Records every login attempt (success or failure) to the login_logs table
-const recordLoginAttempt = async (email: string, success: boolean) => {
-  try {
-    let currentIp = '0.0.0.0';
-    try {
-      const res = await fetch('https://api.ipify.org?format=json');
-      if (res.ok) {
-        const data = await res.json();
-        currentIp = data.ip || '0.0.0.0';
-      }
-    } catch {
-      console.warn("Could not resolve IP address for audit log.");
-    }
-
-    await supabase.from('login_logs').insert({
-      email,
-      ip_address: currentIp,
-      user_agent: navigator.userAgent,
-      success,
-    });
-  } catch (_) {
-    // Silently fail — don't block the user's login flow
-  }
-};
 
 const SignIn = () => {
   const [formData, setFormData] = useState({
@@ -43,7 +19,7 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -58,21 +34,15 @@ const SignIn = () => {
     setError('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
+      // Use VPS proxied login (ISP-safe)
+      await authAPI.login(formData.email, formData.password);
 
-      if (error) {
-        await recordLoginAttempt(formData.email, false);
-        setError(error.message);
-      } else if (data.user) {
-        await recordLoginAttempt(formData.email, true);
-        navigate('/');
-      }
-    } catch (error) {
-      await recordLoginAttempt(formData.email, false);
-      setError('Network error. Please try again.');
+      // If we got here, it succeeded (or it threw an error)
+      toast({ title: "Welcome back!", description: "Signed in successfully." });
+      navigate('/');
+    } catch (err: any) {
+      console.error('SignIn error:', err);
+      setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
       setIsLoading(false);
     }

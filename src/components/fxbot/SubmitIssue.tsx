@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { fxbotAPI } from "@/lib/api";
+import { fxbotAPI, uploadFile } from "@/lib/api";
 import { Upload, X, FileText, CheckCircle2, ChevronRight, AlertCircle, Info, MessageSquare, Shield, User as UserIcon, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
@@ -59,6 +59,12 @@ const SubmitIssue = ({ studentId, department, onSuccess }: SubmitIssueProps) => 
 
             const finalCategory = category === "Others" ? otherCategory : category;
 
+            let uploadedUrls: string[] = [];
+            if (attachments.length > 0) {
+                const uploadPromises = attachments.map(file => uploadFile(file));
+                uploadedUrls = await Promise.all(uploadPromises);
+            }
+
             await fxbotAPI.submitIssue({
                 id: issueId,
                 student_id: studentId,
@@ -69,6 +75,7 @@ const SubmitIssue = ({ studentId, department, onSuccess }: SubmitIssueProps) => 
                 whom_to_send: whomToSend,
                 is_anonymous: isAnonymous,
                 staff_name: category === "Staff Related" ? staffName : undefined,
+                attachments: uploadedUrls,
             });
 
             setSubmittedId(issueId);
@@ -253,7 +260,7 @@ const SubmitIssue = ({ studentId, department, onSuccess }: SubmitIssueProps) => 
                                     type="file"
                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                     multiple
-                                    accept="image/*,.pdf"
+                                    accept="image/*,video/*,.pdf"
                                     onChange={(e) => {
                                         const files = Array.from(e.target.files || []);
                                         if (files.length + attachments.length > 3) {
@@ -268,7 +275,7 @@ const SubmitIssue = ({ studentId, department, onSuccess }: SubmitIssueProps) => 
                                         <Upload className="h-6 w-6 lg:h-8 lg:w-8 text-blue-600" />
                                     </div>
                                     <p className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Synchronize Evidence</p>
-                                    <p className="text-[9px] sm:text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-widest">JPG, PNG, PDF (LIMIT: 03)</p>
+                                    <p className="text-[9px] sm:text-[10px] text-slate-400 mt-2 font-bold uppercase tracking-widest">JPG, PNG, MP4, PDF (LIMIT: 03)</p>
                                 </div>
                             </div>
 

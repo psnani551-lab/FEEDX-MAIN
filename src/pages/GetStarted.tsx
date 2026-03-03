@@ -6,8 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
+import { authAPI } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 const GetStarted = () => {
   const [formData, setFormData] = useState({
@@ -21,7 +21,7 @@ const GetStarted = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -48,23 +48,19 @@ const GetStarted = () => {
     }
 
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.name,
-          }
-        }
+      // Use VPS proxied signup (ISP-safe)
+      await authAPI.signup(formData.email, formData.password, {
+        full_name: formData.name
       });
 
-      if (error) {
-        setError(error.message);
-      } else if (data.user) {
-        navigate('/');
-      }
-    } catch (error) {
-      setError('Network error. Please try again.');
+      toast({
+        title: "Account created!",
+        description: "Please check your email to confirm your account."
+      });
+      navigate('/signin');
+    } catch (err: any) {
+      console.error('Signup error:', err);
+      setError(err.message || 'Signup failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -185,7 +181,7 @@ const GetStarted = () => {
           </CardContent>
         </Card>
       </div>
-      
+
     </div>
   );
 };

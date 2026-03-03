@@ -32,6 +32,17 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
+// ───────────── Supabase Configuration (Source of Truth) ─────────────
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
+const SUPABASE_WRITE_KEY = SUPABASE_SERVICE_ROLE_KEY;
+
+// ───────────── FXBot Configuration (Student Portal) ───────────────
+const FXBOT_URL = process.env.VITE_FXBOT_SUPABASE_URL;
+const FXBOT_KEY = process.env.VITE_FXBOT_SUPABASE_ANON_KEY;
+// ───────────────────────────────────────────────────────────────────
+
 // Helper functions for JSON file storage
 const readJsonFile = (filename) => {
   const filepath = path.join(dataDir, filename);
@@ -708,6 +719,7 @@ createAdminCrudRoutes('events');
 createAdminCrudRoutes('spotlight');
 createAdminCrudRoutes('testimonials');
 createAdminCrudRoutes('projects');
+createAdminCrudRoutes('gallery');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public write endpoints for events (no VPS JWT required — admin uses Supabase auth)
@@ -980,7 +992,7 @@ app.get('/api/admin/institutes/:code', verifyToken, (req, res) => {
   }
 });
 
-app.post('/api/admin/institutes', verifyToken, (req, res) => {
+app.post('/api/admin/institutes', verifyToken, async (req, res) => {
   try {
     const data = req.body;
     if (!data.code || !data.name) {
@@ -1003,6 +1015,12 @@ app.post('/api/admin/institutes', verifyToken, (req, res) => {
       institutes.push(instituteData);
     }
 
+    // --- SYNC TO SUPABASE ---
+    const supabaseData = { ...instituteData };
+    delete supabaseData.id;
+    await supabaseWriteRequest('POST', 'institutes', supabaseData);
+    // ------------------------
+
     writeJsonFile('institutes.json', institutes);
     res.json(instituteData);
   } catch (error) {
@@ -1010,10 +1028,20 @@ app.post('/api/admin/institutes', verifyToken, (req, res) => {
   }
 });
 
-app.delete('/api/admin/institutes/:code', verifyToken, (req, res) => {
+app.delete('/api/admin/institutes/:code', verifyToken, async (req, res) => {
   try {
     const institutes = readJsonFile('institutes.json');
     const filtered = institutes.filter(i => i.code.toUpperCase() !== req.params.code.toUpperCase());
+
+    // --- SYNC TO SUPABASE ---
+    // Note: We use the code as ID for deletion if ID is not available, 
+    // but better to fetch ID from JSON if it exists.
+    const inst = institutes.find(i => i.code.toUpperCase() === req.params.code.toUpperCase());
+    if (inst && inst.id) {
+      await supabaseWriteRequest('DELETE', 'institutes', null, inst.id);
+    }
+    // ------------------------
+
     writeJsonFile('institutes.json', filtered);
     res.json({ success: true });
   } catch (error) {
@@ -1149,106 +1177,184 @@ app.get('/api/results', async (req, res) => {
 });
 
 
-// ================== GALLERY ==================
-// Get all gallery images (public)
-app.get('/api/gallery', (req, res) => {
-  try {
-    const gallery = readJsonFile('gallery.json');
-    res.json(gallery.sort((a, b) => a.order - b.order));
-  } catch (error) {
-    console.error('Error fetching gallery:', error);
-    res.status(500).json({ error: 'Failed to fetch gallery images' });
+// ─────────────────────────────────────────────────────────────────────────────
+// Specialized Gallery Sync Endpoints (Admin panel writes through these)
+// ─────────────────────────────────────────────────────────────────────────────
+app.post('/api/gallery', async (req, res) => {
+  const data = readJsonFile('gallery.json');
+  const newItem = {
+    id: generateId(),
+    ...req.body,
+    timestamp: new Date().toISOString()
+  };
+
+  // --- SYNC TO SUPABASE ---
+  const supabaseData = supabaseWriteTransform('gallery', newItem);
+  if (newItem.order !== undefined) {
+    supabaseData.display_order = newItem.order;
+    delete supabaseData.order;
   }
+  const syncRes = await supabaseWriteRequest('POST', 'gallery', supabaseData);
+  if (syncRes.ok && syncRes.data && syncRes.data.length > 0) {
+    newItem.id = syncRes.data[0].id || newItem.id;
+  }
+  // ------------------------
+
+  data.unshift(newItem);
+  writeJsonFile('gallery.json', data);
+  res.status(201).json(newItem);
 });
 
-// Create gallery image (protected)
-app.post('/api/gallery', verifyToken, (req, res) => {
-  try {
-    const { url, order } = req.body;
-    if (!url) {
-      return res.status(400).json({ error: 'URL is required' });
-    }
+app.delete('/api/gallery/:id', async (req, res) => {
+  let data = readJsonFile('gallery.json');
+  const index = data.findIndex(d => d.id === req.params.id);
+  if (index === -1) return res.status(404).json({ error: 'image not found' });
 
-    const gallery = readJsonFile('gallery.json');
-    const newImage = {
-      id: `gallery-${Date.now()}`,
-      url,
-      order: order || gallery.length + 1,
-      created_at: new Date().toISOString()
-    };
+  // --- SYNC TO SUPABASE ---
+  await supabaseWriteRequest('DELETE', 'gallery', null, req.params.id);
+  // ------------------------
 
-    gallery.push(newImage);
-    writeJsonFile('gallery.json', gallery);
-    logAction(req.user.username, 'CREATE', 'gallery', newImage.id, { url });
-
-    res.status(201).json(newImage);
-  } catch (error) {
-    console.error('Error creating gallery image:', error);
-    res.status(500).json({ error: 'Failed to create gallery image' });
-  }
+  data.splice(index, 1);
+  writeJsonFile('gallery.json', data);
+  console.log('✅ Deleted gallery image (Synced):', req.params.id);
+  res.json({ success: true });
 });
 
-// Delete gallery image (protected)
-app.delete('/api/gallery/:id', verifyToken, (req, res) => {
-  try {
-    const gallery = readJsonFile('gallery.json');
-    const filteredGallery = gallery.filter(img => img.id !== req.params.id);
+app.patch('/api/gallery/reorder', async (req, res) => {
+  const { images } = req.body; // Array of { id, order }
+  if (!Array.isArray(images)) return res.status(400).json({ error: 'Invalid data' });
 
-    if (gallery.length === filteredGallery.length) {
-      return res.status(404).json({ error: 'Image not found' });
-    }
+  const data = readJsonFile('gallery.json');
 
-    writeJsonFile('gallery.json', filteredGallery);
-    logAction(req.user.username, 'DELETE', 'gallery', req.params.id);
+  images.forEach(update => {
+    const item = data.find(d => d.id === update.id);
+    if (item) item.order = update.order;
+  });
 
-    res.json({ success: true, message: 'Image deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting gallery image:', error);
-    res.status(500).json({ error: 'Failed to delete gallery image' });
-  }
-});
+  data.sort((a, b) => a.order - b.order);
+  writeJsonFile('gallery.json', data);
 
-// Reorder gallery images (protected)
-app.put('/api/gallery/reorder', verifyToken, (req, res) => {
-  try {
-    const images = req.body;
-    if (!Array.isArray(images)) {
-      return res.status(400).json({ error: 'Invalid data format' });
-    }
+  // --- SYNC TO SUPABASE ---
+  const promises = images.map(img =>
+    supabaseWriteRequest('PATCH', 'gallery', { display_order: img.order }, img.id)
+  );
+  await Promise.all(promises);
+  // ------------------------
 
-    writeJsonFile('gallery.json', images);
-    logAction(req.user.username, 'UPDATE', 'gallery', 'reorder', { count: images.length });
-
-    res.json({ success: true, message: 'Gallery reordered successfully' });
-  } catch (error) {
-    console.error('Error reordering gallery:', error);
-    res.status(500).json({ error: 'Failed to reorder gallery images' });
-  }
+  console.log(`✅ Gallery reordered: ${images.length} items (Synced)`);
+  res.json({ success: true });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Image Proxy: serve Supabase Storage images through VPS so ISP block doesn't
 // break images on pages (all *.supabase.co URLs are DNS-blocked in India).
-// Usage: /api/image-proxy?url=https://xxx.supabase.co/storage/v1/...
 // ─────────────────────────────────────────────────────────────────────────────
+// PROXY ROUTES: Bypass ISP blocks by relaying everything through VPS
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Auth Proxy: Sign In
+app.post('/api/proxy/auth/signin', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await response.json();
+    if (!response.ok) return res.status(response.status).json(data);
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Auth proxy error: ' + err.message });
+  }
+});
+
+// Auth Proxy: Sign Up
+app.post('/api/proxy/auth/signup', async (req, res) => {
+  const { email, password, data: metadata } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password, data: metadata })
+    });
+
+    const data = await response.json();
+    if (!response.ok) return res.status(response.status).json(data);
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Auth proxy error: ' + err.message });
+  }
+});
+
+// Storage Proxy: Upload File
+app.post('/api/proxy/storage/upload/:bucket', express.raw({ type: '*/*', limit: '50mb' }), async (req, res) => {
+  try {
+    const { bucket } = req.params;
+    const { path: filePath } = req.query; // renaming to avoid conflict with 'path' module
+
+    if (!filePath) return res.status(400).json({ error: 'path query parameter required' });
+
+    // Relay the raw body (binary) to Supabase
+    const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${filePath}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY}`,
+        'Content-Type': req.headers['content-type'] || 'application/octet-stream',
+        'upsert': 'true'
+      },
+      body: req.body
+    });
+
+    const data = await response.json();
+    if (!response.ok) return res.status(response.status).json(data);
+
+    res.json(data);
+  } catch (err) {
+    console.error('Storage Proxy Error:', err);
+    res.status(500).json({ error: 'Storage proxy error: ' + err.message });
+  }
+});
+
+// Image Proxy: Serve Supabase images through VPS to bypass ISP blocks
 app.get('/api/image-proxy', async (req, res) => {
   const { url } = req.query;
   if (!url || typeof url !== 'string') return res.status(400).send('url required');
+
   // Security: only proxy Supabase storage URLs
   if (!url.includes('.supabase.co/storage/')) return res.status(403).send('only supabase storage urls allowed');
+
   try {
     const upstream = await fetch(url, { signal: AbortSignal.timeout(15000) });
     if (!upstream.ok) return res.status(upstream.status).send('upstream error');
+
     const contentType = upstream.headers.get('content-type') || 'image/jpeg';
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=86400'); // cache 24h in browser
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // cache 24h
     res.setHeader('Access-Control-Allow-Origin', '*');
+
     const buf = await upstream.arrayBuffer();
     res.send(Buffer.from(buf));
   } catch (err) {
     res.status(500).send('proxy error: ' + err.message);
   }
 });
+
+// Usage: /api/image-proxy?url=https://xxx.supabase.co/storage/v1/...
 
 // Utility: rewrite all Supabase Storage URLs in an API response object so
 // images are served via /api/image-proxy instead of blocked *.supabase.co
@@ -1319,8 +1425,7 @@ app.post('/api/sync/trigger', async (req, res) => {
 // to avoid mobile network timeouts (same domain = fast)
 // ============================================================
 
-const FXBOT_URL = process.env.VITE_FXBOT_SUPABASE_URL;
-const FXBOT_KEY = process.env.VITE_FXBOT_SUPABASE_ANON_KEY;
+// (Moved to top of file)
 
 const fxbotRequest = async (method, path, body = null, authHeader = null) => {
   if (!FXBOT_URL || !FXBOT_KEY) throw new Error('FXBot Supabase not configured');
@@ -1573,14 +1678,12 @@ app.get('*', (req, res, next) => {
 // Runs on startup + every 2 minutes automatically
 // ============================================================
 
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
+// (Moved to top of file)
 const SYNC_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 
 // Master key for admin writes (bypasses RLS). 
 // Use Service Role Key if available, fallback to Anon Key.
-const SUPABASE_WRITE_KEY = SUPABASE_SERVICE_ROLE_KEY;
+// const SUPABASE_WRITE_KEY = SUPABASE_SERVICE_ROLE_KEY; // (Moved to top)
 
 /**
  * Forward write operations (POST, PUT, PATCH, DELETE) to Supabase.
@@ -1649,15 +1752,16 @@ const supabaseWriteTransform = (table, data) => {
 };
 
 const supabaseFetch = async (table, orderBy = 'created_at') => {
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+  const fetchKey = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
+  if (!SUPABASE_URL || !fetchKey) return null;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000); // 10s timeout
   try {
-    const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&order=${orderBy}.desc`;
+    const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&order=${orderBy}.asc`;
     const res = await fetch(url, {
       headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        'apikey': fetchKey,
+        'Authorization': `Bearer ${fetchKey}`,
         'Content-Type': 'application/json'
       },
       signal: controller.signal
@@ -1713,7 +1817,12 @@ const SYNC_TABLES = [
   },
   {
     table: 'gallery', file: 'gallery.json',
-    transform: (r) => ({ ...r, timestamp: r.created_at || r.timestamp })
+    orderBy: 'display_order',
+    transform: (r) => ({ ...r, timestamp: r.created_at || r.timestamp, order: r.display_order })
+  },
+  {
+    table: 'institutes', file: 'institutes.json',
+    transform: (r) => r
   },
 ];
 
@@ -1730,19 +1839,20 @@ const syncFromSupabase = async (reason = 'scheduled') => {
   let successCount = 0;
   let failCount = 0;
 
-  for (const { table, file, transform } of SYNC_TABLES) {
-    const rows = await supabaseFetch(table);
+  for (const { table, file, transform, orderBy } of SYNC_TABLES) {
+    const rows = await supabaseFetch(table, orderBy || 'created_at');
     if (rows === null) {
       failCount++;
       continue;
     }
-    const existing = readJsonFile(file);
     const synced = rows.map(transform);
 
     // Only write if data actually changed (avoid unnecessary disk writes)
-    if (JSON.stringify(synced) !== JSON.stringify(existing)) {
+    if (JSON.stringify(synced) !== JSON.stringify(readJsonFile(file))) {
       writeJsonFile(file, synced);
-      console.log(`   ✅ ${table}: ${synced.length} records synced`);
+      console.log(`   ✅ ${table}: ${synced.length} records synced (Deletions applied)`);
+    } else {
+      // console.log(`   ℹ️ ${table}: No changes detected`);
     }
     successCount++;
   }

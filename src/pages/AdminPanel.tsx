@@ -3,8 +3,7 @@ import AdminLayout from "@/components/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { notificationsAPI, updatesAPI, resourcesAPI, eventsAPI, settingsAPI } from "@/lib/api";
+import { notificationsAPI, updatesAPI, resourcesAPI, eventsAPI, settingsAPI, authAPI } from "@/lib/api";
 import {
   Users, Bell, Newspaper, BookOpen, Calendar,
   TrendingUp, Activity, ArrowUpRight, ArrowDownRight, ShieldAlert, Database,
@@ -39,19 +38,13 @@ export default function AdminPanel() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [notifs, updates, resources, events, communityMembers, { data: auditLogs }] = await Promise.all([
+        const [notifs, updates, resources, events, communityMembers, auditLogs] = await Promise.all([
           notificationsAPI.getAll().catch(() => []),
           updatesAPI.getAll().catch(() => []),
           resourcesAPI.getAll().catch(() => []),
           eventsAPI.getAll().catch(() => []),
           settingsAPI.getCommunityMembers(),
-          (async () => {
-            try {
-              return await supabase.from('login_logs').select('*').order('created_at', { ascending: false }).limit(5);
-            } catch (e) {
-              return { data: [] };
-            }
-          })()
+          authAPI.getAuditLogs().catch(() => [])
         ]);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -114,23 +107,14 @@ export default function AdminPanel() {
     // Initial fetch
     fetchDashboardData();
 
-    // Setup Supabase Realtime to listen for any changes across the public schema
-    const realtimeChannel = supabase.channel('admin-live-feed')
-      .on('postgres_changes', { event: '*', schema: 'public' }, () => {
-        // Debounce or just raw fetch to get the latest accurate aggregated data
-        fetchDashboardData();
-      })
-      .subscribe();
-
-    // Fallback: Setup a reliable 15-second polling interval to catch missed events 
-    // or simulate liveliness if Supabase Realtime replication is not enabled on all tables
+    // Reliable 15-second polling interval (ISP-safe gateway)
+    // This catches updates processed via VPS proxy without needing blocked Realtime websockets
     const intervalId = setInterval(() => {
       fetchDashboardData();
     }, 15000);
 
     return () => {
       clearInterval(intervalId);
-      supabase.removeChannel(realtimeChannel);
     };
   }, []);
 

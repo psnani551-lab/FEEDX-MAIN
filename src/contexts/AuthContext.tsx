@@ -36,40 +36,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setToken(session.access_token);
-        setUser({
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
-        });
-      }
-      setIsLoading(false);
-    });
+    // Check local storage for session (ISP-safe gateway)
+    const localToken = localStorage.getItem('adminToken');
+    const localUser = localStorage.getItem('adminUser');
 
-    // Listen for changes on auth state (sign in, sign out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session) {
-        setToken(session.access_token);
-        setUser({
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
-        });
-      } else {
-        setToken(null);
-        setUser(null);
+    if (localToken && localUser) {
+      try {
+        setToken(localToken);
+        setUser(JSON.parse(localUser));
+      } catch (e) {
+        console.error('Failed to parse local admin user', e);
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminUser');
       }
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    }
+    setIsLoading(false);
   }, []);
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    // Completely local logout to avoid blocked Supabase calls
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
     setToken(null);
     setUser(null);
   };

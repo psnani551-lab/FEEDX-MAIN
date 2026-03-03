@@ -31,23 +31,11 @@ const ImageCarousel = ({ className = '' }: ImageCarouselProps) => {
         if (sortedImages.length > 0) {
           setCarouselImages(sortedImages.map(img => img.url));
         } else {
-          // Fallback if API returns empty (e.g. no images or RLS blocking)
-          setCarouselImages([
-            '/images/carousel/carousel1.jpg',
-            '/images/carousel/carousel2.jpg',
-            '/images/carousel/carousel3.jpg',
-            '/images/carousel/carousel 4.jpg',
-          ]);
+          setCarouselImages([]);
         }
       } catch (error) {
         console.error('Failed to fetch gallery images:', error);
-        // Fallback to default images if API fails
-        setCarouselImages([
-          '/images/carousel/carousel1.jpg',
-          '/images/carousel/carousel2.jpg',
-          '/images/carousel/carousel3.jpg',
-          '/images/carousel/carousel 4.jpg',
-        ]);
+        setCarouselImages([]);
       } finally {
         setIsLoading(false);
       }
@@ -121,7 +109,8 @@ const ImageCarousel = ({ className = '' }: ImageCarouselProps) => {
   };
 
   // Show loading state
-  if (isLoading || carouselImages.length === 0) {
+  // Show loading state
+  if (isLoading) {
     return (
       <div className={`relative w-full ${className}`}>
         <div className="relative overflow-hidden rounded-2xl shadow-xl bg-white/50 backdrop-blur-sm border border-white/20">
@@ -131,6 +120,10 @@ const ImageCarousel = ({ className = '' }: ImageCarouselProps) => {
         </div>
       </div>
     );
+  }
+
+  if (carouselImages.length === 0) {
+    return null;
   }
 
   return (
