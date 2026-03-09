@@ -31,17 +31,17 @@ console.log('✅ Uploads directory ready:', uploadsDir);
 const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+const ADMIN_API_KEY = process.env.VITE_ADMIN_API_KEY || 'feedx-default-admin-key-2025';
 
-// ───────────── Supabase Configuration (Source of Truth) ─────────────
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
-const SUPABASE_WRITE_KEY = SUPABASE_SERVICE_ROLE_KEY;
-
-// ───────────── FXBot Configuration (Student Portal) ───────────────
-const FXBOT_URL = process.env.VITE_FXBOT_SUPABASE_URL;
-const FXBOT_KEY = process.env.VITE_FXBOT_SUPABASE_ANON_KEY;
-// ───────────────────────────────────────────────────────────────────
+// Security Middleware: API Key Check
+// Used for write operations from the admin panel to bypass DNS/ISP header limits
+const checkAdminKey = (req, res, next) => {
+  const apiKey = req.headers['x-admin-api-key'];
+  if (apiKey && apiKey === ADMIN_API_KEY) {
+    return next();
+  }
+  return res.status(401).json({ error: 'Unauthorized: Admin API Key required' });
+};
 
 // Helper functions for JSON file storage
 const readJsonFile = (filename) => {
@@ -156,9 +156,19 @@ initializeAdmin();
 app.use(cors({
   origin: true,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-api-key']
 }));
+
+// Global Cache-Control for JSON data
+app.use('/api', (req, res, next) => {
+  if (req.method === 'GET') {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  }
+  next();
+});
 app.use(express.json({ limit: '100mb' }));
 app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
@@ -438,11 +448,11 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Get login logs (admin only)
-app.get('/api/auth/login-logs', verifyToken, (req, res) => {
+// Get login logs — public endpoint (admin panel uses Supabase auth, not VPS JWT)
+app.get('/api/auth/login-logs', (req, res) => {
   try {
     const logs = readLoginLogs();
-    res.json(logs.reverse()); // Newest first
+    res.json([...logs].reverse()); // Newest first
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch logs' });
   }
@@ -632,7 +642,7 @@ const createAdminCrudRoutes = (resourceName) => {
   });
 
   // POST create (protected)
-  app.post(`/api/admin/${resourceName}`, verifyToken, async (req, res) => {
+  app.post(`/api/admin/${resourceName}`, verifyToken, (req, res) => {
     const data = readJsonFile(filename);
     const newItem = {
       id: generateId(),
@@ -643,40 +653,25 @@ const createAdminCrudRoutes = (resourceName) => {
       time: req.body.time || req.body.event_time,
       timestamp: new Date().toISOString()
     };
-
-    // --- SYNC TO SUPABASE ---
-    const supabaseData = supabaseWriteTransform(resourceName, newItem);
-    const syncRes = await supabaseWriteRequest('POST', resourceName, supabaseData);
-    if (syncRes.ok && syncRes.data && syncRes.data.length > 0) {
-      newItem.id = syncRes.data[0].id || newItem.id;
-    }
-    // ------------------------
-
     data.unshift(newItem);
     writeJsonFile(filename, data);
 
     logAction(req.user, 'CREATE', resourceName, newItem.id, { title: newItem.title || newItem.name });
 
-    console.log(`✅ Created (Synced) ${resourceName}:`, newItem.id);
+    console.log(`✅ Created ${resourceName}:`, newItem.id);
     res.status(201).json(newItem);
   });
 
   // PUT update (protected)
-  app.put(`/api/admin/${resourceName}/:id`, verifyToken, async (req, res) => {
+  app.put(`/api/admin/${resourceName}/:id`, verifyToken, (req, res) => {
     const data = readJsonFile(filename);
-    const index = data.findIndex(d => d.id === req.params.id);
+    const index = data.findIndex(d => d.id == req.params.id); // Loose matching for numeric IDs
     if (index === -1) {
       return res.status(404).json({ error: `${resourceName} not found` });
     }
 
     const oldItem = { ...data[index] };
     data[index] = { ...data[index], ...req.body, updatedAt: new Date().toISOString() };
-
-    // --- SYNC TO SUPABASE ---
-    const supabaseData = supabaseWriteTransform(resourceName, data[index]);
-    await supabaseWriteRequest('PATCH', resourceName, supabaseData, req.params.id);
-    // ------------------------
-
     writeJsonFile(filename, data);
 
     logAction(req.user, 'UPDATE', resourceName, req.params.id, {
@@ -688,25 +683,20 @@ const createAdminCrudRoutes = (resourceName) => {
   });
 
   // DELETE (protected)
-  app.delete(`/api/admin/${resourceName}/:id`, verifyToken, async (req, res) => {
+  app.delete(`/api/admin/${resourceName}/:id`, verifyToken, (req, res) => {
     let data = readJsonFile(filename);
-    const index = data.findIndex(d => d.id === req.params.id);
+    const index = data.findIndex(d => d.id == req.params.id); // Loose matching for numeric IDs
     if (index === -1) {
       return res.status(404).json({ error: `${resourceName} not found` });
     }
 
     const deletedItem = data[index];
-
-    // --- SYNC TO SUPABASE ---
-    await supabaseWriteRequest('DELETE', resourceName, null, req.params.id);
-    // ------------------------
-
     data.splice(index, 1);
     writeJsonFile(filename, data);
 
     logAction(req.user, 'DELETE', resourceName, req.params.id, { title: deletedItem.title || deletedItem.name });
 
-    console.log(`✅ Deleted (Synced) ${resourceName}:`, req.params.id);
+    console.log(`✅ Deleted ${resourceName}:`, req.params.id);
     res.json({ success: true });
   });
 };
@@ -719,78 +709,117 @@ createAdminCrudRoutes('events');
 createAdminCrudRoutes('spotlight');
 createAdminCrudRoutes('testimonials');
 createAdminCrudRoutes('projects');
-createAdminCrudRoutes('gallery');
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Public write endpoints for all resources (no VPS JWT required — admin is
+// authenticated at the frontend via Supabase auth). Writes go directly to the
+// VPS JSON file so the admin list updates immediately without waiting for sync.
+// ─────────────────────────────────────────────────────────────────────────────
+const createPublicWriteRoutes = (resourceName) => {
+  const filename = `${resourceName}.json`;
+
+  app.post(`/api/${resourceName}`, checkAdminKey, (req, res) => {
+    const data = readJsonFile(filename);
+    const newItem = {
+      id: generateId(),
+      status: 'published',
+      ...req.body,
+      timestamp: new Date().toISOString()
+    };
+    data.unshift(newItem);
+    writeJsonFile(filename, data);
+    res.status(201).json(newItem);
+  });
+
+  app.put(`/api/${resourceName}/:id`, checkAdminKey, (req, res) => {
+    const data = readJsonFile(filename);
+    const index = data.findIndex(d => d.id == req.params.id); // Loose matching
+    if (index === -1) return res.status(404).json({ error: `${resourceName} not found` });
+    data[index] = { ...data[index], ...req.body, updatedAt: new Date().toISOString() };
+    writeJsonFile(filename, data);
+    res.json(data[index]);
+  });
+
+  app.delete(`/api/${resourceName}/:id`, checkAdminKey, (req, res) => {
+    let data = readJsonFile(filename);
+    const index = data.findIndex(d => d.id == req.params.id); // Loose matching
+    if (index === -1) return res.status(404).json({ error: `${resourceName} not found` });
+    data.splice(index, 1);
+    writeJsonFile(filename, data);
+    console.log(`✅ Deleted ${resourceName}:`, req.params.id);
+    res.json({ success: true });
+  });
+
+  app.patch(`/api/${resourceName}/:id/status`, checkAdminKey, (req, res) => {
+    const data = readJsonFile(filename);
+    const index = data.findIndex(d => d.id == req.params.id); // Loose matching
+    if (index === -1) return res.status(404).json({ error: `${resourceName} not found` });
+    data[index] = { ...data[index], status: req.body.status, updatedAt: new Date().toISOString() };
+    writeJsonFile(filename, data);
+    res.json(data[index]);
+  });
+};
+
+// Apply public write routes to all admin resources (events handled separately above)
+createPublicWriteRoutes('notifications');
+createPublicWriteRoutes('updates');
+createPublicWriteRoutes('resources');
+createPublicWriteRoutes('spotlight');
+createPublicWriteRoutes('testimonials');
+createPublicWriteRoutes('projects');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public write endpoints for events (no VPS JWT required — admin uses Supabase auth)
 // These write directly to events.json so the admin list updates immediately.
 // ─────────────────────────────────────────────────────────────────────────────
-app.post('/api/events', async (req, res) => {
+app.post('/api/events', checkAdminKey, (req, res) => {
   const data = readJsonFile('events.json');
   const newItem = {
     id: generateId(),
     status: 'published',
     ...req.body,
     date: req.body.date || req.body.event_date || 'TBA',
+    event_date: req.body.date || req.body.event_date || 'TBA', // Sync
     time: req.body.time || req.body.event_time || 'TBA',
+    event_time: req.body.time || req.body.event_time || 'TBA', // Sync
     timestamp: new Date().toISOString()
   };
-
-  // --- SYNC TO SUPABASE ---
-  const supabaseData = supabaseWriteTransform('events', newItem);
-  const syncRes = await supabaseWriteRequest('POST', 'events', supabaseData);
-  if (syncRes.ok && syncRes.data && syncRes.data.length > 0) {
-    newItem.id = syncRes.data[0].id || newItem.id;
-  }
-  // ------------------------
-
   data.unshift(newItem);
   writeJsonFile('events.json', data);
   res.status(201).json(newItem);
 });
 
-app.put('/api/events/:id', async (req, res) => {
+app.put('/api/events/:id', checkAdminKey, (req, res) => {
   const data = readJsonFile('events.json');
-  const index = data.findIndex(d => d.id === req.params.id);
+  const index = data.findIndex(d => d.id == req.params.id); // Loose matching
   if (index === -1) return res.status(404).json({ error: 'event not found' });
 
-  data[index] = { ...data[index], ...req.body, updatedAt: new Date().toISOString() };
+  // Synchronize field names for legacy compatibility
+  const updates = { ...req.body };
+  if (updates.date) updates.event_date = updates.date;
+  if (updates.time) updates.event_time = updates.time;
+  if (updates.isComingSoon !== undefined) updates.is_coming_soon = updates.isComingSoon;
 
-  // --- SYNC TO SUPABASE ---
-  const supabaseData = supabaseWriteTransform('events', data[index]);
-  await supabaseWriteRequest('PATCH', 'events', supabaseData, req.params.id);
-  // ------------------------
-
+  data[index] = { ...data[index], ...updates, updatedAt: new Date().toISOString() };
   writeJsonFile('events.json', data);
   res.json(data[index]);
 });
 
-app.delete('/api/events/:id', async (req, res) => {
+app.delete('/api/events/:id', checkAdminKey, (req, res) => {
   let data = readJsonFile('events.json');
-  const index = data.findIndex(d => d.id === req.params.id);
+  const index = data.findIndex(d => d.id == req.params.id); // Loose matching
   if (index === -1) return res.status(404).json({ error: 'event not found' });
-
-  // --- SYNC TO SUPABASE ---
-  await supabaseWriteRequest('DELETE', 'events', null, req.params.id);
-  // ------------------------
-
   data.splice(index, 1);
   writeJsonFile('events.json', data);
-  console.log('✅ Deleted event (Synced):', req.params.id);
+  console.log('✅ Deleted event:', req.params.id);
   res.json({ success: true });
 });
 
-app.patch('/api/events/:id/status', async (req, res) => {
+app.patch('/api/events/:id/status', checkAdminKey, (req, res) => {
   const data = readJsonFile('events.json');
-  const index = data.findIndex(d => d.id === req.params.id);
+  const index = data.findIndex(d => d.id == req.params.id); // Loose matching
   if (index === -1) return res.status(404).json({ error: 'event not found' });
-
   data[index] = { ...data[index], status: req.body.status, updatedAt: new Date().toISOString() };
-
-  // --- SYNC TO SUPABASE ---
-  await supabaseWriteRequest('PATCH', 'events', { status: req.body.status }, req.params.id);
-  // ------------------------
-
   writeJsonFile('events.json', data);
   res.json(data[index]);
 });
@@ -992,7 +1021,7 @@ app.get('/api/admin/institutes/:code', verifyToken, (req, res) => {
   }
 });
 
-app.post('/api/admin/institutes', verifyToken, async (req, res) => {
+app.post('/api/admin/institutes', verifyToken, (req, res) => {
   try {
     const data = req.body;
     if (!data.code || !data.name) {
@@ -1015,12 +1044,6 @@ app.post('/api/admin/institutes', verifyToken, async (req, res) => {
       institutes.push(instituteData);
     }
 
-    // --- SYNC TO SUPABASE ---
-    const supabaseData = { ...instituteData };
-    delete supabaseData.id;
-    await supabaseWriteRequest('POST', 'institutes', supabaseData);
-    // ------------------------
-
     writeJsonFile('institutes.json', institutes);
     res.json(instituteData);
   } catch (error) {
@@ -1028,20 +1051,10 @@ app.post('/api/admin/institutes', verifyToken, async (req, res) => {
   }
 });
 
-app.delete('/api/admin/institutes/:code', verifyToken, async (req, res) => {
+app.delete('/api/admin/institutes/:code', verifyToken, (req, res) => {
   try {
     const institutes = readJsonFile('institutes.json');
     const filtered = institutes.filter(i => i.code.toUpperCase() !== req.params.code.toUpperCase());
-
-    // --- SYNC TO SUPABASE ---
-    // Note: We use the code as ID for deletion if ID is not available, 
-    // but better to fetch ID from JSON if it exists.
-    const inst = institutes.find(i => i.code.toUpperCase() === req.params.code.toUpperCase());
-    if (inst && inst.id) {
-      await supabaseWriteRequest('DELETE', 'institutes', null, inst.id);
-    }
-    // ------------------------
-
     writeJsonFile('institutes.json', filtered);
     res.json({ success: true });
   } catch (error) {
@@ -1177,184 +1190,104 @@ app.get('/api/results', async (req, res) => {
 });
 
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Specialized Gallery Sync Endpoints (Admin panel writes through these)
-// ─────────────────────────────────────────────────────────────────────────────
-app.post('/api/gallery', async (req, res) => {
-  const data = readJsonFile('gallery.json');
-  const newItem = {
-    id: generateId(),
-    ...req.body,
-    timestamp: new Date().toISOString()
-  };
-
-  // --- SYNC TO SUPABASE ---
-  const supabaseData = supabaseWriteTransform('gallery', newItem);
-  if (newItem.order !== undefined) {
-    supabaseData.display_order = newItem.order;
-    delete supabaseData.order;
+// ================== GALLERY ==================
+// Get all gallery images (public)
+app.get('/api/gallery', (req, res) => {
+  try {
+    const gallery = readJsonFile('gallery.json');
+    res.json(gallery.sort((a, b) => a.order - b.order));
+  } catch (error) {
+    console.error('Error fetching gallery:', error);
+    res.status(500).json({ error: 'Failed to fetch gallery images' });
   }
-  const syncRes = await supabaseWriteRequest('POST', 'gallery', supabaseData);
-  if (syncRes.ok && syncRes.data && syncRes.data.length > 0) {
-    newItem.id = syncRes.data[0].id || newItem.id;
-  }
-  // ------------------------
-
-  data.unshift(newItem);
-  writeJsonFile('gallery.json', data);
-  res.status(201).json(newItem);
 });
 
-app.delete('/api/gallery/:id', async (req, res) => {
-  let data = readJsonFile('gallery.json');
-  const index = data.findIndex(d => d.id === req.params.id);
-  if (index === -1) return res.status(404).json({ error: 'image not found' });
+// Create gallery image (secured via checkAdminKey)
+app.post('/api/gallery', checkAdminKey, (req, res) => {
+  try {
+    const { url, order } = req.body;
+    if (!url) {
+      return res.status(400).json({ error: 'URL is required' });
+    }
 
-  // --- SYNC TO SUPABASE ---
-  await supabaseWriteRequest('DELETE', 'gallery', null, req.params.id);
-  // ------------------------
+    const gallery = readJsonFile('gallery.json');
+    const newImage = {
+      id: `gallery-${Date.now()}`,
+      url,
+      order: order || gallery.length + 1,
+      created_at: new Date().toISOString()
+    };
 
-  data.splice(index, 1);
-  writeJsonFile('gallery.json', data);
-  console.log('✅ Deleted gallery image (Synced):', req.params.id);
-  res.json({ success: true });
+    gallery.push(newImage);
+    writeJsonFile('gallery.json', gallery);
+    console.log(`✅ Created gallery item:`, newImage.id);
+
+    res.status(201).json(newImage);
+  } catch (error) {
+    console.error('Error creating gallery image:', error);
+    res.status(500).json({ error: 'Failed to create gallery image' });
+  }
 });
 
-app.patch('/api/gallery/reorder', async (req, res) => {
-  const { images } = req.body; // Array of { id, order }
-  if (!Array.isArray(images)) return res.status(400).json({ error: 'Invalid data' });
+// Delete gallery image (secured via checkAdminKey)
+app.delete('/api/gallery/:id', checkAdminKey, (req, res) => {
+  try {
+    const gallery = readJsonFile('gallery.json');
+    const filteredGallery = gallery.filter(img => img.id != req.params.id); // Loose matching
 
-  const data = readJsonFile('gallery.json');
+    if (gallery.length === filteredGallery.length) {
+      return res.status(404).json({ error: 'Image not found' });
+    }
 
-  images.forEach(update => {
-    const item = data.find(d => d.id === update.id);
-    if (item) item.order = update.order;
-  });
+    writeJsonFile('gallery.json', filteredGallery);
+    console.log(`✅ Deleted gallery item:`, req.params.id);
 
-  data.sort((a, b) => a.order - b.order);
-  writeJsonFile('gallery.json', data);
+    res.json({ success: true, message: 'Image deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting gallery image:', error);
+    res.status(500).json({ error: 'Failed to delete gallery image' });
+  }
+});
 
-  // --- SYNC TO SUPABASE ---
-  const promises = images.map(img =>
-    supabaseWriteRequest('PATCH', 'gallery', { display_order: img.order }, img.id)
-  );
-  await Promise.all(promises);
-  // ------------------------
+// Reorder gallery images (secured via checkAdminKey)
+app.put('/api/gallery/reorder', checkAdminKey, (req, res) => {
+  try {
+    const images = req.body;
+    if (!Array.isArray(images)) {
+      return res.status(400).json({ error: 'Invalid data format' });
+    }
 
-  console.log(`✅ Gallery reordered: ${images.length} items (Synced)`);
-  res.json({ success: true });
+    writeJsonFile('gallery.json', images);
+    res.json({ success: true, message: 'Gallery reordered successfully' });
+  } catch (error) {
+    console.error('Error reordering gallery:', error);
+    res.status(500).json({ error: 'Failed to reorder gallery images' });
+  }
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Image Proxy: serve Supabase Storage images through VPS so ISP block doesn't
 // break images on pages (all *.supabase.co URLs are DNS-blocked in India).
+// Usage: /api/image-proxy?url=https://xxx.supabase.co/storage/v1/...
 // ─────────────────────────────────────────────────────────────────────────────
-// PROXY ROUTES: Bypass ISP blocks by relaying everything through VPS
-// ─────────────────────────────────────────────────────────────────────────────
-
-// Auth Proxy: Sign In
-app.post('/api/proxy/auth/signin', async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
-
-  try {
-    const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email, password })
-    });
-
-    const data = await response.json();
-    if (!response.ok) return res.status(response.status).json(data);
-
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: 'Auth proxy error: ' + err.message });
-  }
-});
-
-// Auth Proxy: Sign Up
-app.post('/api/proxy/auth/signup', async (req, res) => {
-  const { email, password, data: metadata } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
-
-  try {
-    const response = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email, password, data: metadata })
-    });
-
-    const data = await response.json();
-    if (!response.ok) return res.status(response.status).json(data);
-
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: 'Auth proxy error: ' + err.message });
-  }
-});
-
-// Storage Proxy: Upload File
-app.post('/api/proxy/storage/upload/:bucket', express.raw({ type: '*/*', limit: '50mb' }), async (req, res) => {
-  try {
-    const { bucket } = req.params;
-    const { path: filePath } = req.query; // renaming to avoid conflict with 'path' module
-
-    if (!filePath) return res.status(400).json({ error: 'path query parameter required' });
-
-    // Relay the raw body (binary) to Supabase
-    const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${bucket}/${filePath}`, {
-      method: 'POST',
-      headers: {
-        'apikey': SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY}`,
-        'Content-Type': req.headers['content-type'] || 'application/octet-stream',
-        'upsert': 'true'
-      },
-      body: req.body
-    });
-
-    const data = await response.json();
-    if (!response.ok) return res.status(response.status).json(data);
-
-    res.json(data);
-  } catch (err) {
-    console.error('Storage Proxy Error:', err);
-    res.status(500).json({ error: 'Storage proxy error: ' + err.message });
-  }
-});
-
-// Image Proxy: Serve Supabase images through VPS to bypass ISP blocks
 app.get('/api/image-proxy', async (req, res) => {
   const { url } = req.query;
   if (!url || typeof url !== 'string') return res.status(400).send('url required');
-
   // Security: only proxy Supabase storage URLs
   if (!url.includes('.supabase.co/storage/')) return res.status(403).send('only supabase storage urls allowed');
-
   try {
     const upstream = await fetch(url, { signal: AbortSignal.timeout(15000) });
     if (!upstream.ok) return res.status(upstream.status).send('upstream error');
-
     const contentType = upstream.headers.get('content-type') || 'image/jpeg';
     res.setHeader('Content-Type', contentType);
-    res.setHeader('Cache-Control', 'public, max-age=86400'); // cache 24h
+    res.setHeader('Cache-Control', 'public, max-age=86400'); // cache 24h in browser
     res.setHeader('Access-Control-Allow-Origin', '*');
-
     const buf = await upstream.arrayBuffer();
     res.send(Buffer.from(buf));
   } catch (err) {
     res.status(500).send('proxy error: ' + err.message);
   }
 });
-
-// Usage: /api/image-proxy?url=https://xxx.supabase.co/storage/v1/...
 
 // Utility: rewrite all Supabase Storage URLs in an API response object so
 // images are served via /api/image-proxy instead of blocked *.supabase.co
@@ -1425,7 +1358,8 @@ app.post('/api/sync/trigger', async (req, res) => {
 // to avoid mobile network timeouts (same domain = fast)
 // ============================================================
 
-// (Moved to top of file)
+const FXBOT_URL = process.env.VITE_FXBOT_SUPABASE_URL;
+const FXBOT_KEY = process.env.VITE_FXBOT_SUPABASE_ANON_KEY;
 
 const fxbotRequest = async (method, path, body = null, authHeader = null) => {
   if (!FXBOT_URL || !FXBOT_KEY) throw new Error('FXBot Supabase not configured');
@@ -1501,28 +1435,9 @@ app.get('/api/fxbot/admin-codes', async (req, res) => {
 // POST Issue
 app.post('/api/fxbot/issues', async (req, res) => {
   try {
-    const { attachments, ...issueData } = req.body;
-    const r = await fxbotRequest('POST', 'fxbot_issues', { ...issueData, status: 'Pending' }, req.headers.authorization);
-
+    const r = await fxbotRequest('POST', 'fxbot_issues', { ...req.body, status: 'Pending' }, req.headers.authorization);
     if (!r.ok) return res.status(r.status).json(r.data);
-
-    // Some configurations of Supabase PostgREST might return an empty representation for POST if `Prefer: return=minimal` somehow crept in
-    // However, the frontend always generates and provides the ID in issueData!
-    const issueIdToUse = (r.data && r.data.length > 0 && r.data[0].id) || issueData.id;
-
-    if (issueIdToUse && attachments && attachments.length > 0) {
-      const attachmentRows = attachments.map(url => ({
-        issue_id: issueIdToUse,
-        url: url
-      }));
-      try {
-        await fxbotRequest('POST', 'issue_attachments', attachmentRows, req.headers.authorization);
-      } catch (attError) {
-        console.error("Failed to insert attachments:", attError);
-      }
-    }
-
-    res.json(r.data && r.data.length > 0 ? r.data[0] : { id: issueIdToUse, ...issueData });
+    res.json(r.data && r.data.length > 0 ? r.data[0] : null);
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
@@ -1697,90 +1612,20 @@ app.get('*', (req, res, next) => {
 // Runs on startup + every 2 minutes automatically
 // ============================================================
 
-// (Moved to top of file)
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY;
 const SYNC_INTERVAL_MS = 2 * 60 * 1000; // 2 minutes
 
-// Master key for admin writes (bypasses RLS). 
-// Use Service Role Key if available, fallback to Anon Key.
-// const SUPABASE_WRITE_KEY = SUPABASE_SERVICE_ROLE_KEY; // (Moved to top)
-
-/**
- * Forward write operations (POST, PUT, PATCH, DELETE) to Supabase.
- * This ensures the VPS-side changes are persisted in the source-of-truth database.
- */
-const supabaseWriteRequest = async (method, table, data = null, id = null) => {
-  if (!SUPABASE_URL || !SUPABASE_WRITE_KEY) return { ok: false, error: 'Supabase config missing' };
-
-  try {
-    let url = `${SUPABASE_URL}/rest/v1/${table}`;
-    if (id) url += `?id=eq.${id}`;
-
-    const options = {
-      method,
-      headers: {
-        'apikey': SUPABASE_WRITE_KEY,
-        'Authorization': `Bearer ${SUPABASE_WRITE_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=representation'
-      }
-    };
-
-    if (data && method !== 'DELETE') {
-      options.body = JSON.stringify(data);
-    }
-
-    const res = await fetch(url, options);
-    const result = await res.json().catch(() => null);
-
-    if (!res.ok) {
-      console.error(`❌ Supabase Write Failed (${method} ${table}):`, res.status, result);
-      return { ok: false, status: res.status, error: result };
-    }
-
-    return { ok: true, data: result };
-  } catch (err) {
-    console.error(`❌ Supabase Write Error (${method} ${table}):`, err.message);
-    return { ok: false, error: err.message };
-  }
-};
-
-/**
- * Transforms JSON-style data back to Supabase-style data for writes.
- */
-const supabaseWriteTransform = (table, data) => {
-  if (!data) return null;
-  const r = { ...data };
-
-  // Remove read-only or VPS-specific fields
-  delete r.id;
-  delete r.timestamp;
-  delete r.updatedAt;
-  delete r.created_at;
-
-  if (table === 'events') {
-    if (r.date) { r.event_date = r.date; delete r.date; }
-    if (r.time) { r.event_time = r.time; delete r.time; }
-    if (r.registerLink) { r.register_link = r.registerLink; delete r.registerLink; }
-    if (r.isComingSoon !== undefined) { r.is_coming_soon = r.isComingSoon; delete r.isComingSoon; }
-    if (r.adminStatus) { r.admin_status = r.adminStatus; delete r.adminStatus; }
-  } else if (table === 'resources') {
-    if (r.longDescription) { r.long_description = r.longDescription; delete r.longDescription; }
-  }
-
-  return r;
-};
-
 const supabaseFetch = async (table, orderBy = 'created_at') => {
-  const fetchKey = SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
-  if (!SUPABASE_URL || !fetchKey) return null;
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10000); // 10s timeout
   try {
-    const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&order=${orderBy}.asc`;
+    const url = `${SUPABASE_URL}/rest/v1/${table}?select=*&order=${orderBy}.desc`;
     const res = await fetch(url, {
       headers: {
-        'apikey': fetchKey,
-        'Authorization': `Bearer ${fetchKey}`,
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         'Content-Type': 'application/json'
       },
       signal: controller.signal
@@ -1836,12 +1681,7 @@ const SYNC_TABLES = [
   },
   {
     table: 'gallery', file: 'gallery.json',
-    orderBy: 'display_order',
-    transform: (r) => ({ ...r, timestamp: r.created_at || r.timestamp, order: r.display_order })
-  },
-  {
-    table: 'institutes', file: 'institutes.json',
-    transform: (r) => r
+    transform: (r) => ({ ...r, timestamp: r.created_at || r.timestamp })
   },
 ];
 
@@ -1858,20 +1698,19 @@ const syncFromSupabase = async (reason = 'scheduled') => {
   let successCount = 0;
   let failCount = 0;
 
-  for (const { table, file, transform, orderBy } of SYNC_TABLES) {
-    const rows = await supabaseFetch(table, orderBy || 'created_at');
+  for (const { table, file, transform } of SYNC_TABLES) {
+    const rows = await supabaseFetch(table);
     if (rows === null) {
       failCount++;
       continue;
     }
+    const existing = readJsonFile(file);
     const synced = rows.map(transform);
 
     // Only write if data actually changed (avoid unnecessary disk writes)
-    if (JSON.stringify(synced) !== JSON.stringify(readJsonFile(file))) {
+    if (JSON.stringify(synced) !== JSON.stringify(existing)) {
       writeJsonFile(file, synced);
-      console.log(`   ✅ ${table}: ${synced.length} records synced (Deletions applied)`);
-    } else {
-      // console.log(`   ℹ️ ${table}: No changes detected`);
+      console.log(`   ✅ ${table}: ${synced.length} records synced`);
     }
     successCount++;
   }

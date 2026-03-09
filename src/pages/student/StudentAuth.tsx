@@ -106,14 +106,14 @@ const StudentAuth = () => {
 
         setIsLoading(true);
         try {
-            // Use VPS proxy to avoid mobile timeout on direct Supabase Auth calls
-            const res = await fetch('/api/fxbot/send-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, shouldCreateUser: activeTab === 'signup' })
+            const { error } = await fxbotSupabase.auth.signInWithOtp({
+                email,
+                options: {
+                    shouldCreateUser: activeTab === 'signup'
+                }
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to send OTP');
+
+            if (error) throw error;
 
             setIsOtpSent(true);
             setCountdown(60);
@@ -133,29 +133,15 @@ const StudentAuth = () => {
 
         setIsLoading(true);
         try {
-            // Use proxy to avoid mobile timeout on direct Supabase calls
-            const res = await fetch('/api/fxbot/verify-otp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, token: otp })
+            const { data, error } = await fxbotSupabase.auth.verifyOtp({
+                email,
+                token: otp,
+                type: 'email'
             });
-            const data = await res.json();
 
-            if (!res.ok || !data.success || !data.user || !data.access_token) {
+            if (error || !data.user || !data.session) {
                 setOtp("");
-                throw new Error(data.error || 'Verification failed');
-            }
-
-            // Store tokens directly in localStorage instead of calling setSession().
-            // Direct browser-to-Supabase connections are blocked by Indian ISPs,
-            // so setSession() (which pings Supabase auth endpoints) would fail.
-            // Our VPS proxy handles ALL Supabase calls, so we only need the token
-            // stored locally so getAuthHeader() can pick it up for proxy requests.
-            if (data.access_token) {
-                localStorage.setItem('fxbot_access_token', data.access_token);
-                if (data.refresh_token) {
-                    localStorage.setItem('fxbot_refresh_token', data.refresh_token);
-                }
+                throw new Error(error?.message || 'Verification failed');
             }
 
             let profile;

@@ -14,7 +14,7 @@ import { ImageCropperDialog } from "@/components/ImageCropperDialog";
 interface GalleryImage {
     id: string;
     url: string;
-    order: number;
+    order?: number;
     createdAt?: string;
 }
 

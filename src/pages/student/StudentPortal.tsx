@@ -61,17 +61,12 @@ const StudentPortal = () => {
         // Session guard: accept localStorage ISP-bypass token OR existing student_session.
         // No direct Supabase contact needed — ISP-block safe.
         const studentData = JSON.parse(session);
-        // Prevent infinite loops by only setting student if it actually changed
-        if (JSON.stringify(student) !== JSON.stringify(studentData)) {
-            setStudent(studentData);
-            fetchIssues(studentData);
-        }
-    }, [navigate, student]);
+        setStudent(studentData);
+        fetchIssues(studentData);
+    }, [navigate]);
 
-    const fetchIssues = async (user: Student, isBackgroundPoll = false) => {
-        if (!isBackgroundPoll) {
-            setIsLoading(true);
-        }
+    const fetchIssues = async (user: Student) => {
+        setIsLoading(true);
         try {
             const data = user.role === 'faculty'
                 ? await fxbotAPI.getFacultyIssues(user)
@@ -80,9 +75,7 @@ const StudentPortal = () => {
         } catch (error) {
             console.error("Failed to fetch issues:", error);
         } finally {
-            if (!isBackgroundPoll) {
-                setIsLoading(false);
-            }
+            setIsLoading(false);
         }
     };
 
@@ -90,7 +83,7 @@ const StudentPortal = () => {
     useEffect(() => {
         if (!student) return;
         const interval = setInterval(() => {
-            fetchIssues(student, true);
+            fetchIssues(student);
         }, 5000);
         return () => clearInterval(interval);
     }, [student]);
