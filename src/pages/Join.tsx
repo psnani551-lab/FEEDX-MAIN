@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button';
 import { joinIllustration } from '@/lib/illustrations';
 import { SOCIAL_LINKS } from '@/lib/socialLinks';
 import { MessageCircle, Instagram, Youtube } from 'lucide-react';
-import { subscriptionsAPI } from '@/lib/api';
 
 const Join = () => {
   const socials = [
@@ -67,48 +66,6 @@ const Join = () => {
                 ))}
               </div>
 
-              {/* Join Form */}
-              <div className="max-w-md mx-auto lg:mx-0 pt-8">
-                <div className="bg-card/50 backdrop-blur-sm border border-border rounded-2xl p-6 shadow-glow hover-glow-primary transition-all duration-300">
-                  <h3 className="text-xl font-bold mb-2">Can't wait to join?</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Leave your email and we'll reach out with community updates!</p>
-                  <form
-                    className="space-y-3"
-                    onSubmit={async (e) => {
-                      e.preventDefault();
-                      const form = e.target as HTMLFormElement;
-                      const name = (form.elements.namedItem('name') as HTMLInputElement).value;
-                      const email = (form.elements.namedItem('email') as HTMLInputElement).value;
-
-                      try {
-                        await subscriptionsAPI.subscribe({ name, email });
-                        alert('Thank you for your interest! We will be in touch soon.');
-                        form.reset();
-                      } catch (err) {
-                        alert('Something went wrong. Please try again.');
-                      }
-                    }}
-                  >
-                    <input
-                      name="name"
-                      type="text"
-                      placeholder="Your Name"
-                      required
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                    />
-                    <input
-                      name="email"
-                      type="email"
-                      placeholder="Email Address"
-                      required
-                      className="w-full bg-background border border-border rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                    />
-                    <Button type="submit" className="w-full bg-gradient-brand hover:opacity-90 transition-smooth">
-                      Join the Community
-                    </Button>
-                  </form>
-                </div>
-              </div>
             </div>
 
             {/* Right side - Illustration */}
@@ -123,7 +80,7 @@ const Join = () => {
         </div>
       </div>
 
-      
+
     </div>
   );
 };
