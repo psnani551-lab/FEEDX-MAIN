@@ -245,10 +245,10 @@ import { SEOHead } from "@/components/SEOHead";
 const StudentAnalytics = () => {
   const navigate = useNavigate();
   const [pin, setPin] = useState('');
-  const [schemeId, setSchemeId] = useState('11');
-  const [semYearId, setSemYearId] = useState('2');
-  const [examTypeId, setExamTypeId] = useState('1');
-  const [examMonthYearId, setExamMonthYearId] = useState('91');
+  const [schemeId, setSchemeId] = useState('');
+  const [semYearId, setSemYearId] = useState('');
+  const [examTypeId, setExamTypeId] = useState('');
+  const [examMonthYearId, setExamMonthYearId] = useState('');
   const [examSessions, setExamSessions] = useState<{ label: string; value: string }[]>(FALLBACK_EXAM_SESSIONS);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -262,8 +262,6 @@ const StudentAnalytics = () => {
       .then(json => {
         if (json?.success && json.sessions?.length) {
           setExamSessions(json.sessions);
-          // Auto-select most recent (first in sorted list)
-          setExamMonthYearId(json.sessions[0].value);
         }
       })
       .catch(() => { /* keep fallback list */ });
@@ -366,7 +364,7 @@ const StudentAnalytics = () => {
                 <div className="space-y-2">
                   <Label>Scheme</Label>
                   <Select value={schemeId} onValueChange={setSchemeId}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select Scheme" /></SelectTrigger>
                     <SelectContent>
                       {SCHEME_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                     </SelectContent>
@@ -376,7 +374,7 @@ const StudentAnalytics = () => {
                 <div className="space-y-2">
                   <Label>Semester</Label>
                   <Select value={semYearId} onValueChange={setSemYearId}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select Semester" /></SelectTrigger>
                     <SelectContent>
                       {SEM_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                     </SelectContent>
@@ -386,7 +384,7 @@ const StudentAnalytics = () => {
                 <div className="space-y-2">
                   <Label>Exam Type</Label>
                   <Select value={examTypeId} onValueChange={setExamTypeId}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
                     <SelectContent>
                       {EXAM_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                     </SelectContent>
@@ -397,7 +395,7 @@ const StudentAnalytics = () => {
                   <div className="space-y-2">
                     <Label>Exam Month/Year</Label>
                     <Select value={examMonthYearId} onValueChange={setExamMonthYearId}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Select Month/Year" /></SelectTrigger>
                       <SelectContent>
                         {examSessions.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
                       </SelectContent>
@@ -412,7 +410,7 @@ const StudentAnalytics = () => {
                       id="pin"
                       value={pin}
                       onChange={(e) => setPin(e.target.value)}
-                      placeholder="e.g. 24054-AI-019"
+                      placeholder=""
                       onKeyDown={(e) => e.key === 'Enter' && fetchAll()}
                       className="pr-10"
                     />
