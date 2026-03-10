@@ -28,16 +28,15 @@ uploadSubDirs.forEach(subDir => {
 });
 console.log('✅ Uploads directory ready:', uploadsDir);
 
-const app = express();
 const PORT = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
-const ADMIN_API_KEY = process.env.VITE_ADMIN_API_KEY || 'feedx-default-admin-key-2025';
+const ADMIN_API_KEY = (process.env.VITE_ADMIN_API_KEY || process.env.ADMIN_API_KEY || 'feedx-default-admin-key-2025').trim();
 
 // Security Middleware: API Key Check
 // Used for write operations from the admin panel to bypass DNS/ISP header limits
 const checkAdminKey = (req, res, next) => {
   const apiKey = req.headers['x-admin-api-key'];
-  if (apiKey && apiKey === ADMIN_API_KEY) {
+  if (apiKey && apiKey.toString().trim() === ADMIN_API_KEY) {
     return next();
   }
   return res.status(401).json({ error: 'Unauthorized: Admin API Key required' });
@@ -312,6 +311,14 @@ const upload = multer({
 // Auth Middleware
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
+  const apiKey = req.headers['x-admin-api-key'];
+
+  // Allow bypass with secure Admin API Key
+  if (apiKey && apiKey.toString().trim() === ADMIN_API_KEY) {
+    req.user = { id: 0, email: 'admin-api', name: 'System Admin' };
+    return next();
+  }
+
   if (!token) {
     return res.status(401).json({ error: 'No token provided' });
   }
@@ -448,8 +455,8 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// Get login logs — public endpoint (admin panel uses Supabase auth, not VPS JWT)
-app.get('/api/auth/login-logs', (req, res) => {
+// Get login logs (protected by API Key or JWT)
+app.get('/api/auth/login-logs', verifyToken, (req, res) => {
   try {
     const logs = readLoginLogs();
     res.json([...logs].reverse()); // Newest first
@@ -900,6 +907,52 @@ app.get('/api/admin/audit-logs', verifyToken, (req, res) => {
     res.json(logs);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch audit logs' });
+  }
+});
+
+const ADMIN_LOGS_FILE = path.join(dataDir, 'admin_logs.json');
+
+const readAdminActivityLogs = () => {
+  try {
+    if (!fs.existsSync(ADMIN_LOGS_FILE)) return [];
+    return JSON.parse(fs.readFileSync(ADMIN_LOGS_FILE, 'utf8'));
+  } catch {
+    return [];
+  }
+};
+
+const writeAdminActivityLogs = (logs) => {
+  fs.writeFileSync(ADMIN_LOGS_FILE, JSON.stringify(logs, null, 2));
+};
+
+// Activity Logging (protected by API Key or JWT)
+app.post('/api/admin/activity-logs', verifyToken, (req, res) => {
+  try {
+    const { type, action, resource, details, username } = req.body;
+    const logs = readAdminActivityLogs();
+    const newLog = {
+      id: Date.now(),
+      username: username || req.user?.username || req.user?.name || 'Admin',
+      type,
+      action,
+      resource,
+      details: details || {},
+      timestamp: new Date().toISOString()
+    };
+    logs.push(newLog);
+    writeAdminActivityLogs(logs.slice(-500)); // Keep last 500 logs
+    res.status(201).json(newLog);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to log activity' });
+  }
+});
+
+app.get('/api/admin/activity-logs', verifyToken, (req, res) => {
+  try {
+    const logs = readAdminActivityLogs();
+    res.json(logs.slice(-100).reverse()); // Return last 100 logs, newest first
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch activity logs' });
   }
 });
 

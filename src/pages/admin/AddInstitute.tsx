@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, X, Plus, Save, Building2, Loader2, MapPin, Phone, Globe, Mail, User as UserIcon, BookOpen, Warehouse, Sparkles, Binary } from "lucide-react";
+import { Upload, X, Plus, Save, Building2, Loader2, MapPin, Phone, Globe, Mail, User as UserIcon, BookOpen, Warehouse, Sparkles, Binary, Image as ImageIcon } from "lucide-react";
 import { uploadFile, institutesAPI, Institute } from "@/lib/api";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
@@ -33,6 +33,8 @@ export default function AddInstitute() {
     principal: "",
     courses: [],
     facilities: [],
+    logoImage: "",
+    bannerImage: "",
     status: "published"
   });
   const [institutes, setInstitutes] = useState<Institute[]>([]);
@@ -65,19 +67,27 @@ export default function AddInstitute() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field?: "logoImage" | "bannerImage") => {
     const files = e.target.files;
     if (!files?.length) return;
 
     setIsUploading(true);
     try {
-      const uploadPromises = Array.from(files).map(file => uploadFile(file));
-      const urls = await Promise.all(uploadPromises);
-      setFormData((prev) => ({
-        ...prev,
-        images: [...(prev.images || []), ...urls],
-      }));
-      toast({ title: "Visual Assets Locked", description: `${files.length} campus views ingested.` });
+      if (field) {
+        // Single image upload for logo or banner
+        const url = await uploadFile(files[0]);
+        setFormData((prev) => ({ ...prev, [field]: url }));
+        toast({ title: "Asset Synchronized", description: `${field === 'logoImage' ? 'Logo' : 'Banner'} has been updated.` });
+      } else {
+        // Multiple images for gallery
+        const uploadPromises = Array.from(files).map(file => uploadFile(file));
+        const urls = await Promise.all(uploadPromises);
+        setFormData((prev) => ({
+          ...prev,
+          images: [...(prev.images || []), ...urls],
+        }));
+        toast({ title: "Visual Assets Locked", description: `${files.length} campus views ingested.` });
+      }
     } catch (error) {
       toast({ title: "Upload Failed", variant: "destructive" });
     } finally {
@@ -160,6 +170,8 @@ export default function AddInstitute() {
       principal: item.principal || "",
       courses: item.courses || [],
       facilities: item.facilities || [],
+      logoImage: item.logoImage || "",
+      bannerImage: item.bannerImage || "",
       status: item.status || "published"
     });
     setIsDialogOpen(true);
@@ -171,7 +183,7 @@ export default function AddInstitute() {
     setFormData({
       code: "", name: "", place: "", dist: "", region: "OU", type: "PVT", minority: "NA", mode: "COED",
       description: "", images: [], address: "", phone: "", email: "", website: "", principal: "",
-      courses: [], facilities: [], status: "published"
+      courses: [], facilities: [], logoImage: "", bannerImage: "", status: "published"
     });
     setIsDialogOpen(false);
   };
@@ -431,6 +443,84 @@ export default function AddInstitute() {
                               </Badge>
                             ))}
                           </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-white/5">
+                    <div className="space-y-4">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Institute Logo</Label>
+                      <div className="flex gap-4 items-center">
+                        <div className="w-20 h-20 rounded-xl bg-card border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                          {formData.logoImage ? (
+                            <img src={formData.logoImage} className="w-full h-full object-contain" />
+                          ) : (
+                            <ImageIcon className="w-8 h-8 text-muted-foreground opacity-20" />
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <Input
+                            name="logoImage"
+                            value={formData.logoImage}
+                            onChange={handleChange}
+                            placeholder="Logo URL..."
+                            className="premium-boundary h-9 text-[10px]"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-[10px] h-8 border-white/10"
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = 'image/*';
+                              input.onchange = (e) => handleImageUpload(e as any, "logoImage");
+                              input.click();
+                            }}
+                          >
+                            <Upload className="w-3 h-3 mr-2" />
+                            Upload Logo
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <Label className="text-[10px] font-black uppercase opacity-60">Banner Image</Label>
+                      <div className="flex gap-4 items-center">
+                        <div className="w-20 h-20 rounded-xl bg-card border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                          {formData.bannerImage ? (
+                            <img src={formData.bannerImage} className="w-full h-full object-cover" />
+                          ) : (
+                            <Sparkles className="w-8 h-8 text-muted-foreground opacity-20" />
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <Input
+                            name="bannerImage"
+                            value={formData.bannerImage}
+                            onChange={handleChange}
+                            placeholder="Banner URL..."
+                            className="premium-boundary h-9 text-[10px]"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-[10px] h-8 border-white/10"
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = 'image/*';
+                              input.onchange = (e) => handleImageUpload(e as any, "bannerImage");
+                              input.click();
+                            }}
+                          >
+                            <Upload className="w-3 h-3 mr-2" />
+                            Upload Banner
+                          </Button>
                         </div>
                       </div>
                     </div>

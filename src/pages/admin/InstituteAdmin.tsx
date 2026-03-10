@@ -275,6 +275,36 @@ function CollegeInfoTab({ institute, updateField, toast }: {
               className="premium-boundary"
             />
           </div>
+          <div className="md:col-span-2">
+            <Label>Vision</Label>
+            <Textarea
+              value={institute.vision || ''}
+              onChange={(e) => updateField('vision', e.target.value)}
+              rows={3}
+              placeholder="Institute Vision..."
+              className="premium-boundary"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Label>Mission</Label>
+            <Textarea
+              value={institute.mission || ''}
+              onChange={(e) => updateField('mission', e.target.value)}
+              rows={3}
+              placeholder="Institute Mission..."
+              className="premium-boundary"
+            />
+          </div>
+          <div className="md:col-span-2">
+            <Label>Unique Features</Label>
+            <Textarea
+              value={institute.unique_features || ''}
+              onChange={(e) => updateField('unique_features', e.target.value)}
+              rows={3}
+              placeholder="Unique physical or academic features..."
+              className="premium-boundary"
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -703,7 +733,7 @@ function GalleryTab({ gallery, onChange, toast }: {
     try {
       for (let i = 0; i < files.length; i++) {
         const url = await uploadFile(files[i], "images");
-        onChange([...gallery, { id: generateId(), url, caption: '', category: 'General' }]);
+        onChange([...gallery, { id: generateId(), url, order: gallery.length + 1 + i, caption: '', category: 'General' }]);
       }
       toast({ title: "Images uploaded" });
     } catch (error) {

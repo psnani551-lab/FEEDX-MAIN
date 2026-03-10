@@ -4,7 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const fxbotUrl = import.meta.env.VITE_FXBOT_SUPABASE_URL as string;
 const fxbotAnonKey = import.meta.env.VITE_FXBOT_SUPABASE_ANON_KEY as string;
-const ADMIN_API_KEY = import.meta.env.VITE_ADMIN_API_KEY as string || 'feedx-default-admin-key-2025';
+export const ADMIN_API_KEY = (import.meta.env.VITE_ADMIN_API_KEY as string || 'feedx-default-admin-key-2025').trim();
 
 export const fxbotSupabase = createClient(fxbotUrl, fxbotAnonKey);
 
@@ -16,6 +16,28 @@ const adminHeaders = () => ({
 
 // Helper: Cache busting timestamp
 const getTimestamp = () => `t=${Date.now()}`;
+
+// Logging Helper: Sends administrative actions to the VPS backend
+export const logActivity = async (data: {
+  type: 'notification' | 'update' | 'resource' | 'event' | 'spotlight' | 'testimonial' | 'institute' | 'settings' | 'project',
+  action: 'CREATED' | 'UPDATED' | 'DELETED' | 'MODIFIED' | 'PUBLISHED' | 'DRAFTED',
+  resource: string,
+  details?: any
+}) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    await fetch('/api/admin/activity-logs', {
+      method: 'POST',
+      headers: adminHeaders(),
+      body: JSON.stringify({
+        ...data,
+        username: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Admin'
+      })
+    });
+  } catch (err) {
+    console.warn('Logging failed:', err);
+  }
+};
 
 
 // Types
@@ -99,392 +121,427 @@ export interface Project {
 
 export const projectsAPI = {
   getAll: async (): Promise<Project[]> => {
-    const res = await fetch(`/api/projects?${getTimestamp()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data) ? data.map((p: any) => ({ ...p, timestamp: p.timestamp || p.created_at, projectUrl: p.projectUrl || p.project_url })) : [];
+    const { data, error } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.error('Supabase fetch error for projects:', error);
+      throw error;
+    }
+    return data.map(p => ({ ...p, timestamp: p.created_at }));
   },
   create: async (data: Omit<Project, 'id' | 'timestamp'>): Promise<Project> => {
-    const res = await fetch('/api/projects', {
-      method: 'POST',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    const payload = { ...data, project_url: data.projectUrl };
+    delete (payload as any).projectUrl;
+    const { data: record, error } = await supabase.from('projects').insert([payload]).select().single();
+    if (error) throw error;
+    logActivity({ type: 'project', action: 'CREATED', resource: data.title });
+    return { ...record, timestamp: record.created_at, projectUrl: record.project_url };
   },
   delete: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/projects/${id}`, {
-      method: 'DELETE',
-      headers: adminHeaders()
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase.from('projects').delete().eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'project', action: 'DELETED', resource: id });
   },
   update: async (id: string, data: Partial<Project>): Promise<void> => {
-    const res = await fetch(`/api/projects/${id}`, {
-      method: 'PUT',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const payload: any = { ...data };
+    if (payload.projectUrl !== undefined) {
+      payload.project_url = payload.projectUrl;
+      delete payload.projectUrl;
+    }
+    const { error } = await supabase.from('projects').update(payload).eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'project', action: 'UPDATED', resource: data.title || id });
   },
 };
 
 export interface GalleryImage {
   id: string;
   url: string;
-  order?: number;
+  order: number;
   caption?: string;
   category?: string;
-  [key: string]: any;
 }
 
+// Notifications API
 export const notificationsAPI = {
   getAll: async (): Promise<Notification[]> => {
-    const res = await fetch(`/api/notifications?${getTimestamp()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data) ? data.map((n: any) => ({ ...n, timestamp: n.timestamp || n.created_at })) : [];
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Supabase fetch error for notifications:', error);
+      throw error;
+    }
+    return data.map(n => ({ ...n, timestamp: n.created_at }));
   },
 
   create: async (data: Omit<Notification, 'id' | 'timestamp'>): Promise<Notification> => {
-    const res = await fetch('/api/notifications', {
-      method: 'POST',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const record = await res.json();
-    return { ...record, timestamp: record.timestamp || record.created_at };
+    const { data: record, error } = await supabase
+      .from('notifications')
+      .insert([data])
+      .select()
+      .single();
+
+    if (error) throw error;
+    logActivity({ type: 'notification', action: 'CREATED', resource: data.title });
+    return { ...record, timestamp: record.created_at };
   },
 
   delete: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/notifications/${id}`, {
-      method: 'DELETE',
-      headers: adminHeaders()
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase
+      .from('notifications')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'notification', action: 'DELETED', resource: id });
   },
 
   update: async (id: string, data: Partial<Notification>): Promise<void> => {
-    const res = await fetch(`/api/notifications/${id}`, {
-      method: 'PUT',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase
+      .from('notifications')
+      .update(data)
+      .eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'notification', action: 'UPDATED', resource: data.title || id });
   },
 
   updateStatus: async (id: string, status: 'published' | 'draft'): Promise<void> => {
-    const res = await fetch(`/api/notifications/${id}/status`, {
-      method: 'PATCH',
-      headers: adminHeaders(),
-      body: JSON.stringify({ status })
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase
+      .from('notifications')
+      .update({ status })
+      .eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'notification', action: status === 'published' ? 'PUBLISHED' : 'DRAFTED', resource: id });
   }
 };
 
 // Updates API
 export const updatesAPI = {
   getAll: async (): Promise<Update[]> => {
-    const res = await fetch(`/api/updates?${getTimestamp()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data) ? data.map((u: any) => ({ ...u, timestamp: u.timestamp || u.created_at })) : [];
+    const { data, error } = await supabase
+      .from('updates')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Supabase fetch error for updates:', error);
+      throw error;
+    }
+    return data.map(u => ({ ...u, timestamp: u.created_at }));
   },
 
   create: async (data: Omit<Update, 'id' | 'timestamp'>): Promise<Update> => {
-    const res = await fetch('/api/updates', {
-      method: 'POST',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const record = await res.json();
-    return { ...record, timestamp: record.timestamp || record.created_at };
+    const { data: record, error } = await supabase
+      .from('updates')
+      .insert([data])
+      .select()
+      .single();
+    if (error) throw error;
+    logActivity({ type: 'update', action: 'CREATED', resource: data.title });
+    return { ...record, timestamp: record.created_at };
   },
 
   delete: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/updates/${id}`, {
-      method: 'DELETE',
-      headers: adminHeaders()
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase
+      .from('updates')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'update', action: 'DELETED', resource: id });
   },
 
   update: async (id: string, data: Partial<Update>): Promise<void> => {
-    const res = await fetch(`/api/updates/${id}`, {
-      method: 'PUT',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase
+      .from('updates')
+      .update(data)
+      .eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'update', action: 'UPDATED', resource: data.title || id });
   },
 
   updateStatus: async (id: string, status: 'published' | 'draft'): Promise<void> => {
-    const res = await fetch(`/api/updates/${id}/status`, {
-      method: 'PATCH',
-      headers: adminHeaders(),
-      body: JSON.stringify({ status })
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase
+      .from('updates')
+      .update({ status })
+      .eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'update', action: status === 'published' ? 'PUBLISHED' : 'DRAFTED', resource: id });
   }
 };
 
 // Resources API
 export const resourcesAPI = {
   getAll: async (): Promise<Resource[]> => {
-    const res = await fetch(`/api/resources?${getTimestamp()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data) ? data.map((r: any) => ({ ...r, timestamp: r.timestamp || r.created_at, longDescription: r.longDescription || r.long_description || '' })) : [];
+    const { data, error } = await supabase
+      .from('resources')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Supabase fetch error for resources:', error);
+      throw error;
+    }
+    return data.map(r => ({ ...r, timestamp: r.created_at }));
   },
 
   getById: async (id: string): Promise<Resource> => {
-    const res = await fetch(`/api/resources?${getTimestamp()}`);
-    const data = await res.json();
-    const item = data.find((r: any) => r.id == id); // Loose matching for flexibility
-    if (!item) throw new Error('Resource not found');
-    return { ...item, timestamp: item.timestamp || item.created_at, longDescription: item.longDescription || item.long_description || '' };
+    const { data, error } = await supabase
+      .from('resources')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (error) throw error;
+    return { ...data, timestamp: data.created_at };
   },
 
   create: async (data: Omit<Resource, 'id' | 'timestamp'>): Promise<Resource> => {
-    const res = await fetch('/api/resources', {
-      method: 'POST',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const record = await res.json();
-    return { ...record, timestamp: record.timestamp || record.created_at, longDescription: record.longDescription || record.long_description || '' };
+    const payload = {
+      ...data,
+      long_description: data.longDescription
+    };
+    delete (payload as any).longDescription;
+
+    const { data: record, error } = await supabase
+      .from('resources')
+      .insert([payload])
+      .select()
+      .single();
+    if (error) throw error;
+    logActivity({ type: 'resource', action: 'CREATED', resource: data.title });
+    return { ...record, timestamp: record.created_at, longDescription: record.long_description };
   },
 
   delete: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/resources/${id}`, {
-      method: 'DELETE',
-      headers: adminHeaders()
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase
+      .from('resources')
+      .delete()
+      .eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'resource', action: 'DELETED', resource: id });
   },
 
   update: async (id: string, data: Partial<Resource>): Promise<void> => {
-    const res = await fetch(`/api/resources/${id}`, {
-      method: 'PUT',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const payload = { ...data } as any;
+    if (data.longDescription) {
+      payload.long_description = data.longDescription;
+      delete payload.longDescription;
+    }
+    const { error } = await supabase
+      .from('resources')
+      .update(payload)
+      .eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'resource', action: 'UPDATED', resource: data.title || id });
   },
 
   updateStatus: async (id: string, status: 'published' | 'draft'): Promise<void> => {
-    const res = await fetch(`/api/resources/${id}/status`, {
-      method: 'PATCH',
-      headers: adminHeaders(),
-      body: JSON.stringify({ status })
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase
+      .from('resources')
+      .update({ status })
+      .eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'resource', action: status === 'published' ? 'PUBLISHED' : 'DRAFTED', resource: id });
   }
 };
 
 // Events API
 export const eventsAPI = {
   getAll: async (): Promise<Event[]> => {
-    try {
-      const res = await fetch(`/api/events?${getTimestamp()}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      return Array.isArray(data) ? data.map((e: any) => ({
-        ...e,
-        timestamp: e.timestamp || e.created_at,
-        date: e.date || e.event_date,
-        time: e.time || e.event_time,
-        registerLink: e.registerLink || e.register_link,
-        isComingSoon: e.isComingSoon || e.is_coming_soon,
-        adminStatus: e.adminStatus || e.admin_status
-      })) : [];
-    } catch (err) {
-      console.error('Backend fetch failed for events, falling back to Supabase:', err);
-      const { data, error } = await supabase.from('events').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      return data.map(e => ({
-        ...e,
-        timestamp: e.created_at,
-        date: e.event_date || e.date,
-        time: e.event_time || e.time,
-        registerLink: e.register_link || e.registerLink,
-        isComingSoon: e.is_coming_soon || e.isComingSoon,
-        adminStatus: e.admin_status || e.adminStatus
-      }));
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) {
+      console.error('Supabase fetch error for events:', error);
+      throw error;
     }
+    return data.map(e => ({
+      ...e,
+      timestamp: e.created_at,
+      date: e.event_date || e.date,
+      time: e.event_time || e.time,
+      registerLink: e.register_link || e.registerLink,
+      isComingSoon: e.is_coming_soon || e.isComingSoon,
+      adminStatus: e.admin_status || e.adminStatus
+    }));
   },
 
   create: async (data: any): Promise<Event> => {
-    const res = await fetch('/api/events', {
-      method: 'POST',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    const payload = {
+      ...data,
+      event_date: data.date,
+      event_time: data.time,
+      register_link: data.registerLink,
+      is_coming_soon: data.isComingSoon,
+      admin_status: data.adminStatus
+    };
+    delete payload.date;
+    delete payload.time;
+    delete payload.registerLink;
+    delete payload.isComingSoon;
+    delete payload.adminStatus;
+
+    const { data: record, error } = await supabase
+      .from('events')
+      .insert([payload])
+      .select()
+      .single();
+    if (error) throw error;
+    logActivity({ type: 'event', action: 'CREATED', resource: data.title });
+    return {
+      ...record,
+      timestamp: record.created_at,
+      date: record.event_date,
+      time: record.event_time,
+      registerLink: record.register_link,
+      isComingSoon: record.is_coming_soon
+    };
   },
 
   delete: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/events/${id}`, {
-      method: 'DELETE',
-      headers: adminHeaders()
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase.from('events').delete().eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'event', action: 'DELETED', resource: id });
   },
 
   update: async (id: string, data: any): Promise<void> => {
-    const res = await fetch(`/api/events/${id}`, {
-      method: 'PUT',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const payload = { ...data };
+    if (data.date) {
+      payload.event_date = data.date;
+      delete payload.date;
+    }
+    if (data.time) {
+      payload.event_time = data.time;
+      delete payload.time;
+    }
+    if (data.registerLink) {
+      payload.register_link = data.registerLink;
+      delete payload.registerLink;
+    }
+    if (data.isComingSoon !== undefined) {
+      payload.is_coming_soon = data.isComingSoon;
+      delete payload.isComingSoon;
+    }
+    if (data.adminStatus) {
+      payload.admin_status = data.adminStatus;
+      delete payload.adminStatus;
+    }
+    const { error } = await supabase.from('events').update(payload).eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'event', action: 'UPDATED', resource: data.title || id });
   },
 
   updateStatus: async (id: string, status: string): Promise<void> => {
-    const res = await fetch(`/api/events/${id}/status`, {
-      method: 'PATCH',
-      headers: adminHeaders(),
-      body: JSON.stringify({ status })
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase.from('events').update({ status }).eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'event', action: 'MODIFIED', resource: id, details: { status } });
   }
 };
 
 // Spotlight API
 export const spotlightAPI = {
   getAll: async (): Promise<Spotlight[]> => {
-    const res = await fetch(`/api/spotlight?${getTimestamp()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data) ? data.map((s: any) => ({ ...s, timestamp: s.timestamp || s.created_at })) : [];
+    const { data, error } = await supabase.from('spotlight').select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.error('Supabase fetch error for spotlight:', error);
+      throw error;
+    }
+    return data.map(s => ({ ...s, timestamp: s.created_at }));
   },
 
   create: async (data: any): Promise<Spotlight> => {
-    const res = await fetch('/api/spotlight', {
-      method: 'POST',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const record = await res.json();
-    return { ...record, timestamp: record.timestamp || record.created_at };
+    const { data: record, error } = await supabase.from('spotlight').insert([data]).select().single();
+    if (error) throw error;
+    logActivity({ type: 'spotlight', action: 'CREATED', resource: data.title });
+    return { ...record, timestamp: record.created_at };
   },
 
   delete: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/spotlight/${id}`, {
-      method: 'DELETE',
-      headers: adminHeaders()
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase.from('spotlight').delete().eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'spotlight', action: 'DELETED', resource: id });
   },
 
   update: async (id: string, data: Partial<Spotlight>): Promise<void> => {
-    const res = await fetch(`/api/spotlight/${id}`, {
-      method: 'PUT',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase.from('spotlight').update(data).eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'spotlight', action: 'UPDATED', resource: data.title || id });
   },
 
   updateStatus: async (id: string, status: 'published' | 'draft'): Promise<void> => {
-    const res = await fetch(`/api/spotlight/${id}/status`, {
-      method: 'PATCH',
-      headers: adminHeaders(),
-      body: JSON.stringify({ status })
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase.from('spotlight').update({ status }).eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'spotlight', action: status === 'published' ? 'PUBLISHED' : 'DRAFTED', resource: id });
   }
 };
 
 // Testimonials API
 export const testimonialsAPI = {
   getAll: async (): Promise<Testimonial[]> => {
-    const res = await fetch(`/api/testimonials?${getTimestamp()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data) ? data.map((t: any) => ({ ...t, timestamp: t.timestamp || t.created_at })) : [];
+    const { data, error } = await supabase.from('testimonials').select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.error('Supabase fetch error for testimonials:', error);
+      throw error;
+    }
+    return data.map(t => ({ ...t, timestamp: t.created_at }));
   },
 
   create: async (data: any): Promise<Testimonial> => {
-    const res = await fetch('/api/testimonials', {
-      method: 'POST',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const record = await res.json();
-    return { ...record, timestamp: record.timestamp || record.created_at };
+    const { data: record, error } = await supabase.from('testimonials').insert([data]).select().single();
+    if (error) throw error;
+    logActivity({ type: 'testimonial', action: 'CREATED', resource: data.name });
+    return { ...record, timestamp: record.created_at };
   },
 
   delete: async (id: string): Promise<void> => {
-    const res = await fetch(`/api/testimonials/${id}`, {
-      method: 'DELETE',
-      headers: adminHeaders()
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase.from('testimonials').delete().eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'testimonial', action: 'DELETED', resource: id });
   },
 
   update: async (id: string, data: Partial<Testimonial>): Promise<void> => {
-    const res = await fetch(`/api/testimonials/${id}`, {
-      method: 'PUT',
-      headers: adminHeaders(),
-      body: JSON.stringify(data)
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase.from('testimonials').update(data).eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'testimonial', action: 'UPDATED', resource: data.name || id });
   },
 
   updateStatus: async (id: string, status: 'published' | 'draft'): Promise<void> => {
-    const res = await fetch(`/api/testimonials/${id}/status`, {
-      method: 'PATCH',
-      headers: adminHeaders(),
-      body: JSON.stringify({ status })
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase.from('testimonials').update({ status }).eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'testimonial', action: status === 'published' ? 'PUBLISHED' : 'DRAFTED', resource: id });
   }
 };
 
 // Gallery API
 export const galleryAPI = {
   getAll: async (): Promise<GalleryImage[]> => {
-    const res = await fetch(`/api/gallery?${getTimestamp()}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    return Array.isArray(data) ? data.map((img: any) => ({ id: img.id, url: img.url, order: img.display_order ?? img.order ?? 0 })) : [];
+    const { data, error } = await supabase.from('gallery').select('*').order('display_order', { ascending: true });
+    if (error) {
+      console.error('Supabase fetch error for gallery:', error);
+      throw error;
+    }
+    return data ? data.map(img => ({ id: img.id, url: img.url, order: img.display_order })) : [];
   },
 
   create: async (image: { url: string; order: number }) => {
-    const res = await fetch('/api/gallery', {
-      method: 'POST',
-      headers: adminHeaders(),
-      body: JSON.stringify({ url: image.url, order: image.order })
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    const { data, error } = await supabase.from('gallery').insert([{ url: image.url, display_order: image.order }]).select().single();
+    if (error) throw error;
+    logActivity({ type: 'resource', action: 'CREATED', resource: 'Gallery Item', details: { url: image.url } });
+    return data;
   },
 
   delete: async (id: string) => {
-    const res = await fetch(`/api/gallery/${id}`, {
-      method: 'DELETE',
-      headers: adminHeaders()
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const { error } = await supabase.from('gallery').delete().eq('id', id);
+    if (error) throw error;
+    logActivity({ type: 'resource', action: 'DELETED', resource: 'Gallery Item', details: { id } });
   },
 
-  reorder: async (images: GalleryImage[]) => {
-    const res = await fetch('/api/gallery/reorder', {
-      method: 'PUT',
-      headers: adminHeaders(),
-      body: JSON.stringify({ images })
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+  reorder: async (images: { id: string; order: number }[]) => {
+    const promises = images.map(img =>
+      supabase.from('gallery').update({ display_order: img.order }).eq('id', img.id)
+    );
+    await Promise.all(promises);
+    logActivity({ type: 'resource', action: 'MODIFIED', resource: 'Gallery Order' });
   },
 };
 
@@ -574,6 +631,10 @@ export interface Institute {
   reviews?: Review[];
   qna?: QA[];
   facilities?: string[];
+  vision?: string;
+  mission?: string;
+  uniqueFeatures?: string;
+  unique_features?: string;
   status?: 'draft' | 'published' | string;
   timestamp?: string;
 }
@@ -585,27 +646,50 @@ export const institutesAPI = {
       console.error('Supabase fetch error for institutes:', error);
       throw error;
     }
-    return data || [];
+    return (data || []).map(inst => ({
+      ...inst,
+      logoImage: inst.logo_image,
+      bannerImage: inst.banner_image,
+      uniqueFeatures: inst.unique_features
+    }));
   },
   getByCode: async (code: string): Promise<Institute | null> => {
     const { data, error } = await supabase.from('institutes').select('*').eq('code', code).single();
-    return data;
+    if (error) return null;
+    return {
+      ...data,
+      logoImage: data.logo_image,
+      bannerImage: data.banner_image,
+      uniqueFeatures: data.unique_features
+    };
   },
   getById: async (code: string): Promise<Institute | null> => {
-    const { data, error } = await supabase.from('institutes').select('*').eq('code', code).single();
-    return data;
+    return institutesAPI.getByCode(code);
   },
   create: async (institute: Partial<Institute>) => {
-    const { error } = await supabase.from('institutes').upsert(institute, { onConflict: 'code' });
+    const payload = {
+      ...institute,
+      logo_image: institute.logoImage,
+      banner_image: institute.bannerImage,
+      unique_features: institute.uniqueFeatures || institute.unique_features
+    };
+    delete (payload as any).logoImage;
+    delete (payload as any).bannerImage;
+    delete (payload as any).uniqueFeatures;
+
+    const { error } = await supabase.from('institutes').upsert(payload, { onConflict: 'code' });
     if (error) throw error;
+    logActivity({ type: 'institute', action: 'UPDATED', resource: institute.name || institute.code });
   },
   delete: async (code: string) => {
     const { error } = await supabase.from('institutes').delete().eq('code', code);
     if (error) throw error;
+    logActivity({ type: 'institute', action: 'DELETED', resource: code });
   },
   updateStatus: async (code: string, status: 'published' | 'draft') => {
     const { error } = await supabase.from('institutes').update({ status }).eq('code', code);
     if (error) throw error;
+    logActivity({ type: 'institute', action: status === 'published' ? 'PUBLISHED' : 'DRAFTED', resource: code });
   },
 };
 // In a real migration, we would map every single Express endpoint here.
@@ -661,6 +745,11 @@ export const authAPI = {
   getAuditLogs: async () => {
     const { data } = await supabase.from('login_logs').select('*').order('created_at', { ascending: false });
     return data || [];
+  },
+  getActivityLogs: async () => {
+    const res = await fetch('/api/admin/activity-logs', { headers: adminHeaders() });
+    if (!res.ok) return [];
+    return await res.json();
   },
   downloadBackup: async () => {
     toast({ title: "Backup Feature", description: "Please use Supabase Dashboard for direct data exports." });
@@ -899,5 +988,6 @@ export const settingsAPI = {
       .update({ community_members: count })
       .eq('id', 1);
     if (error) throw error;
+    logActivity({ type: 'settings', action: 'MODIFIED', resource: 'Community Members', details: { count } });
   }
 };

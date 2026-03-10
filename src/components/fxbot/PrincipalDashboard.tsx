@@ -140,7 +140,7 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
                                 <Activity className="h-4 w-4 text-blue-600" />
                                 <h3 className="font-black text-slate-900 uppercase tracking-[0.2em] text-xs">GLOBAL OVERSIGHT TIMELINE</h3>
                             </div>
-                            <p className="text-[11px] font-medium text-slate-400">ARCHITECT VIEW • CONFIDENTIAL SYSTEM LOGS</p>
+                            <p className="text-[11px] font-medium text-slate-400">ARCHITECT VIEW • ANALYTICS</p>
                         </div>
                     </div>
                     <Table>
@@ -232,7 +232,7 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
                             <Activity className="h-4 w-4 text-blue-600" />
                             <h3 className="font-black text-slate-900 uppercase tracking-[0.2em] text-[10px]">Audit Registry</h3>
                         </div>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Confidential System Logs</p>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Global Registry</p>
                     </div>
                     {issues.length === 0 ? (
                         <div className="glass-card p-12 text-center rounded-[2rem] border-white/40">

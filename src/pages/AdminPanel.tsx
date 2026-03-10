@@ -38,18 +38,25 @@ export default function AdminPanel() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [notifs, updates, resources, events, communityMembers, auditLogs] = await Promise.all([
+        const [notifs, updates, resources, events, communityMembers, auditLogs, activityLogs] = await Promise.all([
           notificationsAPI.getAll().catch(() => []),
           updatesAPI.getAll().catch(() => []),
           resourcesAPI.getAll().catch(() => []),
           eventsAPI.getAll().catch(() => []),
           settingsAPI.getCommunityMembers(),
-          authAPI.getAuditLogs().catch(() => [])
+          authAPI.getAuditLogs().catch(() => []),
+          authAPI.getActivityLogs().catch(() => [])
         ]);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let combinedActivities: any[] = [];
 
+        // Add real-time activity logs from the VPS backend
+        if (Array.isArray(activityLogs) && activityLogs.length > 0) {
+          combinedActivities = [...activityLogs];
+        }
+
+        // Add login logs
         if (Array.isArray(auditLogs) && auditLogs.length > 0) {
           auditLogs.forEach(log => {
             combinedActivities.push({
@@ -57,28 +64,19 @@ export default function AdminPanel() {
               username: (log.email || 'Admin').split('@')[0],
               action: log.success ? 'VALIDATED' : 'FAILED',
               resource: 'System',
-              timestamp: log.created_at,
+              timestamp: log.created_at || log.timestamp,
               success: log.success,
               details: { title: log.ip_address }
             });
           });
         }
 
-        notifs.forEach(n => combinedActivities.push({
-          type: 'notification', username: 'Admin', action: 'PUSHED', resource: 'Notification', timestamp: n.timestamp, success: true, details: { title: n.title }
-        }));
-
-        updates.forEach(u => combinedActivities.push({
-          type: 'update', username: 'Admin', action: 'PUBLISHED', resource: 'Update', timestamp: u.timestamp, success: true, details: { title: u.title }
-        }));
-
-        resources.forEach(r => combinedActivities.push({
-          type: 'resource', username: 'Admin', action: 'ADDED', resource: 'Resource', timestamp: r.timestamp, success: true, details: { title: r.title }
-        }));
-
-        events.forEach(e => combinedActivities.push({
-          type: 'event', username: 'Admin', action: 'SCHEDULED', resource: 'Event', timestamp: e.timestamp, success: true, details: { title: e.title }
-        }));
+        // Fallback or additional derived activities if real logs are scarce
+        if (combinedActivities.length < 5) {
+          notifs.slice(0, 5).forEach(n => combinedActivities.push({
+            type: 'notification', username: 'Admin', action: 'PUSHED', resource: 'Notification', timestamp: n.timestamp, success: true, details: { title: n.title }
+          }));
+        }
 
         combinedActivities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
@@ -192,10 +190,6 @@ export default function AdminPanel() {
                       <div className="flex items-center justify-between mb-2">
                         <div className={`p-2 rounded-lg bg-white/5 transition-transform group-hover:scale-110 ${card.color}`}>
                           <card.icon className="w-5 h-5" />
-                        </div>
-                        <div className={`flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${card.up ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}`}>
-                          {card.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                          {card.trend}
                         </div>
                       </div>
                       <CardTitle className="text-2xl font-black">
@@ -380,9 +374,6 @@ export default function AdminPanel() {
                     ) : (
                       <p className="text-center text-xs text-muted-foreground italic py-10">Waiting for live data transmission...</p>
                     )}
-                    <p className="text-center text-xs text-muted-foreground font-medium pt-4 italic border-t border-white/5">
-                      View full forensics in System Logs section.
-                    </p>
                   </div>
                 </CardContent>
               </Card>

@@ -16,6 +16,25 @@ import { FACULTY_DATA, DEPARTMENTS } from '@/data/ioesData';
 const IOESPage = () => {
     const [activeTab, setActiveTab] = useState("overview");
 
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Government Institute of Electronics, Secunderabad',
+                    url: window.location.href
+                });
+            } catch (err) {
+                console.log('Error sharing', err);
+            }
+        } else {
+            alert('Share feature is not supported on this browser. You can copy the URL directly.');
+        }
+    };
+
+    const handleBrochure = () => {
+        alert("Brochure is currently being updated for the new academic year.");
+    };
+
     const galleryImages = [
         "2d839e36-0991-49a8-88aa-b1bd002f0eec.jpg",
         "362f15d5-e1da-4563-8412-1ab8f1067f3b.jpg",
@@ -85,11 +104,11 @@ const IOESPage = () => {
 
                                 <div className="flex gap-3 w-full sm:w-auto mt-2 lg:mt-0">
                                     <div className="flex flex-wrap gap-2">
-                                        <Button variant="outline" className="gap-2 h-9">
+                                        <Button variant="outline" className="gap-2 h-9" onClick={handleShare}>
                                             <Share2 className="w-4 h-4" />
                                             Share
                                         </Button>
-                                        <Button className="gap-2 bg-green-600 hover:bg-green-700 h-9">
+                                        <Button className="gap-2 bg-green-600 hover:bg-green-700 h-9" onClick={handleBrochure}>
                                             <Download className="w-4 h-4" />
                                             Brochure
                                         </Button>
@@ -113,7 +132,7 @@ const IOESPage = () => {
 
             <main className="container mx-auto px-4 sm:px-6 lg:px-8 pb-12">
                 {/* Content Tabs */}
-                <Tabs defaultValue="overview" className="w-full" onValueChange={setActiveTab}>
+                <Tabs value={activeTab} className="w-full" onValueChange={setActiveTab}>
                     <TabsList className="w-full justify-start h-auto flex-wrap gap-2 bg-transparent p-0 border-b rounded-none mb-6">
                         <TabsTrigger
                             value="overview"
@@ -319,7 +338,7 @@ const IOESPage = () => {
                                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                                         loading="lazy"
                                     />
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center" onClick={() => window.open(`/images/ioes/${img}`, '_blank')}>
                                         <Button variant="secondary" size="sm" className="opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                                             View
                                         </Button>
@@ -331,7 +350,7 @@ const IOESPage = () => {
                 </Tabs>
             </main>
 
-            
+
         </div>
     );
 };

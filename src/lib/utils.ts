@@ -8,9 +8,14 @@ export function cn(...inputs: ClassValue[]) {
 export function getImageUrl(url: string | undefined): string {
   if (!url) return '';
 
-  // If it's a Supabase storage URL, proxy it through our VPS to bypass ISP blocks
-  if (typeof url === 'string' && url.includes('.supabase.co/storage/v1/')) {
-    return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+  // Direct mapping to Supabase storage to bypass the removed proxy
+  if (typeof url === 'string') {
+    if (url.startsWith('/api/image-proxy?url=')) {
+      return decodeURIComponent(url.split('url=')[1]);
+    }
+    if (url.includes('.supabase.co/storage/v1/')) {
+      return url;
+    }
   }
 
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {

@@ -61,7 +61,6 @@ export const AddInstitute = lazyPreload(() => import("./pages/admin/AddInstitute
 export const AddProject = lazyPreload(() => import("./pages/admin/AddProject"));
 export const InstituteAdmin = lazyPreload(() => import("./pages/admin/InstituteAdmin"));
 export const UserManagement = lazyPreload(() => import("./pages/UserManagement"));
-export const LoginLogs = lazyPreload(() => import("./pages/LoginLogs"));
 
 // FXBOT Student - Lazy with Preload
 export const StudentAuth = lazyPreload(() => import("./pages/student/StudentAuth"));
@@ -173,7 +172,6 @@ const App = () => (
                   <Route path="/admin/institutes/:code" element={<InstituteAdmin />} />
 
                   <Route path="/admin/users" element={<UserManagement />} />
-                  <Route path="/admin/logs" element={<LoginLogs />} />
 
                   <Route path="*" element={<NotFound />} />
                 </Routes>

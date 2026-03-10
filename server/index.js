@@ -456,9 +456,18 @@ const writeLoginLogs = (logs) => {
   fs.writeFileSync(LOGIN_LOGS_FILE, JSON.stringify(logs, null, 2));
 };
 
-// Verify JWT token
+const ADMIN_API_KEY = (process.env.VITE_ADMIN_API_KEY || process.env.ADMIN_API_KEY || 'feedx-default-admin-key-2025').trim();
+
+// Verify JWT token or Admin API Key
 const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
+  const apiKey = req.headers['x-admin-api-key'];
+
+  // Allow bypass with secure Admin API Key
+  if (apiKey && apiKey.toString().trim() === ADMIN_API_KEY) {
+    req.user = { id: 0, email: 'admin-api', name: 'System Admin' };
+    return next();
+  }
 
   if (!token) {
     return res.status(401).json({ error: 'No token provided' });
@@ -682,6 +691,50 @@ app.get('/api/crawler/gioe', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Crawler error:', error);
     res.status(500).json({ error: 'Failed to crawl website' });
+  }
+});
+
+const readAdminLogs = () => {
+  try {
+    if (!fs.existsSync(ADMIN_LOGS_FILE)) return [];
+    return JSON.parse(fs.readFileSync(ADMIN_LOGS_FILE, 'utf8'));
+  } catch {
+    return [];
+  }
+};
+
+const writeAdminLogs = (logs) => {
+  fs.writeFileSync(ADMIN_LOGS_FILE, JSON.stringify(logs, null, 2));
+};
+
+// Activity Logging (protected by API Key or JWT)
+app.post('/api/admin/activity-logs', verifyToken, (req, res) => {
+  try {
+    const { type, action, resource, details } = req.body;
+    const logs = readAdminLogs();
+    const newLog = {
+      id: Date.now(),
+      username: req.user?.username || req.user?.name || 'Admin',
+      type,
+      action,
+      resource,
+      details: details || {},
+      timestamp: new Date().toISOString()
+    };
+    logs.push(newLog);
+    writeAdminLogs(logs.slice(-500)); // Keep last 500 logs
+    res.status(201).json(newLog);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to log activity' });
+  }
+});
+
+app.get('/api/admin/activity-logs', verifyToken, (req, res) => {
+  try {
+    const logs = readAdminLogs();
+    res.json(logs.slice(-100).reverse()); // Return last 100 logs, newest first
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch activity logs' });
   }
 });
 

@@ -18,7 +18,7 @@ import { PreloadLink } from "./PreloadLink";
 import {
     AdminPanel, AddNotification, AddUpdate, AddResource, AddEvent,
     AddGallery, AddProject, AddSpotlight, AddTestimonial, AddInstitute,
-    UserManagement, LoginLogs
+    UserManagement
 } from "@/App";
 
 interface AdminLayoutProps {
@@ -38,7 +38,6 @@ const navItems = [
     { id: "institutes", title: "Institutes", icon: Building2, route: "/admin/institutes", preload: AddInstitute.preload },
 
     { id: "users", title: "Admin Users", icon: Users, route: "/admin/users", preload: UserManagement.preload },
-    { id: "logs", title: "System Logs", icon: ShieldAlert, route: "/admin/logs", preload: LoginLogs.preload },
 ];
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
