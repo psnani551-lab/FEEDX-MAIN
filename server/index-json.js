@@ -1213,8 +1213,10 @@ app.get('/api/results', async (req, res) => {
     if (!pin) return res.status(400).json({ success: false, error: 'PIN is required' });
     const normalized = pin.trim().toUpperCase();
     const isSemesterFinal = examTypeId === 'semester';
+    // SBTET Scheme IDs (from api/Results/GetSchemeDataForResults):
+    //  C24=11, C21=9, C18=5, C16=3, C16S=4, C14=1, C09=8, ER91=2, ER2020=10
     const resolvedScheme = schemeId || '11';
-    const resolvedSem = semYearId || '2';
+    const resolvedSem = semYearId || '1';
     const resolvedMonthYear = examMonthYearId || '91';
 
     let data = null;

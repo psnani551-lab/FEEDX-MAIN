@@ -437,6 +437,53 @@ app.get('/api/results', async (req, res) => {
   }
 });
 
+// Proxy route for SBTET PIN Verification (Signup auto-fill)
+// Tries to fetch the student's profile across recent common schemes/semesters
+app.get('/api/sbtet/verify-pin', async (req, res) => {
+  try {
+    const { pin } = req.query;
+    if (!pin) return res.status(400).json({ success: false, error: 'PIN parameter is required' });
+
+    const normalized = pin.trim().toUpperCase();
+    
+    const schemes = ['11', '9', '8'];
+    const sems = ['1', '2', '3', '4', '5', '6'];
+    const examMonthKeys = ['91', '90', '88'];
+
+    for (const scheme of schemes) {
+      for (const sem of sems) {
+        for (const month of examMonthKeys) {
+          const url = `https://www.sbtet.telangana.gov.in/api/api/Results/GetStudentWiseReport?ExamMonthYearId=${month}&ExamTypeId=5&Pin=${encodeURIComponent(normalized)}&SchemeId=${scheme}&SemYearId=${sem}&StudentTypeId=1`;
+          try {
+            const data = await fetchSBTET(url);
+            let table = data?.Table || data?.table || (Array.isArray(data) ? data : []);
+            
+            if (table.length && table[0].studentInfo && table[0].studentInfo.length > 0) {
+               const info = table[0].studentInfo[0];
+               const name = (info.StudentName || '').trim();
+               const branch = (info.BranchName || info.BranchCode || '').trim();
+               
+               if (name) {
+                 console.log(`[VerifyPIN] Found profile for ${normalized} (Scheme=${scheme}, Sem=${sem}) => Name: ${name}`);
+                 return res.json({ success: true, student: { name, branch } });
+               }
+            }
+          } catch (e) {
+            // ignore individual fetch errors during brute force
+          }
+        }
+      }
+    }
+
+    console.warn(`[VerifyPIN] Profile not found for ${normalized}`);
+    return res.status(404).json({ success: false, error: 'Invalid PIN or SBTET data unavailable.' });
+
+  } catch (error) {
+    console.error('[VerifyPIN] Internal error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error while verifying PIN.' });
+  }
+});
+
 
 // ================== AUTHENTICATION ROUTES ==================
 

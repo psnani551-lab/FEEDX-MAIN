@@ -883,29 +883,45 @@ export const fxbotAPI = {
 
   // ── Issue Management ───────────────────────────────────────────────────────
   submitIssue: async (issue: Omit<FXBotIssue, 'status' | 'created_at' | 'updated_at'>): Promise<FXBotIssue> => {
-    const { data, error } = await fxbotSupabase
-      .from('issues')
-      .insert([{ ...issue, department: issue.department.toUpperCase() }])
+    // 1. Separate attachments from the main issue data to avoid schema cache errors
+    const { attachments, ...issueData } = issue;
+
+    // 2. Insert main issue record into fxbot_issues
+    const { data: insertedIssue, error: issueError } = await fxbotSupabase
+      .from('fxbot_issues')
+      .insert([{ ...issueData, department: issue.department.toUpperCase() }])
       .select()
       .single();
-    if (error) throw error;
-    return data;
+      
+    if (issueError) throw issueError;
+
+    // 3. Insert attachments into issue_attachments if there are any
+    if (attachments && attachments.length > 0) {
+      const attachmentsData = attachments.map(url => ({
+        issue_id: insertedIssue.id,
+        url: url
+        // filename can be derived or left null in DB if not strictly required
+      }));
+
+      const { error: attachmentsError } = await fxbotSupabase
+        .from('issue_attachments')
+        .insert(attachmentsData);
+        
+      if (attachmentsError) throw attachmentsError;
+    }
+
+    // Return the inserted issue, optionally attaching the URLs back in for frontend consistency
+    return { ...insertedIssue, attachments: attachments || [] };
   },
 
   getStudentIssues: async (studentId: string): Promise<FXBotIssue[]> => {
     const { data, error } = await fxbotSupabase
-      .from('issues')
-      .select(`
-        *,
-        issue_attachments (
-          url,
-          filename
-        )
-      `)
+      .from('fxbot_issues')
+      .select('*')
       .eq('student_id', studentId)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return data?.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] })) || [];
+    return data || [];
   },
 
   escalateIssue: async (issueId: string, whomToSend: string): Promise<void> => {
@@ -918,12 +934,8 @@ export const fxbotAPI = {
 
   getFacultyIssues: async (user: Student): Promise<FXBotIssue[]> => {
     const { designation, department } = user;
-    let query = fxbotSupabase.from('issues').select(`
+    let query = fxbotSupabase.from('fxbot_issues').select(`
       *,
-      issue_attachments (
-        url,
-        filename
-      ),
       students:student_id (
         full_name,
         pin,
@@ -942,12 +954,26 @@ export const fxbotAPI = {
 
     const { data, error } = await query;
     if (error) throw error;
-    return data?.map((item: any) => ({ ...item, attachments: item.issue_attachments?.map((a: any) => a.url) || [] })) || [];
+    return data || [];
+  },
+
+  getIssueAttachments: async (issueId: string): Promise<string[]> => {
+    const { data, error } = await fxbotSupabase
+      .from('issue_attachments')
+      .select('url')
+      .eq('issue_id', issueId);
+    
+    if (error) {
+      console.error("Failed to fetch attachments for", issueId, error);
+      return [];
+    }
+    
+    return data?.map(row => row.url) || [];
   },
 
   submitDirective: async (issueId: string, directive: string): Promise<void> => {
     const { error } = await fxbotSupabase
-      .from('issues')
+      .from('fxbot_issues')
       .update({ internal_directive: directive })
       .eq('id', issueId);
     if (error) throw error;
@@ -955,7 +981,7 @@ export const fxbotAPI = {
 
   updateIssueStatus: async (issueId: string, status: string, resolution?: string): Promise<void> => {
     const { error } = await fxbotSupabase
-      .from('issues')
+      .from('fxbot_issues')
       .update({
         status,
         resolution_message: resolution,
@@ -963,6 +989,16 @@ export const fxbotAPI = {
       })
       .eq('id', issueId);
     if (error) throw error;
+  },
+
+  verifySbtetPin: async (pin: string): Promise<{ success: boolean; student?: { name: string; branch: string }; error?: string }> => {
+    try {
+      const API_BASE = import.meta.env.VITE_API_URL || '';
+      const res = await fetch(`${API_BASE}/api/sbtet/verify-pin?pin=${encodeURIComponent(pin)}`);
+      return await res.json();
+    } catch (e: any) {
+      return { success: false, error: e.message || 'Failed to connect to verification server' };
+    }
   },
 
   logout: async (): Promise<void> => {

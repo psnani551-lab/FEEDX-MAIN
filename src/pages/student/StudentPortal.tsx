@@ -65,8 +65,8 @@ const StudentPortal = () => {
         fetchIssues(studentData);
     }, [navigate]);
 
-    const fetchIssues = async (user: Student) => {
-        setIsLoading(true);
+    const fetchIssues = async (user: Student, silent = false) => {
+        if (!silent) setIsLoading(true);
         try {
             const data = user.role === 'faculty'
                 ? await fxbotAPI.getFacultyIssues(user)
@@ -75,15 +75,15 @@ const StudentPortal = () => {
         } catch (error) {
             console.error("Failed to fetch issues:", error);
         } finally {
-            setIsLoading(false);
+            if (!silent) setIsLoading(false);
         }
     };
 
-    // 5-second polling for issue updates — replaces Supabase Realtime (ISP-block safe)
+    // 5-second polling for issue updates — silent to avoid page flicker
     useEffect(() => {
         if (!student) return;
         const interval = setInterval(() => {
-            fetchIssues(student);
+            fetchIssues(student, true); // silent = true — no loading state
         }, 5000);
         return () => clearInterval(interval);
     }, [student]);

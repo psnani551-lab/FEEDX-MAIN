@@ -29,6 +29,8 @@ const Logo: React.FC<LogoProps> = ({ className, size = 'md', admin = false }) =>
             <img
                 src={feedxLogo}
                 alt="FeedX Logo"
+                fetchPriority="high"
+                loading="eager"
                 className={cn(
                     "w-full h-full object-contain relative z-10 transition-all duration-500",
                     admin ? "brightness-110 contrast-110" : "group-hover:scale-105"

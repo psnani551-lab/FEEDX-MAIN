@@ -8,6 +8,7 @@ import { format, differenceInHours } from "date-fns";
 import { AlertTriangle, Clock, CheckCircle2, LayoutDashboard, ExternalLink, Globe, TrendingUp, ShieldCheck, ChevronRight, Activity, FileText, History } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import AttachmentDialog from "./AttachmentDialog";
 
 interface PrincipalDashboardProps {
     issues: FXBotIssue[];
@@ -17,6 +18,7 @@ interface PrincipalDashboardProps {
 
 const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDashboardProps) => {
     const [selectedIssue, setSelectedIssue] = useState<FXBotIssue | null>(null);
+    const [viewingAttachments, setViewingAttachments] = useState<FXBotIssue | null>(null);
 
     // Calculate Branch-wise Stats
     const branchStats = useMemo(() => {
@@ -216,6 +218,17 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
                                                 >
                                                     <ExternalLink className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
                                                 </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setViewingAttachments(issue);
+                                                    }}
+                                                    className="rounded-xl text-slate-400 hover:text-emerald-500 hover:bg-white transition-all overflow-hidden group/ev"
+                                                >
+                                                    <FileText className="h-5 w-5 group-hover/ev:scale-110 transition-transform" />
+                                                </Button>
                                             </TableCell>
                                         </motion.tr>
                                     );
@@ -285,7 +298,17 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
                                             <ExternalLink size={16} />
                                         </div>
                                     </div>
-                                </motion.div>
+                                    <Button
+                                            className="w-full mt-4 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 font-black uppercase tracking-widest text-[10px] gap-2 active:scale-95 transition-all"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setViewingAttachments(issue);
+                                            }}
+                                        >
+                                            <FileText className="h-4 w-4" />
+                                            Inspect Evidence
+                                        </Button>
+                                 </motion.div>
                             );
                         })
                     )}
@@ -411,6 +434,12 @@ const PrincipalDashboard = ({ issues, onRefresh, principalProfile }: PrincipalDa
                     )}
                 </DialogContent>
             </Dialog>
+            <AttachmentDialog 
+                isOpen={!!viewingAttachments}
+                onClose={() => setViewingAttachments(null)}
+
+                issueId={viewingAttachments?.id || ''}
+            />
         </div>
     );
 };

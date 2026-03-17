@@ -61,7 +61,8 @@ type StudentResults = {
 };
 
 // ── SBTET Filter Options ────────────────────────────────────────────────
-const SCHEME_OPTIONS = [{ label: 'C24', value: '11' }, { label: 'C18', value: '9' }, { label: 'C16', value: '8' }];
+// Scheme IDs confirmed from SBTET API (GetSchemeDataForResults): C24=11, C21=9, C18=5, C16=3
+const SCHEME_OPTIONS = [{ label: 'C24', value: '11' }, { label: 'C21', value: '9' }, { label: 'C18', value: '5' }, { label: 'C16', value: '3' }];
 const SEM_OPTIONS = [{ label: '1st Sem', value: '1' }, { label: '2nd Sem', value: '2' }, { label: '3rd Sem', value: '3' }, { label: '4th Sem', value: '4' }, { label: '5th Sem', value: '5' }, { label: '6th Sem', value: '6' }];
 const EXAM_OPTIONS = [{ label: 'Mid 1', value: '1' }, { label: 'Mid 2', value: '2' }, { label: 'Semester (Final)', value: 'semester' }, { label: 'Regular', value: '3' }, { label: 'Supplementary', value: '4' }];
 // Fallback exam sessions (used only if /api/exam-sessions is unreachable)

@@ -13,6 +13,7 @@ import {
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import AttachmentDialog from "./AttachmentDialog";
 
 interface AdminDashboardProps {
     issues: FXBotIssue[];
@@ -28,6 +29,7 @@ interface IssueWithIdentity extends FXBotIssue {
 
 const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps) => {
     const [selectedIssue, setSelectedIssue] = useState<IssueWithIdentity | null>(null);
+    const [viewingAttachments, setViewingAttachments] = useState<FXBotIssue | null>(null);
     const [identityLoading, setIdentityLoading] = useState(false);
 
     // Stats
@@ -188,9 +190,22 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => handleSelectIssue(issue)}
-                                                    className="rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                                                    className="rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all font-bold gap-1"
                                                 >
-                                                    <ChevronRight className="h-5 w-5" />
+                                                    Audit
+                                                    <ChevronRight className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setViewingAttachments(issue);
+                                                    }}
+                                                    className="rounded-xl text-emerald-600 font-bold hover:bg-emerald-50 hover:text-emerald-700 transition-all gap-1 ml-1"
+                                                >
+                                                    Evidence
+                                                    <FileText className="h-4 w-4" />
                                                 </Button>
                                             </TableCell>
                                         </motion.tr>
@@ -270,7 +285,17 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
                                             <ChevronRight size={18} />
                                         </div>
                                     </div>
-                                </motion.div>
+                                    <Button
+                                            className="w-full mt-4 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 font-black uppercase tracking-widest text-[10px] gap-2 active:scale-95 transition-all"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setViewingAttachments(issue);
+                                            }}
+                                        >
+                                            <FileText className="h-4 w-4" />
+                                            Inspect Evidence
+                                        </Button>
+                                 </motion.div>
                             );
                         })
                     )}
@@ -516,6 +541,12 @@ const AdminDashboard = ({ issues, onRefresh, adminProfile }: AdminDashboardProps
                     )}
                 </DialogContent>
             </Dialog>
+            <AttachmentDialog 
+                isOpen={!!viewingAttachments}
+                onClose={() => setViewingAttachments(null)}
+
+                issueId={viewingAttachments?.id || ''}
+            />
         </div>
     );
 };

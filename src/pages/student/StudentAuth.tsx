@@ -40,6 +40,8 @@ const StudentAuth = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [countdown, setCountdown] = useState(0);
     const [accessCode, setAccessCode] = useState(""); // Required for Principal/Admin signup
+    const [isPinVerified, setIsPinVerified] = useState(false);
+    const [isVerifyingPin, setIsVerifyingPin] = useState(false);
     const { toast } = useToast();
     const navigate = useNavigate();
 
@@ -58,6 +60,33 @@ const StudentAuth = () => {
         return;
     };
 
+    const handleVerifyPin = async () => {
+        if (!pin.trim()) {
+            toast({ title: "PIN Required", description: "Please enter your PIN first.", variant: "destructive" });
+            return;
+        }
+        setIsVerifyingPin(true);
+        try {
+            const res = await fxbotAPI.verifySbtetPin(pin);
+            if (res.success && res.student) {
+                setFullName(res.student.name);
+                // Department is often empty from API if missing, default to manual if needed
+                if (res.student.branch && res.student.branch !== "") {
+                    setDepartment(res.student.branch);
+                }
+                setIsPinVerified(true);
+                toast({ title: "PIN Verified", description: `Profile found for ${res.student.name}.` });
+            } else {
+                toast({ title: "Verification Failed", description: res.error || "Could not find profile for this PIN.", variant: "destructive" });
+                setIsPinVerified(false);
+            }
+        } catch (err: any) {
+            toast({ title: "Error", description: err.message || "Failed to verify PIN.", variant: "destructive" });
+        } finally {
+            setIsVerifyingPin(false);
+        }
+    };
+
     const handleSendOTP = async () => {
         if (!email) {
             toast({ title: "Email Required", variant: "destructive" });
@@ -69,6 +98,10 @@ const StudentAuth = () => {
             const missingFields = !fullName || !mobile || (!isPrincipalOrAdmin && !department) || (isStudent && !pin);
             if (missingFields) {
                 toast({ title: "All fields are required", variant: "destructive" });
+                return;
+            }
+            if (isStudent && !isPinVerified) {
+                toast({ title: "Verification Required", description: "Please verify your PIN using the Verify button before continuing.", variant: "destructive" });
                 return;
             }
         }
@@ -403,6 +436,7 @@ const StudentAuth = () => {
                                                         value={fullName}
                                                         onChange={(e) => setFullName(e.target.value.toUpperCase())}
                                                         className="h-12 bg-white/50 border-slate-200 rounded-xl pl-12 font-bold tracking-tight"
+                                                        disabled={userType === 'student' && isPinVerified}
                                                     />
                                                 </div>
                                             </div>
@@ -411,16 +445,29 @@ const StudentAuth = () => {
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div className="space-y-2">
                                                         <Label className="text-slate-700 text-xs font-bold uppercase tracking-wider ml-1">PIN ID</Label>
-                                                        <Input
-                                                            placeholder="22001-C-001"
-                                                            value={pin}
-                                                            onChange={(e) => setPin(e.target.value.toUpperCase())}
-                                                            className="h-12 bg-white/50 border-slate-200 rounded-xl"
-                                                        />
+                                                        <div className="flex gap-2">
+                                                            <Input
+                                                                placeholder="22001-C-001"
+                                                                value={pin}
+                                                                onChange={(e) => { 
+                                                                    setPin(e.target.value.toUpperCase());
+                                                                    if (isPinVerified) setIsPinVerified(false);
+                                                                }}
+                                                                className="h-12 bg-white/50 border-slate-200 rounded-xl flex-1"
+                                                            />
+                                                            <Button 
+                                                                type="button" 
+                                                                onClick={handleVerifyPin} 
+                                                                disabled={!pin || isVerifyingPin || isPinVerified}
+                                                                className={cn("h-12 px-4 rounded-xl font-bold transition-all", isPinVerified ? "bg-green-600 hover:bg-green-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white")}
+                                                            >
+                                                                {isVerifyingPin ? <Loader2 className="h-5 w-5 animate-spin" /> : isPinVerified ? <CheckCircle2 className="h-5 w-5" /> : "Verify"}
+                                                            </Button>
+                                                        </div>
                                                     </div>
                                                     <div className="space-y-2">
                                                         <Label className="text-slate-700 text-xs font-bold uppercase tracking-wider ml-1">Branch</Label>
-                                                        <Select value={department} onValueChange={setDepartment}>
+                                                        <Select value={department} onValueChange={setDepartment} disabled={userType === 'student' && isPinVerified}>
                                                             <SelectTrigger className="h-12 bg-white/50 border-slate-200 rounded-xl font-bold text-slate-700">
                                                                 <SelectValue placeholder="Select Branch" />
                                                             </SelectTrigger>

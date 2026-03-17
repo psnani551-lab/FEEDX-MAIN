@@ -11,6 +11,7 @@ import { AlertCircle, Clock, CheckCircle2, MessageSquare, ExternalLink, ChevronR
 import { toast } from "@/hooks/use-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import AttachmentDialog from "./AttachmentDialog";
 
 interface FacultyDashboardProps {
     issues: FXBotIssue[];
@@ -20,6 +21,7 @@ interface FacultyDashboardProps {
 
 const FacultyDashboard = ({ issues, onRefresh, facultyProfile }: FacultyDashboardProps) => {
     const [selectedIssue, setSelectedIssue] = useState<FXBotIssue | null>(null);
+    const [viewingAttachments, setViewingAttachments] = useState<FXBotIssue | null>(null);
     const [resolution, setResolution] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
@@ -184,6 +186,18 @@ const FacultyDashboard = ({ issues, onRefresh, facultyProfile }: FacultyDashboar
                                                     Manage
                                                     <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                                                 </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setViewingAttachments(issue);
+                                                    }}
+                                                    className="rounded-xl text-emerald-600 font-bold hover:bg-emerald-600 hover:text-white transition-all gap-2 group/evidence ml-2"
+                                                >
+                                                    Evidence
+                                                    <FileText className="h-4 w-4 group-hover/evidence:scale-110 transition-transform" />
+                                                </Button>
                                             </TableCell>
                                         </motion.tr>
                                     );
@@ -259,6 +273,16 @@ const FacultyDashboard = ({ issues, onRefresh, facultyProfile }: FacultyDashboar
                                             <ChevronRight size={18} />
                                         </div>
                                     </div>
+                                    <Button
+                                            className="w-full mt-4 h-12 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 font-black uppercase tracking-widest text-[10px] gap-2 active:scale-95 transition-all"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setViewingAttachments(issue);
+                                            }}
+                                        >
+                                            <FileText className="h-4 w-4" />
+                                            Inspect Evidence
+                                        </Button>
                                 </motion.div>
                             );
                         })
@@ -438,6 +462,12 @@ const FacultyDashboard = ({ issues, onRefresh, facultyProfile }: FacultyDashboar
                     )}
                 </DialogContent>
             </Dialog>
+            <AttachmentDialog 
+                isOpen={!!viewingAttachments}
+                onClose={() => setViewingAttachments(null)}
+
+                issueId={viewingAttachments?.id || ''}
+            />
         </div>
     );
 };

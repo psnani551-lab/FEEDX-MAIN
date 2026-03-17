@@ -1,26 +1,5 @@
 [
   {
-    "id": "ce47e7ae-6ce1-44f7-b69a-17fc531f7689",
-    "title": "AI HACKATHON ",
-    "description": "MAKING UP APPLICATION THAT SOLVE REAL LIFE PROBLEMS ",
-    "image": "https://tmyeaobdlxqmwcncxhlo.supabase.co/storage/v1/object/public/uploads/0.6240377996686882.jpg",
-    "event_date": "2026-02-28",
-    "event_time": "10:41:00",
-    "location": "GIOE COLLEGE AUITORIUM ",
-    "register_link": "https://www.youtube.com/watch?v=J2GKwMI_J_I&t=166s",
-    "files": [],
-    "created_at": "2026-02-14T13:08:18.547+00:00",
-    "date": "2026-02-28",
-    "time": "10:41:00",
-    "is_coming_soon": false,
-    "status": "published",
-    "admin_status": "upcoming",
-    "timestamp": "2026-02-14T13:08:18.547+00:00",
-    "registerLink": "https://www.youtube.com/watch?v=J2GKwMI_J_I&t=166s",
-    "isComingSoon": false,
-    "adminStatus": "upcoming"
-  },
-  {
     "id": "76955ebc-8e9a-4434-9ce7-d5a754db2f1a",
     "title": " Awareness Program on Women’s Rights and Legal Protection",
     "description": "Awareness Drive on AICTE Pragathi Scholarship\nThe program was conducted to create awareness among Telangana diploma girl students about\ngovernment-supported financial assistance for higher education. The session provided clear\nguidance on eligibility, benefits, and the application process through the National Scholarship\nPortal (NSP), including a live demonstration. An interactive discussion helped students clarify\ndoubts, reduce application errors, and gain confidence in applying independently.",
@@ -43,11 +22,11 @@
     "time": "12:03:00",
     "is_coming_soon": false,
     "status": "conducted",
-    "admin_status": "conducted",
+    "admin_status": "published",
     "timestamp": "2025-12-30T15:30:36.148+00:00",
     "registerLink": "https://www.ilovepdf.com/download/sgdcxcqAckwsgc7p2469jcfAy6p995g2fAk78w2mpy2621gslhv3q678j3j8hvsy6vc1mv0Aq8tnp11nzbktrbnvb26q6x1f0xg24ks9s7wgqk76cy93jtxnbjphgptx1n500y6rfd8Af8Af4trv44vqgwh8nnljqqd9zqdnckAq2q0d3z51/69",
     "isComingSoon": false,
-    "adminStatus": "conducted"
+    "adminStatus": "published"
   },
   {
     "id": "1c4adb7a-d5bf-4dcc-bd5f-28fba147920f",
@@ -80,10 +59,10 @@
     "id": "98eeca45-6fa5-4d3f-83b3-361fb8747787",
     "title": "Essay Writing Competition – Vignana Darshini",
     "description": "This was conducted as part of the Vignana Darshini – Scientific Telangana initiative to promote\nscientific temper and analytical writing among students. The competition was organized at\nGovernment Institute of Electronics (GIOE) and Government Polytechnic for Women (GPW),\nenabling participation from both institutions. The theme focused on science in daily life, and\n\nselected entries were forwarded for evaluation at the Greater Hyderabad level, providing\nstudents with wider academic exposure.",
-    "image": "https://tmyeaobdlxqmwcncxhlo.supabase.co/storage/v1/object/public/uploads/0.8161217160135283.jpg",
-    "event_date": "2025-11-11",
+    "image": "/api/image-proxy?url=https%3A%2F%2Ftmyeaobdlxqmwcncxhlo.supabase.co%2Fstorage%2Fv1%2Fobject%2Fpublic%2Fuploads%2F0.8161217160135283.jpg",
+    "event_date": "2026-03-19",
     "event_time": "12:39:00",
-    "location": "Government Institute of Electronics (GIOE) and Government Polytechnic for Women (GPW)",
+    "location": "Government Institute of Electronics (GIOE) ",
     "register_link": "https://www.ilovepdf.com/download/sgdcxcqAckwsgc7p2469jcfAy6p995g2fAk78w2mpy2621gslhv3q678j3j8hvsy6vc1mv0Aq8tnp11nzbktrbnvb26q6x1f0xg24ks9s7wgqk76cy93jtxnbjphgptx1n500y6rfd8Af8Af4trv44vqgwh8nnljqqd9zqdnckAq2q0d3z51/69",
     "files": [
       "/uploads/images/1767107270251-683609575.jpg",
@@ -95,7 +74,7 @@
       "/uploads/images/1767107412433-937586709.jpg"
     ],
     "created_at": "2025-12-30T15:10:26.772+00:00",
-    "date": "2025-11-11",
+    "date": "2026-03-19",
     "time": "12:39:00",
     "is_coming_soon": false,
     "status": "conducted",
